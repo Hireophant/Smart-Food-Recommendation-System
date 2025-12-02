@@ -1,0 +1,2 @@
+class QuerySystem:
+    pass

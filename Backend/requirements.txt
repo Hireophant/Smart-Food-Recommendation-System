@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+aiosqlite
+overpy
+dirtyjson
+dotenv
+requests
+alembic
+pydantic[email]
+python-jose
+passlib[bcrypt]
+bcrypt==4.0.1
+slowapi
