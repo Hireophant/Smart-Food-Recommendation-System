@@ -50,6 +50,9 @@ data/logs/
 # MongoDB
 data/db/
 
+# Data files (too large for git)
+Data/VietnamRestaurants.csv
+
 # Testing
 .pytest_cache/
 .coverage
