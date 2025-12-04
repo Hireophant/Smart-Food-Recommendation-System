@@ -1,0 +1,26 @@
+{
+  "logging": {
+    "name": "SmartFoodBackend",
+    "console": {
+      "enabled": true,
+      "debugMode": true
+    },
+    "file": {
+      "enabled": true,
+      "debugMode": false,
+      "folder": "data/logs",
+      "nameFormat": "%Y%m%d-%H%M%S.log"
+    }
+  },
+  "security": {
+    "jwtAlgorithm": "HS256"
+  },
+  "mongodb": {
+    "host": "localhost",
+    "port": 27017,
+    "database": "smart_food_db",
+    "username": null,
+    "password": null,
+    "connectionString": null
+  }
+}
