@@ -52,3 +52,4 @@ class VietmapPlaceResponseModel(BaseModel):
 VietmapSearchResponse = List[VietmapGeocodingResponseModel]
 VietmapPlaceResponse = VietmapPlaceResponseModel
 VietmapReverseResponse = List[VietmapGeocodingResponseModel]
+VietmapAutocompleteResponse = List[VietmapGeocodingResponseModel]

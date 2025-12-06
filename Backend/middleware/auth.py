@@ -11,7 +11,6 @@ from utils import Logger
 # HTTP Bearer token extractor
 __http_bearer = HTTPBearer()
 
-
 async def VerifyAccessToken(
     credentials: HTTPAuthorizationCredentials = Depends(__http_bearer),
 ) -> Dict:
