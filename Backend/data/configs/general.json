@@ -1,0 +1,18 @@
+{
+    "logging" : {
+        "name" : "TDTT-Final Backend",
+        "console" : {
+            "enabled" : true,
+            "debugMode" : false
+        },
+        "file" : {
+            "enabled" : true,
+            "debugMode" : true,
+            "folder" : "data\\logs",
+            "nameFormat" : "%Y%m%d-%H%M%S.log"
+        }
+    },
+    "security" : {
+        "jwtAlgorithm" : "HS256"
+    }
+}
