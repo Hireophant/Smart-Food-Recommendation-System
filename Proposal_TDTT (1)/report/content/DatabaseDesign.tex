@@ -1,0 +1,182 @@
+\section{Entity Relationship Diagram và Data Model}
+
+\subsection{Database Schema Overview}
+
+Hệ thống sử dụng PostgreSQL database với các bảng chính theo thiết kế ERD:   
+
+\subsection{ERD - Entity Relationship Diagram}
+
+\subsection{Data Model Relationships}
+
+\begin{itemize}
+    \item \textbf{One-to-One}: Users $\leftrightarrow$ User Preferences
+    \item \textbf{One-to-Many}: Users $\rightarrow$ Search History, Users $\rightarrow$ Reviews, Users $\rightarrow$ Saved Restaurants, Users $\rightarrow$ Feedback
+    \item \textbf{One-to-Many}: Restaurants $\rightarrow$ Reviews
+    \item \textbf{Many-to-Many}: Restaurants $\leftrightarrow$ Tags (through Restaurant Tags)
+    \item \textbf{Many-to-Many}: Users $\leftrightarrow$ Restaurants (through Reviews, Saved Restaurants, Feedback)
+\end{itemize}
+
+\subsection{Database Schema - ERD Code}
+
+\begin{verbatim}
+erDiagram
+    USERS ||--o{ USER_PREFERENCES : has
+    USERS ||--o{ SEARCH_HISTORY : makes
+    USERS ||--o{ FEEDBACK : gives
+    USERS ||--o{ SAVED_RESTAURANTS : saves
+
+    RESTAURANTS ||--o{ RESTAURANT_TAGS : typed_as
+    TAGS ||--o{ RESTAURANT_TAGS : describes
+
+    RESTAURANTS ||--o{ REVIEWS : receives
+    USERS ||--o{ REVIEWS : writes
+
+    %% TABLES %%
+    USERS {
+        uuid id PK
+        varchar full_name
+        varchar email UK
+        varchar password_hash
+        decimal latitude
+        decimal longitude
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USER_PREFERENCES {
+        uuid id PK
+        uuid user_id FK,UK
+        boolean vegetarian
+        boolean spicy
+        boolean sweet
+        boolean healthy
+        varchar cuisine_preferences[]   "List of preferred cuisines"
+        varchar budget_level            "low / medium / high"
+        integer search_radius           "in meters"
+        timestamp updated_at
+    }
+
+    RESTAURANTS {
+        uuid id PK
+        varchar name
+        text address
+        decimal latitude
+        decimal longitude
+        varchar cuisine_type
+        varchar price_level             "₫ / ₫₫ / ₫₫₫"
+        decimal rating
+        integer rating_count
+        jsonb opening_hours
+        boolean is_vegetarian_friendly
+        boolean is_spicy
+        boolean is_healthy
+        timestamp updated_at
+    }
+
+    TAGS {
+        uuid id PK
+        varchar name UK                 "Examples: spicy, vegan, seafood"
+        varchar type                    "taste / cuisine / feature"
+        timestamp created_at
+    }
+
+    RESTAURANT_TAGS {
+        uuid restaurant_id FK,PK
+        uuid tag_id FK,PK
+        timestamp created_at
+    }
+
+    SEARCH_HISTORY {
+        uuid id PK
+        uuid user_id FK
+        text query_text
+        jsonb normalized_query          "NLP extracted attributes"
+        decimal user_lat
+        decimal user_lon
+        timestamp created_at
+    }
+
+    REVIEWS {
+        uuid id PK
+        uuid user_id FK
+        uuid restaurant_id FK
+        integer rating
+        text comment
+        date visit_date
+        timestamp created_at
+    }
+
+    SAVED_RESTAURANTS {
+        uuid id PK
+        uuid user_id FK
+        uuid restaurant_id FK
+        timestamp created_at
+    }
+
+    FEEDBACK {
+        uuid id PK
+        uuid user_id FK
+        uuid restaurant_id FK
+        boolean is_good_suggestion      "User rates suggestion relevance"
+        timestamp created_at
+    }
+\end{verbatim}
+
+
+\subsection{Indexing Strategy}
+
+\begin{table}[h]
+\centering
+\caption{Database Indexes for Performance}
+\begin{tabular}{|p{4cm}|p{4cm}|p{4cm}|}
+\hline
+\textbf{Table} & \textbf{Index} & \textbf{Purpose} \\
+\hline
+restaurants & GIST(longitude, latitude) & Spatial location queries \\
+\hline
+restaurants & cuisine\_type & Filter by cuisine \\
+\hline
+restaurants & price\_level & Filter by price range \\
+\hline
+restaurant\_tags & restaurant\_id & Fast restaurant tag lookup \\
+\hline
+restaurant\_tags & tag\_id & Fast tag-based queries \\
+\hline
+search\_history & (user\_id, created\_at DESC) & User search history \\
+\hline
+reviews & restaurant\_id & Restaurant reviews lookup \\
+\hline
+reviews & user\_id & User reviews lookup \\
+\hline
+reviews & rating & Filter by rating \\
+\hline
+saved\_restaurants & user\_id & User saved restaurants \\
+\hline
+feedback & (user\_id, restaurant\_id) & Recommendation feedback \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Data Storage Strategy}
+
+\subsubsection{User History Management}
+\begin{itemize}
+    \item Lưu trữ 12 tháng search history gần nhất
+    \item Automatic cleanup với scheduled job
+    \item Anonymize data sau 24 tháng
+\end{itemize}
+
+\subsubsection{Tags và Metadata}
+\begin{itemize}
+    \item Hierarchical tag system (cuisine → Vietnamese → Phở)
+    \item Automatic tag extraction từ reviews
+    \item Manual tag curation system
+\end{itemize}
+
+\subsubsection{Cache Management}
+\begin{itemize}
+    \item Recommendations cache 30 phút
+    \item Location-based cache với radius tolerance
+    \item LRU eviction policy cho memory cache
+\end{itemize}

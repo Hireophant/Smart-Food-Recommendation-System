@@ -1,0 +1,526 @@
+\section{Thiết kế thuật toán (Algorithm Design)}
+
+Thuật toán gợi ý được xây dựng dựa trên cơ chế lọc theo thuộc tính kết hợp chấm điểm 
+(score-based ranking). Các bước chính:
+
+\begin{enumerate}
+    \item \textbf{Geocoding}: chuyển địa chỉ thành toạ độ bằng Nominatim.
+    \item \textbf{Lấy POI}: dùng Overpass API để lấy danh sách nhà hàng gần người dùng.
+    \item \textbf{Tiền xử lý}: chuẩn hoá dữ liệu (cuisine, price, tags).
+    \item \textbf{Tính toán độ phù hợp khẩu vị}:
+    \[
+    \text{taste\_similarity} = 
+    \frac{|tags_{user} \cap tags_{restaurant}|}{|tags_{user}|}
+    \]
+    \item \textbf{Tính trọng số khoảng cách}:
+    \[
+    \text{distance\_score} = 1 - \frac{d}{radius}, \quad d \leq radius
+    \]
+    \item \textbf{Tính điểm phù hợp tổng}:
+    \[
+    \text{score} =
+    w_1 \cdot \text{taste\_similarity} +
+    w_2 \cdot \text{distance\_score} +
+    w_3 \cdot \text{price\_match}
+    \]
+    \item \textbf{Xếp hạng}: sắp xếp danh sách theo score giảm dần.
+    \item \textbf{Trả kết quả}: hiển thị top-$k$ nhà hàng.
+\end{enumerate}
+
+\subsection*{Pseudo-code}
+
+\subsubsection{Main Recommendation Algorithm}
+
+\begin{verbatim}
+ALGORITHM RestaurantRecommendation
+INPUT: user_id, location, preferences, context
+OUTPUT: ranked_restaurants[]
+
+BEGIN
+    // Step 1: Location-based filtering
+    candidate_restaurants = SpatialQuery(location, preferences.max_distance)
+    
+    // Step 2: Apply basic filters
+    filtered_restaurants = ApplyFilters(candidate_restaurants, preferences)
+    
+    // Step 3: Calculate scores for each restaurant
+    scored_restaurants = []
+    FOR each restaurant IN filtered_restaurants DO
+        score = CalculateCompositeScore(user_id, restaurant, location, context)
+        scored_restaurants.ADD({restaurant, score})
+    END FOR
+    
+    // Step 4: Sort and return top results
+    ranked_restaurants = SORT(scored_restaurants BY score DESC)
+    RETURN TAKE(ranked_restaurants, 20)
+END
+
+FUNCTION SpatialQuery(location, max_distance)
+BEGIN
+    query = "
+        SELECT * FROM restaurants r
+        WHERE ST_DWithin(
+            ST_Point(r.longitude, r.latitude),
+            ST_Point({location.lng}, {location.lat}),
+            {max_distance / 111000}  // Convert meters to degrees
+        )
+    "
+    RETURN ExecuteQuery(query)
+END
+
+FUNCTION ApplyFilters(restaurants, preferences)
+BEGIN
+    filtered = []
+    FOR each restaurant IN restaurants DO
+        // Price range filter
+        IF preferences.price_range AND 
+           restaurant.price_range NOT IN preferences.price_range THEN
+            CONTINUE
+        END IF
+        
+        // Cuisine type filter  
+        IF preferences.cuisine_types AND
+           restaurant.cuisine_type NOT IN preferences.cuisine_types THEN
+            CONTINUE
+        END IF
+        
+        // Dietary restrictions
+        IF preferences.dietary_restrictions THEN
+            restaurant_tags = GetRestaurantTags(restaurant.id)
+            IF NOT HasAllDietaryTags(restaurant_tags, preferences.dietary_restrictions) THEN
+                CONTINUE
+            END IF
+        END IF
+        
+        // Operating hours check
+        IF context.meal_time AND NOT IsOpen(restaurant, context.meal_time) THEN
+            CONTINUE
+        END IF
+        
+        filtered.ADD(restaurant)
+    END FOR
+    RETURN filtered
+END
+
+FUNCTION CalculateCompositeScore(user_id, restaurant, location, context)
+BEGIN
+    // Get user profile and history
+    user_profile = GetUserProfile(user_id)
+    user_history = GetUserHistory(user_id)
+    
+    // Calculate individual component scores
+    distance_score = CalculateDistanceScore(restaurant, location)
+    rating_score = CalculateRatingScore(restaurant)  
+    price_score = CalculatePriceScore(restaurant, user_profile)
+    cuisine_score = CalculateCuisineScore(restaurant, user_profile, user_history)
+    popularity_score = CalculatePopularityScore(restaurant)
+    personal_score = CalculatePersonalizationScore(restaurant, user_history)
+    
+    // Get dynamic weights based on context
+    weights = GetDynamicWeights(user_profile, context)
+    
+    // Calculate weighted composite score
+    composite_score = 
+        weights.distance * distance_score +
+        weights.rating * rating_score +
+        weights.price * price_score +
+        weights.cuisine * cuisine_score +
+        weights.popularity * popularity_score +
+        weights.personalization * personal_score
+        
+    RETURN composite_score
+END
+\end{verbatim}
+
+\subsubsection{Score Calculation Functions}
+
+\begin{verbatim}
+FUNCTION CalculateDistanceScore(restaurant, user_location)
+BEGIN
+    distance_km = CalculateHaversineDistance(
+        restaurant.latitude, restaurant.longitude,
+        user_location.lat, user_location.lng
+    )
+    
+    // Normalize to 0-1 scale, closer = higher score
+    IF distance_km <= 0.5 THEN
+        RETURN 1.0
+    ELSE IF distance_km >= 5.0 THEN
+        RETURN 0.1
+    ELSE
+        // Linear decay from 1.0 to 0.1 over 0.5-5km range
+        RETURN 1.0 - 0.9 * (distance_km - 0.5) / 4.5
+    END IF
+END
+
+FUNCTION CalculateRatingScore(restaurant)
+BEGIN
+    // Normalize rating to 0-1 scale
+    base_score = restaurant.rating / 5.0
+    
+    // Adjust based on number of reviews (confidence factor)
+    confidence_factor = MIN(1.0, restaurant.total_reviews / 50.0)
+    
+    RETURN base_score * (0.7 + 0.3 * confidence_factor)
+END
+
+FUNCTION CalculatePriceScore(restaurant, user_profile)
+BEGIN
+    user_budget_max = user_profile.price_range_max
+    user_budget_min = user_profile.price_range_min
+    
+    // Estimate restaurant average price
+    restaurant_avg_price = EstimateAveragePrice(restaurant.price_range)
+    
+    IF restaurant_avg_price > user_budget_max THEN
+        RETURN 0.2  // Too expensive
+    ELSE IF restaurant_avg_price < user_budget_min THEN
+        RETURN 0.7  // Maybe too cheap/quality concerns
+    ELSE
+        // Best score when price is 70-80% of budget
+        optimal_price = user_budget_max * 0.75
+        deviation = ABS(restaurant_avg_price - optimal_price) / optimal_price
+        RETURN MAX(0.3, 1.0 - deviation)
+    END IF
+END
+
+FUNCTION CalculateCuisineScore(restaurant, user_profile, user_history)
+BEGIN
+    base_score = 0.5  // Neutral starting point
+    
+    // Check explicit preferences
+    IF restaurant.cuisine_type IN user_profile.cuisine_preferences THEN
+        base_score += 0.3
+    END IF
+    
+    // Analyze historical behavior
+    cuisine_interaction_count = CountInteractions(user_history, restaurant.cuisine_type)
+    total_interactions = user_history.total_interactions
+    
+    IF total_interactions > 10 THEN
+        cuisine_affinity = cuisine_interaction_count / total_interactions
+        base_score += cuisine_affinity * 0.2
+    END IF
+    
+    RETURN MIN(1.0, base_score)
+END
+
+FUNCTION CalculatePersonalizationScore(restaurant, user_history)
+BEGIN
+    // Check if user has interacted with this restaurant before
+    previous_interaction = FindInteraction(user_history, restaurant.id)
+    
+    IF previous_interaction EXISTS THEN
+        IF previous_interaction.type == "liked" THEN
+            RETURN 0.9
+        ELSE IF previous_interaction.type == "visited" AND previous_interaction.rating >= 4 THEN
+            RETURN 0.8
+        ELSE IF previous_interaction.type == "disliked" THEN
+            RETURN 0.1
+        END IF
+    END IF
+    
+    // Collaborative filtering - find similar users
+    similar_users = FindSimilarUsers(user_id, 10)
+    positive_recommendations = 0
+    total_recommendations = 0
+    
+    FOR each similar_user IN similar_users DO
+        similar_interaction = FindInteraction(similar_user.history, restaurant.id)
+        IF similar_interaction EXISTS THEN
+            total_recommendations += 1
+            IF similar_interaction.rating >= 4 OR similar_interaction.type == "liked" THEN
+                positive_recommendations += 1
+            END IF
+        END IF
+    END FOR
+    
+    IF total_recommendations >= 3 THEN
+        RETURN positive_recommendations / total_recommendations
+    ELSE
+        RETURN 0.5  // Neutral score for insufficient data
+    END IF
+END
+\end{verbatim}
+
+\subsubsection{Route Planning Algorithm}
+
+\begin{verbatim}
+ALGORITHM OptimalRouteGeneration
+INPUT: start_location, destinations[], preferences
+OUTPUT: optimized_route
+
+BEGIN
+    // Handle different optimization objectives
+    IF preferences.optimize_for == "time" THEN
+        RETURN SolveVRPWithTimeWindows(start_location, destinations, preferences)
+    ELSE IF preferences.optimize_for == "distance" THEN
+        RETURN SolveTSP(start_location, destinations, preferences)
+    ELSE IF preferences.optimize_for == "experience" THEN
+        RETURN SolveExperienceOptimizedRoute(start_location, destinations, preferences)
+    END IF
+END
+
+FUNCTION SolveTSP(start, destinations, preferences)
+BEGIN
+    // Traveling Salesman Problem solver for distance optimization
+    nodes = [start] + destinations
+    n = LENGTH(nodes)
+    
+    // Create distance matrix
+    distance_matrix = CreateMatrix(n, n)
+    FOR i = 0 TO n-1 DO
+        FOR j = 0 TO n-1 DO
+            IF i == j THEN
+                distance_matrix[i][j] = 0
+            ELSE
+                distance_matrix[i][j] = CalculateDistance(nodes[i], nodes[j], preferences.transport_mode)
+            END IF
+        END FOR
+    END FOR
+    
+    // Use dynamic programming for small n, or nearest neighbor heuristic for large n
+    IF n <= 12 THEN
+        optimal_path = TSPDynamicProgramming(distance_matrix)
+    ELSE
+        optimal_path = NearestNeighborTSP(distance_matrix)
+        optimal_path = Improve2Opt(optimal_path, distance_matrix)
+    END IF
+    
+    RETURN ConstructRoute(optimal_path, nodes)
+END
+
+FUNCTION TSPDynamicProgramming(dist_matrix)
+BEGIN
+    n = LENGTH(dist_matrix)
+    dp = CreateMatrix(1 << n, n)  // 2^n x n matrix
+    parent = CreateMatrix(1 << n, n)
+    
+    // Initialize
+    FOR i = 0 TO n-1 DO
+        dp[1 << i][i] = dist_matrix[0][i]
+    END FOR
+    
+    // Fill DP table
+    FOR mask = 1 TO (1 << n) - 1 DO
+        FOR u = 0 TO n-1 DO
+            IF (mask & (1 << u)) == 0 THEN CONTINUE
+            
+            FOR v = 0 TO n-1 DO
+                IF u == v OR (mask & (1 << v)) == 0 THEN CONTINUE
+                
+                prev_mask = mask ^ (1 << u)
+                new_dist = dp[prev_mask][v] + dist_matrix[v][u]
+                
+                IF dp[mask][u] > new_dist THEN
+                    dp[mask][u] = new_dist
+                    parent[mask][u] = v
+                END IF
+            END FOR
+        END FOR
+    END FOR
+    
+    // Find minimum cost and reconstruct path
+    final_mask = (1 << n) - 1
+    min_cost = INFINITY
+    last_node = -1
+    
+    FOR i = 1 TO n-1 DO
+        cost = dp[final_mask][i] + dist_matrix[i][0]
+        IF cost < min_cost THEN
+            min_cost = cost
+            last_node = i
+        END IF
+    END FOR
+    
+    // Reconstruct optimal path
+    path = []
+    current_mask = final_mask
+    current_node = last_node
+    
+    WHILE current_mask != 0 DO
+        path.ADD(current_node)
+        prev_node = parent[current_mask][current_node]
+        current_mask ^= (1 << current_node)
+        current_node = prev_node
+    END WHILE
+    
+    path.REVERSE()
+    RETURN path
+END
+\end{verbatim}
+
+\subsubsection{Constraint Handling}
+
+\begin{verbatim}
+FUNCTION HandleConstraints(restaurants, user_preferences, context)
+BEGIN
+    constrained_results = []
+    
+    FOR each restaurant IN restaurants DO
+        constraint_violations = []
+        
+        // Time constraints
+        IF context.meal_time AND NOT IsOpenAtTime(restaurant, context.meal_time) THEN
+            constraint_violations.ADD("closed_at_requested_time")
+        END IF
+        
+        // Accessibility constraints
+        IF user_preferences.accessibility_needs THEN
+            FOR each need IN user_preferences.accessibility_needs DO
+                IF NOT HasAccessibilityFeature(restaurant, need) THEN
+                    constraint_violations.ADD("accessibility_" + need)
+                END IF
+            END FOR
+        END IF
+        
+        // Group size constraints
+        IF context.party_size > restaurant.max_capacity THEN
+            constraint_violations.ADD("insufficient_capacity")
+        END IF
+        
+        // Budget hard constraints
+        IF restaurant.min_price > user_preferences.budget_max THEN
+            constraint_violations.ADD("exceeds_budget")
+        END IF
+        
+        // Dietary restrictions (hard constraints)
+        IF user_preferences.dietary_restrictions THEN
+            restaurant_tags = GetRestaurantTags(restaurant.id)
+            FOR each restriction IN user_preferences.dietary_restrictions DO
+                IF NOT HasDietaryTag(restaurant_tags, restriction) THEN
+                    constraint_violations.ADD("dietary_" + restriction)
+                END IF
+            END FOR
+        END IF
+        
+        // Only add restaurant if no hard constraint violations
+        hard_constraints = ["exceeds_budget", "dietary_*", "insufficient_capacity"]
+        has_hard_violation = FALSE
+        
+        FOR each violation IN constraint_violations DO
+            IF IsHardConstraint(violation, hard_constraints) THEN
+                has_hard_violation = TRUE
+                BREAK
+            END IF
+        END FOR
+        
+        IF NOT has_hard_violation THEN
+            restaurant.constraint_violations = constraint_violations
+            restaurant.constraint_penalty = CalculateConstraintPenalty(constraint_violations)
+            constrained_results.ADD(restaurant)
+        END IF
+    END FOR
+    
+    RETURN constrained_results
+END
+
+FUNCTION CalculateConstraintPenalty(violations)
+BEGIN
+    penalty = 0.0
+    
+    FOR each violation IN violations DO
+        CASE violation OF
+            "closed_at_requested_time": penalty += 0.3
+            "accessibility_*": penalty += 0.2
+            "limited_parking": penalty += 0.1
+            "high_noise_level": penalty += 0.05
+            DEFAULT: penalty += 0.02
+        END CASE
+    END FOR
+    
+    RETURN MIN(0.5, penalty)  // Cap penalty at 50%
+END
+\end{verbatim}
+
+\subsubsection{Ranking and Final Selection}
+
+\begin{verbatim}
+FUNCTION FinalRanking(scored_restaurants, user_preferences, context)
+BEGIN
+    // Apply constraint penalties
+    FOR each restaurant IN scored_restaurants DO
+        restaurant.final_score = restaurant.composite_score * (1.0 - restaurant.constraint_penalty)
+    END FOR
+    
+    // Diversity injection to avoid monotonous results
+    diverse_results = InjectDiversity(scored_restaurants, user_preferences)
+    
+    // Sort by final score
+    ranked_results = SORT(diverse_results BY final_score DESC)
+    
+    // Add explanation metadata
+    FOR each restaurant IN ranked_results DO
+        restaurant.recommendation_reasons = GenerateExplanations(restaurant, user_preferences)
+    END FOR
+    
+    RETURN TAKE(ranked_results, user_preferences.result_limit OR 20)
+END
+
+FUNCTION InjectDiversity(restaurants, user_preferences)
+BEGIN
+    IF LENGTH(restaurants) <= 5 THEN
+        RETURN restaurants  // Too few results for diversity
+    END IF
+    
+    diverse_results = []
+    cuisine_counts = {}
+    price_range_counts = {}
+    
+    // Sort by score first
+    sorted_restaurants = SORT(restaurants BY final_score DESC)
+    
+    FOR each restaurant IN sorted_restaurants DO
+        cuisine = restaurant.cuisine_type
+        price_range = restaurant.price_range
+        
+        // Check diversity criteria
+        max_per_cuisine = MAX(3, LENGTH(restaurants) / 4)
+        max_per_price_range = MAX(2, LENGTH(restaurants) / 3)
+        
+        cuisine_ok = (cuisine_counts[cuisine] OR 0) < max_per_cuisine
+        price_ok = (price_range_counts[price_range] OR 0) < max_per_price_range
+        
+        // Always include top 3 results regardless of diversity
+        IF LENGTH(diverse_results) < 3 OR (cuisine_ok AND price_ok) THEN
+            diverse_results.ADD(restaurant)
+            cuisine_counts[cuisine] = (cuisine_counts[cuisine] OR 0) + 1
+            price_range_counts[price_range] = (price_range_counts[price_range] OR 0) + 1
+        END IF
+        
+        IF LENGTH(diverse_results) >= user_preferences.result_limit THEN
+            BREAK
+        END IF
+    END FOR
+    
+    RETURN diverse_results
+END
+\end{verbatim}
+
+\subsubsection{Algorithm Complexity Summary}
+
+\begin{table}[h]
+\centering
+\caption{Detailed Complexity Analysis}
+\begin{tabular}{|p{4cm}|p{2.5cm}|p{2.5cm}|p{3.5cm}|}
+\hline
+\textbf{Function} & \textbf{Time} & \textbf{Space} & \textbf{Notes} \\
+\hline
+Spatial Query & O(log n) & O(k) & k = results, spatial index \\
+\hline
+Apply Filters & O(k × f) & O(k) & f = avg filters per restaurant \\
+\hline
+Calculate Composite Score & O(s) & O(1) & s = similar users (<= 10) \\
+\hline
+TSP (DP) & $O(n^2 \cdot 2^n)$ & $O(n × \cdot 2^n)$ & n <= 12 destinations \\
+\hline
+TSP (Heuristic) & O(n²) & O(n) & For larger n \\
+\hline
+Handle Constraints & O(k × c) & O(k) & c = constraints per restaurant \\
+\hline
+Final Ranking & O(k log k) & O(k) & Dominated by sorting \\
+\hline
+\textbf{Overall System} & \textbf{O(k log k)} & \textbf{O(k)} & After spatial filtering \\
+\hline
+\end{tabular}
+\end{table}

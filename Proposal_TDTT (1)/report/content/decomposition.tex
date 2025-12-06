@@ -1,0 +1,94 @@
+\section{Phân rã vấn đề (Decomposition)}
+
+Bài toán được chia thành nhiều mô-đun nhỏ nhằm đơn giản hoá quy trình xử lý, tách biệt trách 
+nhiệm và giúp hệ thống dễ phát triển, kiểm thử và mở rộng. Dưới đây là các thành phần chính 
+và nhiệm vụ tương ứng.
+
+\subsection{Thu thập và xử lý thông tin người dùng}
+\textbf{Mục tiêu:} Chuẩn hoá toàn bộ dữ liệu đầu vào của người dùng trước khi đưa vào mô-đun gợi ý (rõ ràng, đầy đủ và dễ xử lý cho AI).
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Thu nhận vị trí người dùng: nhập tay hoặc chọn từ bản đồ (lat, lon).
+    \item Thu nhận khẩu vị và yêu cầu món ăn: chay/mặn, độ cay, mức ngọt, loại cuisine.
+    \item Xử lý dữ liệu nhập qua chatbot: tách từ khoá về món ăn, mức cay, địa điểm.
+    \item Tiếp nhận các bộ lọc tuỳ chọn: bán kính tìm kiếm, giá, đánh giá.
+    \item Chuẩn hoá đầu vào thành cấu trúc JSON cố định
+\end{itemize}
+
+\subsection{Xử lý và quản lý dữ liệu nhà hàng}
+\textbf{Mục tiêu:} Tạo nguồn dữ liệu quán ăn sạch, thống nhất, dễ truy vấn.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Kết nối API bản đồ (Overpass API) để lấy danh sách nhà hàng quanh vị trí người dùng.
+    \item Làm sạch dữ liệu: loại trùng lặp, chuẩn hoá tên, định dạng lại cuisine/tags.
+    \item Gắn nhãn khẩu vị (vegetarian, spicy, sweet, healthy) nếu thông tin có sẵn.
+    \item Gắn tag cho nhà hàng: "chay", "đồ cay", "bình dân", "gia đình", "đồ Hàn", ...
+\end{itemize}
+
+\subsection{Phân tích yêu cầu và hiểu ngữ nghĩa (NLP Processing)}
+\textbf{Mục tiêu:} Biến ngôn ngữ tự nhiên → dữ liệu chuẩn để Recommendation Engine xử lý.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Nhận dạng ý định (intent): tìm nhà hàng, xem món ăn, hỏi gợi ý.
+    \item Trích xuất thực thể (entity extraction): món ăn, đặc điểm khẩu vị, địa điểm.
+    \item Chuẩn hoá từ khoá: xử lý đồng nghĩa, lỗi chính tả.
+    \item Trả về tập thuộc tính chuẩn hoá để đưa vào mô-đun gợi ý.
+\end{itemize}
+
+\subsection{Quản lý hồ sơ người dùng (User Profile Management)}
+\textbf{Mục tiêu:} Lưu và học từ các hành vi của người dùng để cải thiện độ chính xác của gợi ý.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Tạo hồ sơ người dùng (diet, sở thích vị, món yêu thích).
+    \item Lưu lịch sử tìm kiếm hoặc gợi ý đã chọn.
+    \item (Tuỳ chọn) Điều chỉnh trọng số sở thích dựa trên hành vi người dùng.
+    \item Hỗ trợ chỉnh sửa/xoá dữ liệu cá nhân (bảo mật, quyền riêng tư).
+\end{itemize}
+
+\subsection{Bộ máy gợi ý (Recommendation Engine)}
+\textbf{Mục tiêu:} Tính toán và xếp hạng danh sách quán ăn phù hợp nhất.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Lọc theo bán kính, mức giá, đánh giá (manual filtering).
+    \item So khớp khẩu vị người dùng với tag của nhà hàng.
+    \item Tính điểm phù hợp (matching score) dựa trên: khẩu vị, khoảng cách, giá.
+    \item Xếp hạng và trả về danh sách top-$k$ kết quả.
+    \item Học từ lịch sử người dùng → gợi ý các quán tương tự đã yêu thích
+\end{itemize}
+
+\subsection{Hiển thị giao diện và kết quả (UI/UX)}
+\textbf{Mục tiêu:} Giúp người dùng xem và tương tác với kết quả gợi ý.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Hiển thị danh sách quán ăn (tên, địa chỉ, giá, khoảng cách).
+    \item Tích hợp bản đồ với các marker vị trí quán.
+    \item Tương tác chatbot: hỏi món, hỏi khẩu vị, thay đổi yêu cầu.
+    \item Cho phép lọc lại kết quả theo chế độ thủ công.
+\end{itemize}
+
+\subsection{7. Đánh giá và phản hồi (Evaluation \& Feedback)}
+\textbf{Mục tiêu:} Cải thiện hệ thống theo phản hồi của người dùng.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Ghi nhận hành vi người dùng: nhấp xem chi tiết, chọn quán.
+    \item Thu thập phản hồi: ``gợi ý này có phù hợp không?''.
+    \item Điều chỉnh thuật toán hoặc gợi ý trong lần sử dụng tiếp theo.
+\end{itemize}
+
+\subsection{8. Xử lý ngoại lệ và rủi ro (Exception Handling)}
+\textbf{Mục tiêu:} Đảm bảo hệ thống hoạt động đáng tin cậy, an toàn và ổn định.
+
+\textbf{Các nhiệm vụ con:}
+\begin{itemize}
+    \item Nếu API không phản hồi → sử dụng dữ liệu cache.
+    \item Nếu không có kết quả phù hợp → hiển thị quán phổ biến gần đó.
+    \item Xác thực đầu vào người dùng để tránh lỗi nhập liệu.
+    \item Bảo vệ dữ liệu cá nhân và quyền riêng tư.
+\end{itemize}
