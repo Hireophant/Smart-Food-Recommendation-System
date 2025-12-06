@@ -32,6 +32,10 @@ ENV/
 .env.local
 .env.*.local
 
+# Team credentials (DO NOT COMMIT!)
+TEAM_SETUP.md
+**/CREDENTIALS.md
+
 # Logs
 data/logs/
 *.log

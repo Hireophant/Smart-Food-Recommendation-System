@@ -1,0 +1,140 @@
+\section{Phân tích vấn đề (Problem Analysis)}
+
+\subsection{Định nghĩa bài toán (Problem Definition)}
+Mục tiêu là xây dựng \textbf{hệ thống gợi ý quán ăn cá nhân hoá theo vị trí và khẩu vị người dùng}.  
+Hệ thống nhận đầu vào:
+\begin{itemize}
+    \item Toạ độ người dùng hoặc địa chỉ (được geocoding thành lat, lon).
+    \item Khẩu vị: chay/mặn, cay/ít cay, ngọt/thanh, healthy, v.v.
+    \item (Tùy chọn) Món muốn ăn.
+    \item (Tuỳ chọn) Ngân sách, bán kính tìm kiếm, rating.
+\end{itemize}
+
+Đầu ra bao gồm danh sách quán ăn phù hợp nhất: tên, địa chỉ, khoảng cách, mức giá, điểm phù hợp 
+và toạ độ để điều hướng.
+
+\subsection{Các bên liên quan (Stakeholders)}
+\subsubsection*{Primary Stakeholders}
+\begin{itemize}
+    \item \textbf{Người dùng cuối (du khách / người dân địa phương)}: cần hệ thống giúp lọc nhanh quán ăn phù hợp 
+    với khẩu vị cá nhân.
+\end{itemize}
+
+\subsubsection*{Secondary Stakeholders}
+\begin{itemize}
+    \item \textbf{Nhà hàng}: hưởng lợi khi tiếp cận đúng nhóm khách có nhu cầu phù hợp.
+\end{itemize}
+
+\subsubsection*{External Stakeholders}
+\begin{itemize}
+    \item \textbf{Nhà cung cấp dữ liệu (OSM)}: cung cấp dữ liệu vị trí và POI.
+\end{itemize}
+
+\subsubsection*{Internal Stakeholders}
+\begin{itemize}
+    \item \textbf{Nhóm phát triển}: thiết kế hệ thống, xây dựng mô hình lọc, tối ưu UX.
+\end{itemize}
+
+\subsection{Phạm vi (Scope)}
+\subsubsection*{In-scope}
+\begin{itemize}
+    \item Gợi ý quán ăn theo vị trí người dùng (lat, lon).
+    \item Cá nhân hoá theo khẩu vị: chay/mặn, cay/ít cay, ngọt/thanh, ít dầu mỡ.
+    \item Hỗ trợ nhập liệu: form hoặc chatbot.
+    \item Lấy dữ liệu nhà hàng qua API hoặc tìm data thủ công.
+    \item Triển khai dưới dạng ứng dụng desktop.
+\end{itemize}
+
+\subsubsection*{Out-of-scope}
+\begin{itemize}
+    \item Không hỗ trợ đặt bàn, thanh toán hoặc hệ thống review phức tạp.
+    \item Không xây dựng mạng xã hội hoặc chức năng chia sẻ.
+    \item Không đảm bảo dữ liệu đầy đủ 100\% trên toàn quốc.
+    \item Không sử dụng mô hình AI lớn nội bộ (ưu tiên API hoặc rule-based).
+\end{itemize}
+
+\subsection{Các điểm đau của người dùng (Pain Points)}
+Dựa trên quan sát hành vi người dùng và phân tích đánh giá trên Google Maps/Foody, nhóm 
+xác định các pain points chính sau:
+\begin{itemize}
+    \item \textbf{Quá nhiều lựa chọn nhưng thiếu cá nhân hoá}: người dùng nhận danh sách dài nhưng không 
+    biết quán nào hợp khẩu vị.
+    \item \textbf{Khẩu vị cá nhân khó lọc}: các app không có filter cho ``cay/ít cay'', ``chay'', ``healthy'', v.v.
+    \item \textbf{Không hiểu tìm kiếm mô tả tự nhiên}: các truy vấn dạng câu nói không được xử lý.
+    \item \textbf{Du khách không biết món đặc trưng địa phương}: thiếu thông tin để lựa chọn đúng món/quán.
+\end{itemize}
+
+\subsection{Kiểm chứng điểm đau (Pain Point Validation)}
+
+Để đảm bảo các pain point không chỉ xuất phát từ suy đoán chủ quan của nhóm, việc xác thực 
+được thực hiện dựa trên \textbf{ba loại nguồn độc lập}, theo đúng nguyên tắc tam giác dữ liệu 
+(\textit{triangulation}):
+
+\subsubsection*{(1) Nghiên cứu đối thủ (Competitive Research)}
+Nhóm tiến hành khảo sát thử trên các nền tảng phổ biến như Google Maps và Foody. 
+Kết quả quan sát:
+\begin{itemize}
+    \item Google Maps chỉ hỗ trợ các bộ lọc cơ bản (khoảng cách, đánh giá, giá tiền), 
+    \textbf{không có bộ lọc khẩu vị} như chay/mặn, độ cay, mức dầu mỡ.
+    \item Foody có thể tìm theo ``món ăn'', nhưng \textbf{không thể lọc theo đặc tính khẩu vị cá nhân}, 
+    đặc biệt là khẩu vị đặc thù (healthy, ít dầu mỡ, cay nhẹ).
+    \item Cả hai nền tảng đều \textbf{không hiểu truy vấn dạng ngôn ngữ tự nhiên}, 
+    ví dụ: ``tôi muốn ăn đồ chay cay nhẹ gần bãi biển Mỹ Khê''.
+\end{itemize}
+Điều này xác nhận pain point về \textbf{thiếu cá nhân hoá khẩu vị} và \textbf{không hiểu intent} là có thật.
+
+\subsubsection*{(2) Quan sát hành vi người dùng (User Behavior Observation)}
+Nhóm thực hiện một khảo sát nhỏ dạng quan sát hành vi (\textit{informal observation}) 
+trên 8–10 sinh viên trong trường:
+\begin{itemize}
+    \item Hầu hết người dùng khi tìm quán ăn sẽ mở Google Maps, chọn ``Nearby'' và sau đó
+    phải mở từng nhà hàng để xem menu và đánh giá.
+    \item Thời gian trung bình để chọn được quán phù hợp là khoảng 10–15 phút.
+    \item Nhiều người chia sẻ rằng họ ``không chắc quán đó có phù hợp khẩu vị hay không''
+    cho đến khi xem chi tiết từng menu, gây \textbf{quá tải thông tin}.
+\end{itemize}
+Quan sát này xác nhận pain point về \textbf{tốn thời gian chọn quán} và \textbf{không có hỗ trợ khẩu vị rõ ràng}.
+
+\subsubsection*{(3) Phân tích đánh giá trực tuyến (Online Review Analysis)}
+Nhóm tham khảo các bình luận trên Google Maps và Foody, nhận thấy một số mẫu lặp lại:
+\begin{itemize}
+    \item Người dùng thường phàn nàn về việc ``không đúng khẩu vị'', ví dụ: món quá mặn, quá cay, 
+    nhiều dầu, không hợp chế độ ăn.
+    \item Người đi du lịch thường bình luận rằng ``không biết món nào nên thử'' hoặc 
+    ``khó tìm quán hợp khẩu vị địa phương''.
+    \item Nhiều người viết rằng họ phải dựa vào đánh giá ngẫu nhiên và thử vận may, thay vì có công cụ 
+    đề xuất chính xác.
+\end{itemize}
+Những đánh giá này củng cố pain point về \textbf{thiếu thông tin khẩu vị phù hợp cho du khách}.
+
+\subsubsection*{Kết luận Validation}
+Việc kết hợp ba nguồn dữ liệu (đối thủ, hành vi người dùng, và đánh giá trực tuyến) cho thấy 
+các pain point đã được xác thực bởi nhiều nguồn độc lập và có tính thực tế cao.  
+Do đó, vấn đề mà hệ thống hướng đến giải quyết là \textbf{có thật, phổ biến, và chưa được 
+giải quyết tốt bởi các giải pháp hiện có}.
+
+
+\subsection{Ràng buộc (Constraints)}
+\begin{itemize}
+    \item Ứng dụng chỉ chạy trên desktop.
+    \item Phụ thuộc vào dữ liệu OSM và API bản đồ.
+    \item Nhiều quán ăn thiếu thông tin chi tiết như menu, mức giá. Nhưng cũng nhiều quán có quá nhiều món trong menu.
+    \item Giới hạn tốc độ truy vấn của các API.
+\end{itemize}
+
+\subsection{Rủi ro (Risks)}
+\begin{itemize}
+    \item Dữ liệu nhà hàng không đầy đủ hoặc bị sai.
+    \item API timeout nếu truy vấn bán kính lớn.
+    \item Chatbot có thể hiểu sai khẩu vị do câu nhập không rõ ràng.
+    \item Vấn đề cold start với người dùng mới.
+\end{itemize}
+
+\subsection{Tiêu chí thành công (Success Criteria)}
+Hệ thống được xem là thành công nếu:
+\begin{itemize}
+    \item Tối thiểu 70\% người dùng thử nghiệm đánh giá top-3 gợi ý là ``phù hợp'' hoặc ``rất phù hợp''.
+    \item Thời gian phản hồi dưới 3 giây cho bán kính tìm kiếm 1km.
+    \item Chatbot hiểu đúng ít nhất 80\% truy vấn khẩu vị đơn giản.
+    \item Giải quyết ít nhất hai pain point mà ứng dụng bản đồ phổ biến hiện tại chưa giải quyết.
+\end{itemize}

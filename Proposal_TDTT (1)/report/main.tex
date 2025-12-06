@@ -1,0 +1,73 @@
+\documentclass[12pt]{article}
+
+\usepackage{hcmus-report-template}
+
+% Disable indentation on new paragraphs
+\setlength{\parindent}{0pt}
+
+% Line spacing 1.5
+\renewcommand{\baselinestretch}{1.5}
+
+% Optional: graphic path
+% \graphicspath{PATH_TO_GRAPHIC_FOLDER}
+
+% To use Times font family, uncomment this row
+% \usepackage{mathptmx}
+
+% To use roman section / subsection, uncomment these rows
+% \renewcommand{\thesection}{\Roman{section}}
+% \renewcommand{\thesubsection}{\thesection.\Roman{subsection}}
+
+% Define course name, report name and report title.
+\newcommand{\coursename}{Tư duy tính toán}
+\newcommand{\reportname}{Smart Restaurant Suggestion System for Tourists}
+\newcommand{\reporttitle}{Project proposal and Proof of concept}
+
+\newcommand{\studentname}{ Nguyễn Hoàng Bảo Khánh (24127055)\\ Trần Nguyễn Đình Nhân (24127093)\\Trương Nguyễn Thành Danh (24127150)\\Nguyễn Đức Hưng (24127174) \\ Huỳnh Minh Hùng (24127385)\\Trần Thiên Phúc (24127506)}
+\newcommand{\teachername}{Ths. Trần Duy Quang}
+
+
+% Header
+\lhead{\reporttitle}
+\rhead{
+Trường Đại học Khoa học Tự nhiên - ĐHQG HCM\\
+\coursename
+}
+
+
+
+% ============ DOCUMENT ============
+\begin{document}
+
+\pagenumbering{roman}
+\input{content/title.tex}
+
+\tableofcontents
+\pagebreak
+\listoftables
+\pagebreak
+\listoffigures
+\pagebreak
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%\input{content/section}
+%\input{content/hinhanh}
+%\input{content/bangbieu}
+%\input{content/congthuctoan}
+%\input{content/thuattoan}
+%\input{content/code}
+%\input{content/ngonngu}
+%\input{content/cite}
+\input{report/content/Information}
+\input{report/content/Introduce}
+\input{content/problemAnalysis}
+\input{content/decomposition}
+\input{report/content/algorithmDesign}
+\input{report/content/abstraction}
+\input{report/content/poc}
+\input{report/content/DatabaseDesign}
+\input{report/content/timeline}
+
+\end{document}

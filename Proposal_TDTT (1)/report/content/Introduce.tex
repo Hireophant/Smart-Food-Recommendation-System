@@ -1,0 +1,56 @@
+\section{Giới thiệu} 
+
+\subsection{Nội dung}
+Trong bối cảnh du lịch ngày càng phát triển, trải nghiệm của du khách vẫn gặp nhiều hạn chế 
+như thiếu tính cá nhân hoá, khó tìm được món ăn phù hợp khẩu vị, và không được hỗ trợ bởi 
+các công cụ thông minh trong quá trình khám phá. 
+"Du lịch thông minh" là xu hướng quan trọng nhằm cải thiện hành trình, hỗ trợ ra quyết 
+định và nâng cao sự hài lòng của người dùng thông qua công nghệ và trí tuệ nhân tạo.
+
+Dựa trên định hướng đó, nhóm thực hiện đề tài:  
+\textbf{Hệ thống gợi ý quán ăn cá nhân hoá cho du khách dựa trên vị trí và khẩu vị}.  
+Hệ thống tập trung giải quyết vấn đề thường gặp của du khách khi đến một khu vực mới—không 
+biết quán ăn nào phù hợp khẩu vị, món muốn thử hoặc chế độ ăn (chay/mặn, cay/ít cay, ít dầu mỡ).  
+Các nền tảng hiện nay như Google Maps hay Foody chỉ trả về danh sách nhà hàng gần vị trí 
+nhưng chưa hỗ trợ lọc theo khẩu vị chi tiết, cũng như không hiểu ngôn ngữ tự nhiên dạng:
+\begin{quote}
+    ``Tôi muốn ăn đồ chay cay nhẹ gần hồ Hoàn Kiếm'' \\
+    ``Tìm quán hải sản không quá mặn ở Nha Trang''
+\end{quote}
+
+Hệ thống nhóm xây dựng hoạt động dưới dạng ứng dụng desktop, cho phép:
+\begin{itemize}
+    \item đánh giá vị trí người dùng qua toạ độ (lat, lon);
+    \item gợi ý quán ăn dựa trên khẩu vị, món yêu cầu và ngân sách;
+    \item hỗ trợ nhập liệu bằng biểu mẫu hoặc chatbot xử lý ngôn ngữ tự nhiên;
+    \item khai thác dữ liệu nhà hàng từ OpenStreetMap qua Overpass API và Nominatim.
+\end{itemize}
+
+Toàn bộ mô hình được thiết kế theo quy trình tư duy tính toán: phân tích bài toán, tách nhỏ 
+(thành phần dữ liệu và các bộ lọc), trừu tượng hoá các thuộc tính quan trọng, thiết kế thuật toán 
+lọc–xếp hạng, biểu diễn bằng lưu đồ và mô phỏng thử nghiệm theo yêu cầu của môn học.
+
+\subsection{Mục tiêu}
+Mục tiêu của đề tài bao gồm:
+\begin{enumerate}
+    \item Xây dựng một mô hình gợi ý quán ăn cá nhân hoá dựa trên vị trí và khẩu vị người dùng.
+    \item Ứng dụng tư duy tính toán (Computational Thinking) trong toàn bộ quy trình: 
+        phân tích, phân rã, trừu tượng hoá, thiết kế thuật toán và mô phỏng.
+    \item Kết hợp các công nghệ phù hợp như API bản đồ (Overpass, Nominatim) 
+        và NLP cho chatbot để xử lý đầu vào dạng ngôn ngữ tự nhiên.
+    \item Tạo ra giao diện ứng dụng desktop giúp người dùng nhập thông tin dễ dàng 
+        và nhận gợi ý trực quan.
+    \item Đánh giá hệ thống theo tiêu chí: độ phù hợp gợi ý, tốc độ phản hồi, 
+        khả năng hiểu truy vấn và mức độ giải quyết pain points thực tế.
+    \item Rèn luyện khả năng làm việc nhóm, thiết kế hệ thống và trình bày báo cáo kỹ thuật.
+\end{enumerate}
+
+\subsection{Lời cảm ơn}
+Nhóm xin gửi lời cảm ơn chân thành đến giảng viên hướng dẫn \textit{ThS. Trần Duy Quang}, 
+người đã cung cấp định hướng, tài liệu và phản hồi giúp nhóm hoàn thiện đề tài đúng mục tiêu 
+của học phần. Nhóm cũng cảm ơn các thầy cô bộ môn đã xây dựng nội dung học phần 
+``Tư Duy Tính Toán'' và tài liệu hướng dẫn dự án ``Smart Tourism System'', tạo nền tảng để 
+nhóm vận dụng công nghệ vào giải quyết bài toán thực tế.  
+Cuối cùng, nhóm ghi nhận sự hỗ trợ của các công cụ học thuật và tham khảo như ChatGPT trong 
+việc chỉnh sửa diễn đạt và tối ưu bố cục báo cáo, nhưng toàn bộ nội dung phân tích và triển khai 
+đều do nhóm trực tiếp thực hiện và chịu trách nhiệm.

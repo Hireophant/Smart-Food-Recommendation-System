@@ -1,0 +1,140 @@
+\section{Proof of Concept}
+
+Phần Proof of Concept (PoC) được xây dựng nhằm chứng minh rằng hệ thống 
+\textit{“gợi ý quán ăn cá nhân hoá theo vị trí và khẩu vị người dùng”} có thể triển khai thực tế, 
+dựa trên các API hiện có (VietMap API, OpenAI/Gemini API) và cơ sở dữ liệu Supabase. 
+Tuy chưa lập trình đầy đủ, nhóm đã hoàn thiện mô hình kiến trúc bằng C4 Model và 
+mô phỏng luồng hoạt động chi tiết của hệ thống.
+
+\subsection{C4 Model và Kiến trúc hệ thống}
+
+\subsubsection{Level 1 – System Context}
+Hình~\ref{fig:c1} mô tả bối cảnh tổng thể của hệ thống, bao gồm người dùng, hệ thống gợi ý và 
+các dịch vụ bên ngoài như VietMap API và Supabase.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{img/c1.png}
+    \caption{C4 Level 1 – System Context Diagram}
+    \label{fig:c1}
+\end{figure}
+
+\subsubsection{Level 2 – Container Diagram}
+Hình~\ref{fig:c2} cho thấy hệ thống được chia thành nhiều container: Frontend, Gate, 
+Query System, VietMap Handler, AI Handler, Data Handler và Supabase (Auth + Database).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{img/c2.png}
+    \caption{C4 Level 2 – Container Diagram}
+    \label{fig:c2}
+\end{figure}
+
+\subsubsection{Level 3 – Component Diagram}
+Hình~\ref{fig:c3} thể hiện chi tiết các component trong \textbf{Query System} – thành phần trung tâm 
+điều phối toàn bộ luồng xử lý của hệ thống.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{img/c3.png}
+    \caption{C4 Level 3 – Component Diagram of Query System}
+    \label{fig:c3}
+\end{figure}
+
+
+
+
+
+\subsection{Kiến trúc hệ thống}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{img/SysArchitect.png}
+\caption{System Architecture và Data Flow}
+\end{figure}
+
+\subsection{Luồng xử lý chi tiết của hệ thống}
+
+Khi người dùng nhập yêu cầu như:\\
+\textit{``Tôi muốn ăn đồ chay cay nhẹ gần biển Nha Trang''}, hệ thống xử lý theo các bước:
+
+\begin{enumerate}
+    \item \textbf{Frontend} thu thập input, gửi kèm JWT đến \textbf{Gate}.
+    \item \textbf{Gate} kiểm tra JWT → chuyển yêu cầu sang \textbf{Query System}.
+    \item \textbf{AI Handler} gửi câu hỏi sang OpenAI hoặc Gemini để phân tích khẩu vị, 
+    món ăn, địa điểm (intent + entities).
+    \item \textbf{VietMap Handler} gọi VietMap API để đổi địa điểm sang tọa độ và truy vấn danh sách quán ăn.
+    \item \textbf{Data Handler} gắn tag khẩu vị, chấm điểm từng quán (matching score).
+    \item \textbf{Query System} xếp hạng kết quả và gửi lại Frontend.
+    \item Frontend hiển thị danh sách + bản đồ cho người dùng.
+\end{enumerate}
+
+Quy trình này chứng minh rằng hệ thống hoạt động mạch lạc, khả thi và sẵn sàng triển khai.
+
+\subsection{Algorithm Flowchart}
+\begin{figure}[h]
+\centering
+\includegraphics[height=300]{img/AlgorithmFlow.png}
+\caption{Restaurant Recommendation Algorithm Flow}
+\end{figure}
+
+\subsection{Công nghệ sử dụng trong PoC}
+
+\begin{itemize}
+    \item \textbf{AI API}: nhóm thiết kế hệ thống để có thể hoán đổi giữa 
+    \underline{OpenAI} và \underline{Gemini}. 
+    Cả hai mô hình đều xử lý NLP cho chatbot và phân tích câu nhập.
+    
+    \item \textbf{Supabase Auth \& Database}:  
+    Dùng cho đăng ký, đăng nhập, phát JWT và lưu dữ liệu người dùng.
+
+    \item \textbf{VietMap API}:  
+    Dùng cho geocoding và tìm POI (quán ăn) theo bán kính.
+
+    \item \textbf{Các mô-đun nội bộ}:  
+    Gate, Query System, VietMap Handler, AI Handler, Data Handler.
+\end{itemize}
+
+\subsection{Pseudocode – C4 Level 4}
+
+Pseudocode dưới đây mô phỏng hoạt động của \textbf{Query System}, minh chứng tính khả thi kỹ thuật:
+
+\begin{lstlisting}[language=Python, caption={C4 Level 4 – Core Logic Pseudocode}, label={lst:c4}]
+class QuerySystem:
+    def handle_request(user_request):
+        # Step 1: Normalize input
+        normalized = InputNormalizer.clean(user_request)
+
+        # Step 2: NLP analysis (OpenAI or Gemini)
+        intent_data = AIHandler.extract_entities(normalized.text)
+
+        # Step 3: Resolve geographic location
+        latlon = VietMapHandler.geocode(intent_data.location)
+
+        # Step 4: Retrieve POIs from VietMap
+        poi_list = VietMapHandler.search_poi(latlon, intent_data.radius)
+
+        # Step 5: Score & rank POIs
+        scored = RecommendEngine.rank(
+            poi_list,
+            taste_tags=intent_data.taste,
+            budget=normalized.budget
+        )
+
+        # Step 6: Build JSON response
+        return ResponseBuilder.build(scored)
+\end{lstlisting}
+
+\subsection{Kết luận Proof of Concept}
+
+PoC cho thấy:
+\begin{itemize}
+    \item Kiến trúc hệ thống rõ ràng và có tính mở rộng cao.
+    \item Các API VietMap, OpenAI/Gemini và Supabase hoàn toàn đủ để triển khai hệ thống.
+    \item Query System đã có cấu trúc xử lý đầy đủ, có thể hiện thực hóa bằng Python trong giai đoạn tiếp theo.
+\end{itemize}
+
+Những yếu tố trên khẳng định đề tài là khả thi, đáp ứng đúng mục tiêu của đồ án và 
+sẵn sàng chuyển sang giai đoạn xây dựng sản phẩm mẫu (prototype).
+
+Tuy nhiên trong quá trình phát triển vẫn có thể sẽ phát sinh thêm tính năng, nhóm sẽ liên tục cập nhật công nghệ sử dụng trong đồ án vào proposal.
