@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'constants/strings.dart';
+import 'handlers/food_search_handler.dart';
+import 'models/food_model.dart';
+import 'widgets/food_widgets.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Food Search',
+      title: UIStrings.appBarTitle,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
@@ -28,62 +32,64 @@ class FoodSearchPage extends StatefulWidget {
 }
 
 class _FoodSearchPageState extends State<FoodSearchPage> {
+  late final FoodSearchHandler _handler;
   final TextEditingController _searchController = TextEditingController();
-  List<FoodItem> _filteredFoods = [];
-  List<FoodItem> allFoods = [
-    FoodItem(
-      name: 'Pizza Margherita',
-      category: 'Italian',
-      rating: 4.5,
-      image: '🍕',
-    ),
-    FoodItem(
-      name: 'Sushi Platter',
-      category: 'Japanese',
-      rating: 4.8,
-      image: '🍣',
-    ),
-    FoodItem(
-      name: 'Burger Deluxe',
-      category: 'American',
-      rating: 4.2,
-      image: '🍔',
-    ),
-    FoodItem(name: 'Pad Thai', category: 'Thai', rating: 4.6, image: '🍜'),
-    FoodItem(
-      name: 'Tacos Al Pastor',
-      category: 'Mexican',
-      rating: 4.4,
-      image: '🌮',
-    ),
-    FoodItem(name: 'Biryani', category: 'Indian', rating: 4.7, image: '🍚'),
-    FoodItem(
-      name: 'Caesar Salad',
-      category: 'Healthy',
-      rating: 4.1,
-      image: '🥗',
-    ),
-    FoodItem(name: 'Ramen', category: 'Japanese', rating: 4.5, image: '🍲'),
-  ];
+  SearchResult _searchResult = SearchResult.empty();
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    _filteredFoods = allFoods;
-    _searchController.addListener(_filterFoods);
+    // Khởi tạo Handler - hiện tại là Mock, sau thay bằng API thực
+    _handler = MockFoodSearchHandler();
+    _loadAllFoods();
+    _searchController.addListener(_onSearchChanged);
   }
 
-  void _filterFoods() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredFoods = allFoods
-          .where(
-            (food) =>
-                food.name.toLowerCase().contains(query) ||
-                food.category.toLowerCase().contains(query),
-          )
-          .toList();
-    });
+  /// Tải tất cả các món ăn khi app khởi động
+  Future<void> _loadAllFoods() async {
+    setState(() => _isSearching = true);
+    try {
+      final result = await _handler.getAllFoods();
+      setState(() => _searchResult = result);
+    } catch (e) {
+      setState(() => _searchResult = SearchResult.error(e.toString()));
+    } finally {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  /// Tìm kiếm khi user gõ trong search bar
+  void _onSearchChanged() async {
+    final query = _searchController.text;
+
+    setState(() => _isSearching = true);
+
+    try {
+      final result = await _handler.searchFoods(query);
+      setState(() => _searchResult = result);
+    } catch (e) {
+      setState(() => _searchResult = SearchResult.error(e.toString()));
+    } finally {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  /// Clear search
+  void _clearSearch() {
+    _searchController.clear();
+    _loadAllFoods();
+  }
+
+  /// Xử lý khi user click vào một mục ăn
+  void _onFoodItemTap(FoodItem food) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${UIStrings.itemSelectedPrefix}${food.name}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+    // TODO: Thêm logic điều hướng đến trang chi tiết sản phẩm sau
   }
 
   @override
@@ -96,124 +102,50 @@ class _FoodSearchPageState extends State<FoodSearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Food Search'),
+        title: const Text(UIStrings.appBarTitle),
         centerTitle: true,
         elevation: 0,
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search for food or cuisine...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterFoods();
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
-              ),
-            ),
+          // Search Bar
+          FoodSearchBar(
+            controller: _searchController,
+            onChanged: (_) => _onSearchChanged(),
+            onClear: _clearSearch,
           ),
-          Expanded(
-            child: _filteredFoods.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('🔍', style: TextStyle(fontSize: 48)),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No foods found',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Try searching for a different cuisine or food name',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: _filteredFoods.length,
-                    itemBuilder: (context, index) {
-                      final food = _filteredFoods[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 8,
-                        ),
-                        elevation: 2,
-                        child: ListTile(
-                          leading: Text(
-                            food.image,
-                            style: const TextStyle(fontSize: 40),
-                          ),
-                          title: Text(
-                            food.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(food.category),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                color: Colors.orange,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                food.rating.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Selected: ${food.name}'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
+          // Content Area
+          Expanded(child: _buildContentArea()),
         ],
       ),
     );
   }
-}
 
-class FoodItem {
-  final String name;
-  final String category;
-  final double rating;
-  final String image;
+  /// Build content area dựa trên trạng thái
+  Widget _buildContentArea() {
+    // Loading state
+    if (_isSearching && _searchResult.items.isEmpty) {
+      return const LoadingState();
+    }
 
-  FoodItem({
-    required this.name,
-    required this.category,
-    required this.rating,
-    required this.image,
-  });
+    // Error state
+    if (_searchResult.error != null) {
+      return ErrorState(message: _searchResult.error, onRetry: _loadAllFoods);
+    }
+
+    // Empty state
+    if (_searchResult.items.isEmpty) {
+      return const EmptySearchState();
+    }
+
+    // Food list
+    return ListView.builder(
+      padding: const EdgeInsets.all(8.0),
+      itemCount: _searchResult.items.length,
+      itemBuilder: (context, index) {
+        final food = _searchResult.items[index];
+        return FoodItemCard(food: food, onTap: () => _onFoodItemTap(food));
+      },
+    );
+  }
 }
