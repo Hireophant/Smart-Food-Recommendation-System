@@ -1,30 +1,58 @@
 /// Định nghĩa các model dùng trong app
 /// Theo Guideline: Định nghĩa rõ Input/Output
 
-/// Đại diện cho một mục ăn (Food Item)
-class FoodItem {
+/// Đại diện cho một nhà hàng/quán cafe (Restaurant Item)
+class RestaurantItem {
   final String id;
   final String name;
-  final String category;
+  final String category; // e.g., "Cafe • Coffee • Beverages"
   final double rating;
-  final String imageUrl; // Có thể là emoji hoặc URL thực
+  final int ratingCount;
+  final String imageUrl; // URL or Asset path
   final String? description;
-  final double? price;
+  final String? priceLevel; // $, $$, $$$
+  final bool isOpen;
+  final String distance; // e.g., "1.2 km"
+  final List<String> tags; // e.g., ["Cozy", "Ba Dinh"]
+  final double latitude;
+  final double longitude;
 
-  FoodItem({
+  RestaurantItem({
     required this.id,
     required this.name,
     required this.category,
     required this.rating,
+    this.ratingCount = 0,
     required this.imageUrl,
     this.description,
-    this.price,
+    this.priceLevel,
+    this.isOpen = true,
+    this.distance = '0 km',
+    this.tags = const [],
+    this.latitude = 21.0285, // Default Hanoi
+    this.longitude = 105.8542,
+  });
+}
+
+class MenuItem {
+  final String id;
+  final String name;
+  final String description;
+  final double price;
+  final String imageUrl;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imageUrl,
   });
 }
 
 /// Kết quả tìm kiếm từ Handler
 class SearchResult {
-  final List<FoodItem> items;
+  final List<RestaurantItem> items;
   final bool isLoading;
   final String? error;
 
