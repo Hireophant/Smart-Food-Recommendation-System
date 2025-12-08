@@ -2,20 +2,21 @@
 /// Theo Guideline: Định nghĩa rõ Input/Output
 
 /// Đại diện cho một nhà hàng/quán cafe (Restaurant Item)
+/// Model đại diện cho một Nhà hàng hoặc Địa điểm ăn uống
 class RestaurantItem {
   final String id;
   final String name;
   final String category; // e.g., "Cafe • Coffee • Beverages"
   final double rating;
   final int ratingCount;
-  final String imageUrl; // URL or Asset path
+  final String imageUrl; // URL ảnh (Network Image)
   final String? description;
-  final String? priceLevel; // $, $$, $$$
+  final String? priceLevel; // $ - $$$$
   final bool isOpen;
   final String distance; // e.g., "1.2 km"
   final List<String> tags; // e.g., ["Cozy", "Ba Dinh"]
-  final double latitude;
-  final double longitude;
+  final double latitude; // Tọa độ Vĩ độ
+  final double longitude; // Tọa độ Kinh độ
 
   RestaurantItem({
     required this.id,
@@ -34,6 +35,7 @@ class RestaurantItem {
   });
 }
 
+/// Model đại diện cho một món ăn trong Menu
 class MenuItem {
   final String id;
   final String name;

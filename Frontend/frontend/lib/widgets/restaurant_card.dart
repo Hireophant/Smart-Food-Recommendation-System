@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/food_model.dart';
 
+/// Widget hiển thị thẻ thông tin nhà hàng trong danh sách
+/// Hiển thị: Ảnh, Tên, Danh mục, Đánh giá, và Trạng thái (Open/Close).
 class RestaurantCard extends StatelessWidget {
   final RestaurantItem item;
   final VoidCallback? onTap;

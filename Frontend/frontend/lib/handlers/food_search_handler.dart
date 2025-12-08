@@ -17,8 +17,11 @@ abstract class FoodSearchHandler {
   Future<List<MenuItem>> getMenu(String id);
 }
 
-/// Implementation hiện tại - Mock Data
-/// TODO: Thay bằng API call thực khi Backend sẵn sàng
+/// Implementation hiện tại - Mock Data kết hợp OSM Search
+///
+/// Class này giả lập việc gọi API từ Backend.
+/// - Dữ liệu cứng (Hardcoded) được dùng để hiển thị các quán mẫu đẹp mắt.
+/// - Tích hợp gọi API OpenStreetMap (Nominatim) để tìm kiếm địa điểm thực tế.
 class MockFoodSearchHandler implements FoodSearchHandler {
   /// Mock data - matches the screenshot
   static final List<RestaurantItem> _mockFoods = [

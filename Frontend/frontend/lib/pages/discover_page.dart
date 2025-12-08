@@ -5,6 +5,8 @@ import '../widgets/restaurant_card.dart';
 import '../widgets/filter_bar.dart';
 import 'map_page.dart';
 
+/// Trang Khám phá - Màn hình chính của ứng dụng
+/// Hiển thị danh sách nhà hàng với tính năng tìm kiếm và bộ lọc.
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
 

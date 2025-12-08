@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/food_model.dart';
 import '../handlers/food_search_handler.dart';
 
+/// Màn hình Chi tiết Nhà hàng
+/// Hiển thị thông tin tổng quan, ảnh bìa và danh sách thực đơn (Menu).
 class RestaurantDetailPage extends StatefulWidget {
   final RestaurantItem restaurant;
 

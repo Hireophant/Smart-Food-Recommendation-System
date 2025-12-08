@@ -5,6 +5,9 @@ import '../models/food_model.dart';
 import '../handlers/food_search_handler.dart';
 import 'restaurant_detail_page.dart';
 
+/// Màn hình Bản đồ
+/// Sử dụng Flutter Map và OpenStreetMap để hiển thị vị trí các nhà hàng.
+/// Có thể nhận vào [selectedRestaurant] để tự động focus vào nhà hàng đó.
 class MapPage extends StatefulWidget {
   final RestaurantItem? selectedRestaurant;
 
@@ -77,7 +80,7 @@ class _MapPageState extends State<MapPage> {
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text("Chọn"),
+            child: const Text("Chọn", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
