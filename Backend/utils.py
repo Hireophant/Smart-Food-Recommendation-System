@@ -135,11 +135,22 @@ class SecurityConfig(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
     JWTAlgorithm: str = Field(default="HS256", alias="jwtAlgorithm")
 
+class MongoDBConfig(BaseModel):
+    """MongoDB configuration."""
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+    Host: str = Field(default="localhost", alias="host")
+    Port: int = Field(default=27017, alias="port")
+    Database: str = Field(default="smart_food_db", alias="database")
+    Username: Optional[str] = Field(default=None, alias="username")
+    Password: Optional[str] = Field(default=None, alias="password")
+    ConnectionString: Optional[str] = Field(default=None, alias="connectionString")
+
 class ApplicationConfig(BaseModel):
     """Global application configuration."""
     model_config = ConfigDict(extra='ignore', populate_by_name=True)
     Logging: LoggingConfig = Field(default_factory=LoggingConfig, alias='logging')
     Security: SecurityConfig = Field(default_factory=SecurityConfig, alias='security')
+    MongoDB: MongoDBConfig = Field(default_factory=MongoDBConfig, alias='mongodb')
 
 class Config:
     """The Config class, contain the static configuration of the application."""
