@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+import '../models/dish_model.dart';
+import '../models/food_model.dart';
+import '../handlers/query_system.dart';
+import '../widgets/restaurant_card.dart';
+import 'map_page.dart';
+
+class RestaurantListPage extends StatefulWidget {
+  final DishItem dish;
+
+  const RestaurantListPage({super.key, required this.dish});
+
+  @override
+  State<RestaurantListPage> createState() => _RestaurantListPageState();
+}
+
+class _RestaurantListPageState extends State<RestaurantListPage> {
+  final QuerySystem _querySystem = QuerySystem();
+  List<RestaurantItem> _restaurants = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final result = await _querySystem.findRestaurantsByDish(widget.dish.id);
+    setState(() {
+      _restaurants = result.items;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFA),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Places serving",
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            Text(
+              widget.dish.name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
+        ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _restaurants.isEmpty
+          ? const Center(child: Text("No restaurants found"))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _restaurants.length,
+              itemBuilder: (context, index) {
+                final restaurant = _restaurants[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: SizedBox(
+                    height: 240, // Fixed height for card
+                    child: RestaurantCard(
+                      item: restaurant,
+                      onTap: () {
+                        // Navigate to MapPage in Confirmation Mode
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapPage(
+                              selectedDish: widget.dish,
+                              selectedRestaurant: restaurant,
+                              isConfirmationMode: true,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}

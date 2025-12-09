@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/food_model.dart';
-import '../handlers/food_search_handler.dart';
-import '../widgets/restaurant_card.dart';
-import '../widgets/filter_bar.dart';
-import 'map_page.dart';
+import '../models/dish_model.dart';
+import '../handlers/query_system.dart';
+import '../widgets/dish_card.dart';
+import 'restaurant_list_page.dart';
 
-/// Trang Khám phá - Màn hình chính của ứng dụng
-/// Hiển thị danh sách nhà hàng với tính năng tìm kiếm và bộ lọc.
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
 
@@ -15,10 +12,10 @@ class DiscoverPage extends StatefulWidget {
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
-  // Use Handler
-  final FoodSearchHandler _handler = MockFoodSearchHandler();
-  SearchResult? _data;
-  final TextEditingController _searchController = TextEditingController();
+  // Use QuerySystem instead of direct Handler
+  final QuerySystem _querySystem = QuerySystem(); // Facade
+  List<DishItem> _dishes = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -27,209 +24,227 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Future<void> _loadData() async {
-    final result = await _handler.getAllFoods();
+    // Fetch dishes via Query System
+    final dishes = await _querySystem.getAllDishes();
     setState(() {
-      _data = result;
+      _dishes = dishes;
+      _isLoading = false;
     });
   }
 
-  Future<void> _search(String query) async {
-    setState(() {
-      _data = SearchResult.loading();
-    });
-    final result = await _handler.searchFoods(query);
-    setState(() {
-      _data = result;
-    });
+  void _onDishSelected(DishItem dish) {
+    // Navigate to Restaurant List Page first
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => RestaurantListPage(dish: dish)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Dark Background
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.shield, color: Colors.blueAccent), // Logo placeholder
-            SizedBox(width: 8),
-            Text('SmartSys', style: TextStyle(fontWeight: FontWeight.bold)),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(
+                Icons.restaurant_menu,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'FoodFinder',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
           ],
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(8),
-            ),
+          TextButton(
+            onPressed: () {},
+            child: const Text("Home", style: TextStyle(color: Colors.black54)),
+          ),
+          TextButton(
+            onPressed: () {},
             child: const Text(
-              "Login",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              "Favorites",
+              style: TextStyle(color: Colors.black54),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.map, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MapPage()),
-              );
-            },
+          TextButton(
+            onPressed: () {},
+            child: const Text(
+              "Profile",
+              style: TextStyle(color: Colors.black54),
+            ),
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Khám phá Ẩm thực',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Hero Section
+                  Container(
+                    width: double.infinity,
+                    height: 250,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(
+                          'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920', // Food pattern or generic food background
+                        ),
+                        fit: BoxFit.cover,
+                        opacity: 0.3, // Dim it a bit if needed or use overlay
+                      ),
+                      color: Color(0xFFFFC045), // Fallback/Tint
+                    ),
+                    child: Stack(
+                      children: [
+                        // Yellow Overlay Pattern
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.orangeAccent.withValues(alpha: 0.8),
+                                Colors.amber.withValues(alpha: 0.6),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                        // Content
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Find your perfect dish",
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 1.0,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black26,
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                "Filter by taste and discover restaurants near you",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Tìm kiếm trải nghiệm ăn uống tuyệt vời',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
 
-          // Search
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2C),
-                borderRadius: BorderRadius.circular(12),
+                  // Search Bar Overlay specific styling (Optional, keeping simple here)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 24,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: const TextField(
+                        decoration: InputDecoration(
+                          hintText:
+                              "Search by dish name (e.g. phở, bún bò, cơm tấm)...",
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Dish Grid
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Showing ${_dishes.length} dishes",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Responsive Grid
+                            int crossAxisCount = 2;
+                            if (constraints.maxWidth > 1000) {
+                              crossAxisCount = 4;
+                            } else if (constraints.maxWidth > 600) {
+                              crossAxisCount = 3;
+                            }
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _dishes.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 20,
+                                    mainAxisSpacing: 20,
+                                    childAspectRatio:
+                                        0.75, // Taller cards for image + content
+                                  ),
+                              itemBuilder: (context, index) {
+                                final item = _dishes[index];
+                                return DishCard(
+                                  item: item,
+                                  onTap: () => _onDishSelected(item),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  // Debounce could be added here
-                  _search(val);
-                },
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search, color: Colors.blueAccent),
-                  hintText: "Tìm phở, cơm tấm, cafe...",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                ),
-              ),
             ),
-          ),
-
-          // Filter Sort Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Row(
-              children: [
-                const Text("Sắp xếp: ", style: TextStyle(color: Colors.grey)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2C2C2C),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Row(
-                    children: [
-                      Text("Mặc định", style: TextStyle(color: Colors.white)),
-                      Icon(Icons.arrow_drop_down, color: Colors.grey),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Chips
-          const FilterBar(),
-
-          const SizedBox(height: 16),
-
-          // Grid
-          Expanded(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_data == null || _data!.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_data!.error != null) {
-      return Center(
-        child: Text(
-          "Error: ${_data!.error}",
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
-    }
-    if (_data!.items.isEmpty) {
-      return const Center(
-        child: Text(
-          "No restaurants found",
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Adaptive grid
-        int crossAxisCount = 2;
-        if (constraints.maxWidth > 900)
-          crossAxisCount = 4;
-        else if (constraints.maxWidth > 600)
-          crossAxisCount = 3;
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.8, // Adjust for card height
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: _data!.items.length,
-          itemBuilder: (context, index) {
-            return RestaurantCard(
-              item: _data!.items[index],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MapPage(selectedRestaurant: _data!.items[index]),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
     );
   }
 }
