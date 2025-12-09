@@ -125,5 +125,158 @@ process_ui(clean_input)
     + Không bắt buộc quá khắt khe, nhưng ưu tiên sự rõ ràng (Readability).
     + Tên biến/hàm nên mô tả đúng chức năng (e.g., `get_user_profile` thay vì `get_data`).
 
+## 6. Query System: Trung tâm điều phối công việc (Optional - cho FE/BE)
+
+### 6.1. Query System là gì?
+**Query System** là một lớp trung gian nằm bên trên tầng Handlers, đóng vai trò là "trung tâm điều phối" - nhận yêu cầu công việc từ một bên và giao việc cho đúng Handler xử lý.
+
+*Phần này là tùy chọn (Optional), chủ yếu dành cho Front-end/Back-end. Core và UI/UX chỉ cần biết sơ qua là được.*
+
+**Ví dụ minh họa:**  
+Hãy tưởng tượng bạn đi khám bệnh lần đầu - bạn chưa biết mình cần vào phòng khám nào. Đầu tiên, bạn sẽ gặp **"lễ tân/tiếp tân"**, kể triệu chứng, và lễ tân sẽ chuyển bạn tới đúng **"chuyên khoa/phòng khám"** phù hợp.
+
+- **Query System** = Lễ tân (trung tâm điều phối)
+- **Handlers** = Các chuyên khoa/phòng khám
+
+### 6.2. Tại sao nên có Query System?
+
+Giả sử có hai bên: **A** (người dùng) và **B** (người cung cấp dịch vụ).  
+**B** có hai Handler:
+- `QueryHandler`: có các chức năng `QueryBook`, `QueryAuthor`
+- `StoreHandler`: có các chức năng `StoreBook`, `StoreAuthor`
+
+**A** muốn dùng ba tính năng: `QueryBook`, `QueryAuthor`, và `StoreBook`.
+
+#### Cách đơn giản (không dùng Query System):
+**A** gọi trực tiếp:
+```python
+# A phải biết chính xác Handler nào có chức năng gì
+result1 = QueryHandler().QueryBook(...)
+result2 = QueryHandler().QueryAuthor(...)
+result3 = StoreHandler().StoreBook(...)
+```
+
+**Vấn đề phát sinh:**
+
+1. **A phải biết quá nhiều chi tiết cấu trúc nội bộ của B:**
+   - A không chỉ biết "công việc cần làm" mà còn phải biết "Handler nào làm việc đó".
+   - Nếu B thay đổi cấu trúc (ví dụ: đổi từ `StoreHandler` sang `NewStoreHandler`), A cũng phải sửa code theo.
+   - Về phía B: các Handler trở nên "cứng nhắc" vì có bên ngoài đang dùng trực tiếp. Muốn thay đổi thì phải lo ảnh hưởng tới tất cả bên dùng, hoặc bị buộc phải over-engineer ngay từ đầu để cover mọi tình huống.
+
+2. **Vấn đề bảo mật/giới hạn chức năng:**
+   - Nếu A dùng thẳng Handler, toàn bộ chức năng của Handler đều bị lộ ra ngoài.
+   - Khó kiểm soát được việc A chỉ nên dùng một số chức năng nhất định.
+
+#### Giải pháp: Query System
+
+**Query System** đứng ở giữa A và các Handler của B. A chỉ cần nói "công việc cần làm", không cần biết Handler nào sẽ xử lý.
+
+```python
+# A chỉ cần gọi Query System
+result1 = QuerySystem().QueryBook(...)
+result2 = QuerySystem().QueryAuthor(...)
+result3 = QuerySystem().StoreBook(...)
+```
+
+**Lợi ích:**
+
+- **A không cần biết cách làm, chỉ cần biết công việc:**  
+  Giả sử ban đầu để làm công việc X, B phải làm Y. Sau này B thay đổi, để làm X thì phải làm Z và W.  
+  → A không cần quan tâm, nó chỉ nhờ B "làm công việc X". B tự biết cách làm mới như thế nào.
+
+- **Dễ dàng thay đổi cấu trúc nội bộ:**  
+  B có thể thoải mái thay đổi Handler, thêm/bớt bước xử lý bên trong mà không ảnh hưởng tới A.
+
+- **Kiểm soát bảo mật tốt hơn:**  
+  Query System chỉ "nhận" những công việc được phép từ A. Các chức năng khác của Handler sẽ không bị lộ ra ngoài.
+
+### 6.3. Ví dụ code minh họa
+
+```python
+# ===== Các Handler của B =====
+
+class QueryHandler:
+    def QueryBook(self, *args):
+        # Logic query book
+        ...
+    
+    def QueryAuthor(self, *args):
+        # Logic query author
+        ...
+
+class StoreHandler:
+    def StoreBook(self, *args):
+        # Logic store book
+        ...
+    
+    def StoreAuthor(self, *args):
+        # Logic store author
+        ...
+
+# ===== Handler mới (ví dụ khi B muốn thay đổi cách làm) =====
+
+class NewStoreHandler:
+    def StoreBook(self, *args):
+        # Logic store book mới
+        ...
+    
+    def ProcessBook(self, *args):
+        # Bước xử lý bổ sung (phải gọi sau StoreBook)
+        ...
+    
+    def StoreAuthor(self, *args):
+        # Logic store author
+        ...
+
+# ===== Query System của B (cung cấp cho A) =====
+
+class QuerySystem:
+    """
+    Chỉ expose các công việc mà B cho phép A làm.
+    A chỉ cần biết tên công việc, không cần biết Handler nào xử lý.
+    """
+    
+    def QueryBook(self, *args):
+        # Gọi Handler tương ứng
+        return QueryHandler().QueryBook(*args)
+    
+    def QueryAuthor(self, *args):
+        return QueryHandler().QueryAuthor(*args)
+    
+    def StoreBook(self, *args):
+        # Phiên bản cũ (đơn giản)
+        # StoreHandler().StoreBook(*args)
+        
+        # Phiên bản mới (thay đổi logic bên trong, A không cần sửa code)
+        handler = NewStoreHandler()
+        handler.StoreBook(*args)
+        handler.ProcessBook(*args)  # Thêm bước xử lý mới
+
+# ===== Code bên A (người dùng) =====
+
+# Khi cần query book
+result = QuerySystem().QueryBook(...)
+
+# Khi cần query author
+result = QuerySystem().QueryAuthor(...)
+
+# Khi cần store book
+# ✅ Lưu ý: Dù B thay đổi logic bên trong (từ StoreHandler sang NewStoreHandler),
+# A vẫn không cần sửa code này
+result = QuerySystem().StoreBook(...)
+```
+
+### 6.4. Khi nào nên dùng Query System?
+
+**Nên dùng:**
+- Giữa **UI/UX** và **Front-end**: Front-end cung cấp Query System để UI/UX gọi các "công việc" mà không cần biết logic bên trong.
+- Trong nội bộ **Back-end**: Giữa **Router/Route** và **Handlers**. Router chỉ nhận input từ Front-end và "nhờ Query System làm công việc", thay vì Router trực tiếp gọi Handler.
+
+**Lưu ý cho Back-end:**
+- Trong một số trường hợp, Query System có thể hơi dư thừa vì **Router/Route** đã đóng vai trò trung gian giữa Front-end và Back-end.
+- Tuy nhiên, vẫn có thể áp dụng Query System giữa Router và Handlers để:
+  - Tách bạch rõ ràng: Router chỉ xử lý HTTP request/response, Query System quản lý logic "gọi đúng Handler".
+  - Dễ dàng thay đổi cách thức xử lý công việc mà không ảnh hưởng tới Router.
+
 ---
 Code vui vẻ nhá
