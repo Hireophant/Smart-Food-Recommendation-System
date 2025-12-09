@@ -279,4 +279,330 @@ result = QuerySystem().StoreBook(...)
   - Dễ dàng thay đổi cách thức xử lý công việc mà không ảnh hưởng tới Router.
 
 ---
+
+# CHI TIẾT GUIDELINE CHO TỪNG BÊN
+
+## 1. Khu vực làm việc (Workspace Boundaries)
+
+Để tránh tình trạng các bên xâm phạm code lẫn nhau (như Core đi chỉnh code của Backend), ta cần phân chia rõ phạm vi làm việc của các bên.
+
+### 1.1. Phía Front-end và UI/UX
+
+Tùy theo Framework, cách chia có thể khác nhau, nhưng chủ yếu gồm ba phần:
+
+```
+UI/
+  └── (Quản lý bởi UI/UX)
+      Các bên khác hạn chế sửa code khu vực này.
+
+Frontend/
+  ├── (Quản lý bởi Front-end)
+  │   Các bên khác hạn chế sửa code khu vực này.
+  │
+  └── Core/ (Optional)
+      └── (Quản lý bởi Core team)
+          Nếu Core viết modules/handlers cho Frontend dùng trực tiếp
+          (thay vì qua Backend), sẽ làm ở đây.
+          Frontend hạn chế sửa code khu vực này.
+```
+
+### 1.2. Phía Back-end
+
+Tương tự, Back-end cũng chia thành hai phần:
+
+```
+Backend/
+  ├── (Quản lý bởi Back-end team)
+  │   Các bên khác hạn chế sửa code khu vực này, trừ...
+  │
+  └── core/
+      └── (Quản lý bởi Core team của Backend)
+          Backend và các bên khác hạn chế sửa code khu vực này.
+```
+
+### 1.3. Quy tắc làm việc cho Core
+
+Core bao gồm nhiều Modules kết hợp lại. Để tránh chồng chéo, mỗi Module nên có một phần riêng:
+
+```
+Core/
+  ├── Module1/
+  │   └── (Phần của Module 1)
+  ├── Module2/
+  │   └── (Phần của Module 2)
+  └── ...
+```
+
+**Nguyên tắc Module:**
+- Các module nên **độc lập** với nhau, không nên có quá nhiều liên quan.
+- Nếu một module xử lý quá nhiều thứ, có thể chia thành **sub-module**:
+
+```
+Core/
+  └── UnionModule/
+      ├── Sub-Module1/
+      └── Sub-Module2/
+          └── Sub-Sub-Module1/ (Không khuyến khích)
+```
+
+**Lưu ý:**
+- Nên giữ quy tắc **"tối đa 2 tầng"** (tránh Sub-Sub-Module) để code không quá phức tạp.
+- Nếu module quá dày, có thể chia thành nhiều sub-module rồi gom lại cho dễ maintain. Tuy nhiên, cái này là tùy chọn - nếu không cần thiết thì thôi, không sao.
+
+### 1.4. Quy luật của khu vực làm việc
+
+#### a. Làm việc trong phạm vi của mình
+- **Chỉ nên làm việc "trong" khu vực của mình.**
+- Kể cả khi muốn gọi `init/deinit` (ví dụ: Core MongoDB muốn khởi tạo, thì nhờ Backend làm hoặc xin Backend làm giúp, **đừng tự thêm vào**).
+- Nếu cần viết models/schemas, thì viết trong khu vực của mình luôn.
+- Đối với Core: nếu được phân một Module thì chỉ làm trong Module đó, không chạm vào module khác hay tạo module cùng cấp.
+
+#### b. Xin phép trước khi "chen vào"
+- Nếu muốn "xin chen vào" hoặc "làm giúp" trong khu vực khác, hãy **xin phép bên quản lý khu vực đó trước**.
+
+#### c. Sử dụng `.gitignore`
+- Trong khu vực làm việc của mình, **nên có file `.gitignore`**.
+- **Mục đích:** Tránh push những file không mong muốn lên GitHub (như `__pycache__`, `node_modules`, `.env`, v.v.).
+- **Lưu ý:** Một project có thể có nhiều file `.gitignore` ở các thư mục khác nhau. Mỗi file sẽ ignore relative với thư mục nó nằm trong.
+- **Quan trọng:** Đừng push file `.gitignore` lên GitHub nếu nó chứa config cá nhân hoặc không cần thiết cho team.
+
+### 1.5. Tại sao cần phân chia khu vực làm việc?
+
+1. **Tránh nhầm lẫn:** "Ơ, phần này tự nhiên ai sửa code của mình thế???"
+2. **Dễ dàng tìm lỗi:** Khi có bug, biết rõ đứa nào chịu trách nhiệm để blame (hoặc fix).
+3. **Tăng tính độc lập (Decoupled):**
+   - Giúp các bên làm việc song song hiệu quả hơn.
+   - Giảm xung đột file (conflict). Ví dụ: Backend đang edit `app.py`, nếu Core cũng edit thì sẽ conflict.
+
+---
+
+## 2. Thiết kế Handlers và Query System
+
+Về cơ bản, có 3 cách implement cho 3 tình huống: **Tĩnh (Static)**, **Object**, và **Singleton**.
+
+*Dưới đây minh họa cho Handler. Query System cũng thiết kế tương tự.*
+
+### 2.1. Cách 1: Tĩnh (Static)
+
+**Khi nào dùng:**  
+Trường hợp đơn giản, không cần khởi tạo hay giữ state gì trước khi gọi.
+
+```python
+class StaticHandlerEx:
+    @staticmethod
+    def GetBook(*args):
+        # Logic get book
+        ...
+    
+    @staticmethod
+    def SetBook(*args):
+        # Logic set book
+        ...
+
+# Sử dụng
+StaticHandlerEx.GetBook(...)
+StaticHandlerEx.SetBook(...)
+```
+
+### 2.2. Cách 2: Object
+
+**Khi nào dùng:**  
+Khi cần giữ **state local riêng** cho mỗi lần gọi, hoặc cần khởi tạo mỗi lần sử dụng.
+
+```python
+class ObjectHandlerEx:
+    def __init__(self, *args):
+        # Lưu state cho session hiện tại
+        self.state = ...
+        
+        # Khởi tạo session mới
+        self.init_session(...)
+    
+    def GetBook(self, *args):
+        # Logic get book
+        ...
+    
+    def SetBook(self, *args):
+        # Logic set book
+        ...
+
+# Sử dụng
+handler = ObjectHandlerEx(...)
+handler.GetBook(...)
+handler.SetBook(...)
+```
+
+### 2.3. Cách 3: Singleton (Design Pattern)
+
+**Khi nào dùng:**  
+Khi cần **khởi tạo một lần duy nhất** trong suốt quá trình chạy chương trình (không phải mỗi lần dùng). Hỗ trợ lazy initialization.
+
+```python
+class SingletonHandlerEx:
+    _instance = None  # Giữ instance duy nhất
+
+    def __new__(cls, *args, **kwargs):
+        # Chỉ tạo instance một lần duy nhất
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, *args):
+        # Chỉ khởi tạo một lần
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            
+            # Khởi tạo global state
+            self.initialize()
+            self.global_state = 1
+    
+    def initialize(self):
+        # Logic khởi tạo
+        ...
+    
+    def GetBook(self, *args):
+        # Logic get book
+        ...
+    
+    def SetBook(self, *args):
+        # Logic set book
+        ...
+
+# Sử dụng
+SingletonHandlerEx().global_state = 2
+print(SingletonHandlerEx().global_state)  # Output: 2
+
+# Lưu ý: initialize() chỉ được gọi một lần duy nhất
+```
+
+### 2.4. Lựa chọn thiết kế phù hợp
+
+**Nguyên tắc:**
+- **Ưu tiên đơn giản trước:** Nếu Static đủ dùng, đừng dùng Object hay Singleton.
+- **Chọn đúng tình huống:**
+  - Static → Không cần state, không thay đổi trong suốt quá trình chạy.
+  - Object → Cần state riêng cho mỗi lần gọi.
+  - Singleton → Cần khởi tạo một lần và dùng chung state global.
+
+---
+
+## 3. Quy tắc Hộp đen (Black-box Rule) và Giao tiếp giữa các bên
+
+### 3.1. Quy tắc Hộp đen
+
+Khi bạn dùng ChatGPT, Gemini, Claude, hay Copilot để code, bạn có biết bên trong nó chạy như thế nào không?
+
+*"Input được feed vào, forward qua từng layer, mỗi layer gồm attention layer và neural layers..."*
+
+**NAHHH, biết làm cái gì?**
+
+Câu hỏi đúng hơn là: **"Lúc bạn xài, bạn có CẦN biết nó chạy như nào không?"**
+
+→ Đáp án: **KHÔNG!** Bạn chỉ cần biết nó có tính năng gì, input/output là gì, xài thế nào. **Chấm hết.**
+
+---
+
+**Áp dụng vào đây:**
+
+- Guideline này chỉ quy định **Input/Output** giữa các bên nên theo các quy tắc đã nêu.
+- **Cái ruột bên trong?** → **"Bạn làm thế nào cũng được!"**
+- Team không quan tâm logic bên trong, chỉ quan tâm **"đầu vào/đầu ra"** thôi.
+- **Không có coding convention phức tạp**, không ép buộc style code. Chỉ có Input, Output!
+
+*Mình là sinh viên, không phải lập trình viên của Google hay Microsoft. Thế thôi!*
+
+### 3.2. Giao tiếp giữa các bên
+
+#### a. Về phía "cho" - Core cung cấp cho Backend/Frontend
+
+Core có thể cung cấp output dưới dạng:
+- **Một đống functions**
+- **Client classes** (giống như Handler)
+
+**Các cách thiết kế Client (tương tự Handler):**
+
+**Client Tĩnh (Static):**
+```python
+class StaticClient:
+    @staticmethod
+    def DoTask(*args):
+        ...
+    
+    @staticmethod
+    def AnotherTask(*args):
+        ...
+
+# Sử dụng
+StaticClient.DoTask(...)
+```
+
+**Client Object:**
+```python
+class ObjectClient:
+    def __init__(self, *args):
+        self.session = ...
+        self.initialize_connection(...)
+    
+    def DoTask(self, *args):
+        ...
+    
+    def AnotherTask(self, *args):
+        ...
+
+# Sử dụng
+client = ObjectClient(...)
+client.DoTask(...)
+```
+
+**Client Singleton:**
+```python
+class SingletonClient:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, *args):
+        if not hasattr(self, "_initialized"):
+            self._initialized = True
+            self.connection = self.establish_connection()
+    
+    def establish_connection(self):
+        # Logic kết nối
+        ...
+    
+    def DoTask(self, *args):
+        ...
+    
+    def AnotherTask(self, *args):
+        ...
+
+# Sử dụng
+SingletonClient().DoTask(...)
+```
+
+#### b. Chi tiết giao tiếp của các bên
+
+Mỗi bên cần cung cấp thông tin về **Input/Output** rõ ràng:
+
+| Bên | Cần cung cấp |
+|-----|--------------|
+| **Core** | Module gì, module làm được "công việc gì", Input/Output từng "công việc" (schemas), "gọi như nào" |
+| **Back-end** | Giống Core, nhưng là route/routers (có thể không cần do có auto-gen docs) |
+| **Front-end** | Giống Core, nhưng là tính năng/chức năng cung cấp |
+| **UI/UX** | Cần nhận những gì từ Front-end |
+
+#### c. Tài liệu (Documentation)
+
+Mỗi Module Core, Backend (có thể không cần nếu có auto-gen docs), Frontend và UI/UX sẽ viết một file docs.
+
+**Template docs sẽ được cung cấp sau trong file riêng.**
+
+---
+
+**Note:** Guideline này vẫn đang được mở rộng và cập nhật tùy theo tình hình thực tế của dự án.
+
+---
 Code vui vẻ nhá
