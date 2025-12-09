@@ -5,51 +5,58 @@ AI-powered restaurant recommendation system using geospatial queries and intelli
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.10+
 - Database credentials (provided by project lead)
 
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/Hireophant/Smart-Food-Recommendation-System.git
    cd Smart-Food-Recommendation-System
    ```
 
 2. **Install Python dependencies:**
+
    ```bash
    cd Backend/
    pip install -r requirements.txt
    ```
 
 3. **Get Database Access:**
-   
+
    **Contact the project lead to get:**
+
    - MongoDB Atlas connection string
    - VietMap API key (if needed)
-   
+
    **We use a shared team database** - no setup needed!
+
    - Database already has 36,173 restaurants
    - All indexes created
    - Ready to use immediately
 
 4. **Configure environment variables:**
+
    ```bash
    cd Backend/
    cp .env.example .env
    # Edit .env with credentials provided by project lead
    ```
-   
+
    **⚠️ Never commit `.env` to git!**
 
 5. **Verify connection:**
+
    ```bash
    cd Backend/
    python3 -c "
    from motor.motor_asyncio import AsyncIOMotorClient
    import asyncio, os
    from dotenv import load_dotenv
-   
+
    async def test():
        load_dotenv()
        client = AsyncIOMotorClient(os.getenv('MONGODB_CONNECTION_STRING'))
@@ -57,16 +64,17 @@ AI-powered restaurant recommendation system using geospatial queries and intelli
        count = await db.restaurants.count_documents({})
        print(f'✅ Connected! Total: {count:,} restaurants')
        client.close()
-   
+
    asyncio.run(test())
    "
    ```
 
 6. **Run the backend:**
+
    ```bash
    uvicorn app:app --reload
    ```
-   
+
    Visit http://127.0.0.1:8000/docs for API documentation.
 
 **📖 Detailed Setup Guide:** [Data/scripts/README.md](Data/scripts/README.md)
@@ -125,22 +133,25 @@ Smart-Food-Recommendation-System/
 
 - **MongoDB Setup:** [Data/scripts/README.md](Data/scripts/README.md)
 - **API Documentation:** `/docs` endpoint when running locally
-- **Project Proposal:** [Proposal_TDTT/readme.md](Proposal_TDTT%20(1)/readme.md)
+- **Project Proposal:** [Proposal_TDTT/readme.md](<Proposal_TDTT%20(1)/readme.md>)
 
 ## 🤝 Team Collaboration
 
 **Shared Database Setup:**
+
 - ✅ Everyone works on the **same MongoDB Atlas database**
 - ✅ No local installation or data import needed
 - ✅ **36,173 restaurants** already loaded and indexed
 - ✅ Real-time data access for all team members
 
 **Getting Started:**
+
 1. Contact project lead for database credentials
 2. Add credentials to `.env` file
 3. Start coding immediately!
 
 **Benefits:**
+
 - 🌐 Consistent data across all team members
 - 💻 Works from anywhere with internet
 - 🚀 Faster onboarding - no setup overhead
