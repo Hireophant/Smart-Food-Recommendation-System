@@ -161,3 +161,6 @@ yarn.lock
 .env.backup
 secrets/
 private/
+# Logs
+Backend/logs/
+Backend/data/logs/

@@ -66,7 +66,7 @@ class Logger:
             Logger.__logger.addHandler(console_handler)
             
         if logging_config.File.Enabled:
-            curr_time = datetime.datetime.now(datetime.UTC)
+            curr_time = datetime.datetime.now()
             file_name = curr_time.strftime(logging_config.File.NameFormat)
             
             file_handler = logging.FileHandler(os.path.join(dir_name, file_name), encoding='utf-8')
