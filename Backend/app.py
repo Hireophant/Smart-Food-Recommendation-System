@@ -18,24 +18,14 @@ async def onInitialize() -> bool:
         return False
     Logger.Initialize()
     
-    #* Initialize MongoDB
-    from core.database.mongodb import MongoDB, MongoConfig
+    #* Initialize MongoDB (automatically reads MONGODB_CONNECTION_STRING from .env)
+    from core.mongodb import MongoDB
     
-    # Try to get MongoDB config from environment first, then from config file
-    mongo_config = MongoConfig(
-        host=Config.Get().MongoDB.Host,
-        port=Config.Get().MongoDB.Port,
-        database=Config.Get().MongoDB.Database,
-        username=Config.Get().MongoDB.Username,
-        password=Config.Get().MongoDB.Password,
-        connection_string=Config.Get().MongoDB.ConnectionString
-    )
-    
-    if not await MongoDB.initialize(mongo_config):
+    if not await MongoDB.initialize():
         Logger.LogError("Failed to initialize MongoDB!")
         return False
     
-    # Create indexes
+    # Create indexes for optimal query performance
     await MongoDB.create_indexes()
     Logger.LogInfo("MongoDB setup completed successfully")
             
@@ -44,7 +34,7 @@ async def onInitialize() -> bool:
 #* Call when deinitialize the backend
 async def onDeinitialize():
     #* Deinitialize MongoDB
-    from core.database.mongodb import MongoDB
+    from core.mongodb import MongoDB
     await MongoDB.close()
     
     return
