@@ -9,13 +9,15 @@ class DishCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -35,8 +37,11 @@ class DishCard extends StatelessWidget {
                   item.imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    child: Icon(
+                      Icons.broken_image,
+                      color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                    ),
                   ),
                 ),
               ],
@@ -53,10 +58,10 @@ class DishCard extends StatelessWidget {
                 children: [
                   Text(
                     item.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E1E1E),
+                      color: isDarkMode ? Colors.white : const Color(0xFF1E1E1E),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -66,7 +71,7 @@ class DishCard extends StatelessWidget {
                     item.description,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       height: 1.4,
                     ),
                     maxLines: 2,
@@ -85,14 +90,18 @@ class DishCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE0F2F1), // Light teal
+                          color: isDarkMode
+                              ? const Color(0xFF1ABC9C).withValues(alpha: 0.2)
+                              : const Color(0xFFE0F2F1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           tag,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
-                            color: Color(0xFF009688), // Teal
+                            color: isDarkMode
+                                ? const Color(0xFF1ABC9C)
+                                : const Color(0xFF009688),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
