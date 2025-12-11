@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
 import '../handlers/query_system.dart';
 import '../widgets/dish_card.dart';
+import '../providers/theme_provider.dart';
 import 'restaurant_list_page.dart';
+import 'settings_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -42,8 +45,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -84,6 +89,30 @@ class _DiscoverPageState extends State<DiscoverPage> {
               "Profile",
               style: TextStyle(color: Colors.black54),
             ),
+          ),
+          // Theme Toggle Button (Sun/Moon)
+          IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: Theme.of(context).primaryColor,
+            ),
+            tooltip: themeProvider.isDarkMode
+                ? 'Switch to Light Mode'
+                : 'Switch to Dark Mode',
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+          ),
+          // Settings Button
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
           ),
         ],
       ),
@@ -166,24 +195,49 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     ),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF2C2C2C)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
+                            color: Colors.black.withValues(
+                              alpha: Theme.of(context).brightness == Brightness.dark
+                                  ? 0.3
+                                  : 0.05,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: const TextField(
+                      child: TextField(
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText:
                               "Search by dish name (e.g. phở, bún bò, cơm tấm)...",
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[500]
+                                : Colors.grey[600],
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey,
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,
                             horizontal: 20,
                           ),
@@ -201,7 +255,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         Text(
                           "Showing ${_dishes.length} dishes",
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
                         ),
