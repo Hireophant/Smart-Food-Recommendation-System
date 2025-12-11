@@ -46,6 +46,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -74,20 +75,29 @@ class _DiscoverPageState extends State<DiscoverPage> {
         actions: [
           TextButton(
             onPressed: () {},
-            child: const Text("Home", style: TextStyle(color: Colors.black54)),
-          ),
-          TextButton(
-            onPressed: () {},
-            child: const Text(
-              "Favorites",
-              style: TextStyle(color: Colors.black54),
+            child: Text(
+              "Home",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
             ),
           ),
           TextButton(
             onPressed: () {},
-            child: const Text(
+            child: Text(
+              "Favorites",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {},
+            child: Text(
               "Profile",
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
             ),
           ),
           // Theme Toggle Button (Sun/Moon)
@@ -131,13 +141,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920', // Food pattern or generic food background
                         ),
                         fit: BoxFit.cover,
-                        opacity: 0.3, // Dim it a bit if needed or use overlay
+                        opacity: 0.3,
                       ),
-                      color: Color(0xFFFFC045), // Fallback/Tint
+                      color: Color(0xFFFFC045), // Orange/Yellow
                     ),
                     child: Stack(
                       children: [
-                        // Yellow Overlay Pattern
+                        // Gradient Overlay
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -164,9 +174,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                   letterSpacing: 1.0,
                                   shadows: [
                                     Shadow(
-                                      offset: Offset(0, 2),
-                                      blurRadius: 4,
-                                      color: Colors.black26,
+                                      offset: Offset(0, 3),
+                                      blurRadius: 8,
+                                      color: Colors.black87,
+                                    ),
+                                    Shadow(
+                                      offset: Offset(0, 1),
+                                      blurRadius: 3,
+                                      color: Colors.black54,
                                     ),
                                   ],
                                 ),
@@ -178,6 +193,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 1),
+                                      blurRadius: 4,
+                                      color: Colors.black54,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
