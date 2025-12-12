@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/discover_page.dart';
 import 'providers/theme_provider.dart';
+import 'providers/favorites_provider.dart';
 
 /// Điểm khởi chạy của ứng dụng
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+      ],
       child: const MyApp(),
     ),
   );

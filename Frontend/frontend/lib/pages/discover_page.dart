@@ -6,6 +6,8 @@ import '../widgets/dish_card.dart';
 import '../providers/theme_provider.dart';
 import 'restaurant_list_page.dart';
 import 'settings_page.dart';
+import 'favorites_page.dart';
+import 'profile_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -74,7 +76,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              // Already on home page
+            },
             child: Text(
               "Home",
               style: TextStyle(
@@ -83,7 +87,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesPage()),
+              );
+            },
             child: Text(
               "Favorites",
               style: TextStyle(
@@ -92,7 +101,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
+            },
             child: Text(
               "Profile",
               style: TextStyle(

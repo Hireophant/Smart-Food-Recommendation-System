@@ -204,7 +204,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 16),
                   const Divider(),
@@ -268,16 +268,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
-              image: item.imageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(item.imageUrl!),
+              image: DecorationImage(
+                      image: NetworkImage(item.imageUrl),
                       fit: BoxFit.cover,
-                    )
-                  : null,
+                    ),
             ),
-            child: item.imageUrl == null
-                ? const Icon(Icons.fastfood, color: Colors.grey)
-                : null,
+            child: null,
           ),
           const SizedBox(width: 16),
           Expanded(

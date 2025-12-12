@@ -1,5 +1,6 @@
 /// Định nghĩa các model dùng trong app
 /// Theo Guideline: Định nghĩa rõ Input/Output
+library;
 
 /// Đại diện cho một nhà hàng/quán cafe (Restaurant Item)
 /// Model đại diện cho một Nhà hàng hoặc Địa điểm ăn uống
