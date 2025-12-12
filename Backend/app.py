@@ -18,34 +18,26 @@ async def onInitialize() -> bool:
         return False
     Logger.Initialize()
     
-    # #* Initialize MongoDB
-    # from core.database.mongodb import MongoDB, MongoConfig
+    #* Initialize MongoDB
+    from core.mongodb import MongoDB
+    await MongoDB.initialize()
+    await MongoDB.create_indexes()
     
-    # # Try to get MongoDB config from environment first, then from config file
-    # mongo_config = MongoConfig(
-    #     host=Config.Get().MongoDB.Host,
-    #     port=Config.Get().MongoDB.Port,
-    #     database=Config.Get().MongoDB.Database,
-    #     username=Config.Get().MongoDB.Username,
-    #     password=Config.Get().MongoDB.Password,
-    #     connectionString=Config.Get().MongoDB.ConnectionString
-    # )
-    
-    # if not await MongoDB.initialize(mongo_config):
-    #     Logger.LogError("Failed to initialize MongoDB!")
-    #     return False
-    
-    # # Create indexes
-    # await MongoDB.create_indexes()
-    # Logger.LogInfo("MongoDB setup completed successfully")
+    #* Initialize AI Client (OpenAI)
+    from core.ai import AIClient
+    await AIClient.initialize()
             
     return True
 
 #* Call when deinitialize the backend
 async def onDeinitialize():
-    # #* Deinitialize MongoDB
-    # from core.database.mongodb import MongoDB
-    # await MongoDB.close()
+    #* Close MongoDB connection
+    from core.mongodb import MongoDB
+    await MongoDB.close()
+    
+    #* Close AI Client connection
+    from core.ai import AIClient
+    await AIClient.close()
     
     return
 
