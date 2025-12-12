@@ -1,37 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/food_model.dart';
-import '../models/dish_model.dart';
 
-/// Handler giao tiếp giữa UI và Backend/Core
-abstract class FoodSearchHandler {
-  /// Tìm kiếm nhà hàng theo từ khóa
-  Future<SearchResult> searchFoods(String query);
-
-  /// Lấy danh sách tất cả nhà hàng
-  Future<SearchResult> getAllFoods();
-
-  /// Lấy chi tiết
-  Future<RestaurantItem?> getFoodDetails(String id);
-
-  /// Lấy menu
+/// Handler specialized for Restaurant operations
+abstract class RestaurantHandler {
+  Future<SearchResult> searchRestaurants(String query);
+  Future<SearchResult> getAllRestaurants();
+  Future<RestaurantItem?> getRestaurantDetails(String id);
   Future<List<MenuItem>> getMenu(String id);
-
-  /// Lấy danh sách món ăn (Mới - Cho luồng Dish-first)
-  Future<List<DishItem>> getAllDishes();
-
-  /// Tìm nhà hàng bán món này
   Future<SearchResult> getRestaurantsByDish(String dishId);
 }
 
-/// Implementation hiện tại - Mock Data kết hợp OSM Search
-///
-/// Class này giả lập việc gọi API từ Backend.
-/// - Dữ liệu cứng (Hardcoded) được dùng để hiển thị các quán mẫu đẹp mắt.
-/// - Tích hợp gọi API OpenStreetMap (Nominatim) để tìm kiếm địa điểm thực tế.
-class MockFoodSearchHandler implements FoodSearchHandler {
-  /// Mock data - matches the screenshot
-  static final List<RestaurantItem> _mockFoods = [
+class MockRestaurantHandler implements RestaurantHandler {
+  // Shared mock data could be extracted to a separate file, but keeping it here for simplicity
+  static final List<RestaurantItem> _mockRestaurants = [
     RestaurantItem(
       id: '1',
       name: 'THAIYEN CAFE Quan Thanh',
@@ -163,11 +145,10 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   ];
 
   @override
-  @override
-  Future<SearchResult> searchFoods(String query) async {
+  Future<SearchResult> searchRestaurants(String query) async {
     // 1. Search in local mock data
     final lowerQuery = query.toLowerCase();
-    final localResults = _mockFoods
+    final localResults = _mockRestaurants
         .where(
           (restaurant) =>
               restaurant.name.toLowerCase().contains(lowerQuery) ||
@@ -186,8 +167,6 @@ class MockFoodSearchHandler implements FoodSearchHandler {
         final url = Uri.parse(
           'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5&countrycodes=vn',
         );
-
-        // Add User-Agent as required by Nominatim
         final response = await http.get(
           url,
           headers: {'User-Agent': 'SmartFoodApp/1.0'},
@@ -214,29 +193,26 @@ class MockFoodSearchHandler implements FoodSearchHandler {
               longitude: double.parse(item['lon']),
             );
           }).toList();
-
           localResults.addAll(osmResults);
         }
       } catch (e) {
-        // print('OSM Search Error: $e');
-        // Ignore error and return local results
+        // Ignore error
       }
     }
-
     return SearchResult(items: localResults);
   }
 
   @override
-  Future<SearchResult> getAllFoods() async {
+  Future<SearchResult> getAllRestaurants() async {
     await Future.delayed(const Duration(milliseconds: 200));
-    return SearchResult(items: _mockFoods);
+    return SearchResult(items: _mockRestaurants);
   }
 
   @override
-  Future<RestaurantItem?> getFoodDetails(String id) async {
+  Future<RestaurantItem?> getRestaurantDetails(String id) async {
     await Future.delayed(const Duration(milliseconds: 100));
     try {
-      return _mockFoods.firstWhere((restaurant) => restaurant.id == id);
+      return _mockRestaurants.firstWhere((restaurant) => restaurant.id == id);
     } catch (e) {
       return null;
     }
@@ -245,7 +221,6 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   @override
   Future<List<MenuItem>> getMenu(String restaurantId) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // Mock menu - Generic items for now
     return [
       MenuItem(
         id: '1',
@@ -275,92 +250,15 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   }
 
   @override
-  Future<List<DishItem>> getAllDishes() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return [
-      DishItem(
-        id: '1',
-        name: 'Phở Bò',
-        description: 'Traditional Vietnamese beef noodle soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1582878826618-c05326eff950?q=80&w=600',
-        tags: ['Umami', 'Mild'],
-      ),
-      DishItem(
-        id: '2',
-        name: 'Bún Bò Huế',
-        description: 'Spicy beef noodle soup from Hue',
-        imageUrl:
-            'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600',
-        tags: ['Spicy', 'Umami'],
-      ),
-      DishItem(
-        id: '3',
-        name: 'Cơm Tấm',
-        description: 'Broken rice with grilled pork chop',
-        imageUrl:
-            'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=600', // Alternative rice image
-        tags: ['Salty', 'Sweet'],
-      ),
-      DishItem(
-        id: '4',
-        name: 'Pad Thai',
-        description: 'Stir-fried rice noodles with shrimp',
-        imageUrl:
-            'https://images.unsplash.com/photo-1559314809-0d155014e29e?q=80&w=600',
-        tags: ['Sweet', 'Sour'],
-      ),
-      DishItem(
-        id: '5',
-        name: 'Tom Yum Goong',
-        description: 'Hot and sour Thai soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1548681528-6a5c45b66b42?q=80&w=600',
-        tags: ['Spicy', 'Sour'],
-      ),
-      DishItem(
-        id: '6',
-        name: 'Sushi Platter',
-        description: 'Assorted fresh sushi',
-        imageUrl:
-            'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=600',
-        tags: ['Umami', 'Mild'],
-      ),
-      DishItem(
-        id: '7',
-        name: 'Ramen',
-        description: 'Japanese noodle soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=600',
-        tags: ['Umami', 'Salty'],
-      ),
-      DishItem(
-        id: '8',
-        name: 'Bibimbap',
-        description: 'Korean mixed rice bowl',
-        imageUrl:
-            'https://images.unsplash.com/photo-1596797038530-2c107229654b?q=80&w=600',
-        tags: ['Spicy', 'Umami'],
-      ),
-    ];
-  }
-
-  @override
   Future<SearchResult> getRestaurantsByDish(String dishId) async {
-    // Mock logic: return a subset based on id odd/even to verify filtering visual
-    // In real app, this would query backend for restaurants having this dish
     await Future.delayed(const Duration(milliseconds: 500));
-    final all = await getAllFoods();
-    // Simulate some filtering
+    final all = await getAllRestaurants();
     final filtered = all.items
         .where((r) => r.id.hashCode % 2 == dishId.hashCode % 2)
         .toList();
-
-    // Always return at least some for demo if empty
     if (filtered.isEmpty) {
       return SearchResult(items: all.items.take(3).toList());
     }
-
     return SearchResult(items: filtered);
   }
 }
