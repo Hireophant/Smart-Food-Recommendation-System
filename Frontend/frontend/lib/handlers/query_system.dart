@@ -1,4 +1,6 @@
-import '../handlers/food_search_handler.dart';
+// ignore_for_file: non_constant_identifier_names
+import '../handlers/dish_handler.dart';
+import '../handlers/restaurant_handler.dart';
 import '../models/food_model.dart';
 import '../models/dish_model.dart'; // Will create next
 
@@ -11,25 +13,26 @@ class QuerySystem {
   QuerySystem._internal();
 
   // Registered Handlers
-  final FoodSearchHandler _foodHandler = MockFoodSearchHandler();
+  final DishHandler _dishHandler = MockDishHandler();
+  final RestaurantHandler _restaurantHandler = MockRestaurantHandler();
 
-  /// Lấy danh sách món ăn đề xuất (Cho màn hình Home)
-  Future<List<DishItem>> getAllDishes() {
-    return _foodHandler.getAllDishes();
+  /// Task: Query Dishes (Lấy danh sách món ăn đề xuất)
+  Future<List<DishItem>> QueryDishes({List<String> filters = const []}) {
+    return _dishHandler.getAllDishes(filters: filters);
   }
 
-  /// Tìm kiếm món ăn hoặc nhà hàng
-  Future<SearchResult> search(String query) {
-    return _foodHandler.searchFoods(query);
+  /// Task: Query Search (Tìm kiếm món ăn hoặc nhà hàng)
+  Future<SearchResult> QuerySearch(String query) {
+    return _restaurantHandler.searchRestaurants(query);
   }
 
-  /// Tìm nhà hàng bán món cụ thể (Khi user chọn 1 món từ Home)
-  Future<SearchResult> findRestaurantsByDish(String dishId) {
-    return _foodHandler.getRestaurantsByDish(dishId);
+  /// Task: Query Restaurants By Dish (Tìm nhà hàng bán món cụ thể)
+  Future<SearchResult> QueryRestaurantsByDish(String dishId) {
+    return _restaurantHandler.getRestaurantsByDish(dishId);
   }
 
-  /// Lấy menu của nhà hàng
-  Future<List<MenuItem>> getMenu(String restaurantId) {
-    return _foodHandler.getMenu(restaurantId);
+  /// Task: Query Menu (Lấy menu của nhà hàng)
+  Future<List<MenuItem>> QueryMenu(String restaurantId) {
+    return _restaurantHandler.getMenu(restaurantId);
   }
 }

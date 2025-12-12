@@ -28,13 +28,96 @@ class _DiscoverPageState extends State<DiscoverPage> {
     _loadData();
   }
 
+  // State to track selected filters
+  final Set<String> _selectedFilters = {};
+
   Future<void> _loadData() async {
-    // Fetch dishes via Query System
-    final dishes = await _querySystem.getAllDishes();
+    // Fetch dishes via Query System with active filters
+    final dishes = await _querySystem.QueryDishes(
+      filters: _selectedFilters.toList(),
+    );
     setState(() {
       _dishes = dishes;
       _isLoading = false;
     });
+  }
+
+  // Helper to toggle filters and reload
+  void _onFilterSelected(String filter, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedFilters.add(filter);
+      } else {
+        _selectedFilters.remove(filter);
+      }
+      _isLoading = true; // Show loading while refetching
+    });
+    _loadData(); // Mock handler is fast, but good practice
+  }
+
+  Widget _buildFilterSection(
+    BuildContext context, {
+    required String title,
+    required List<String> options,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: options.map((option) {
+              final isSelected = _selectedFilters.contains(option);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: FilterChip(
+                  label: Text(option),
+                  selected: isSelected,
+                  onSelected: (bool selected) =>
+                      _onFilterSelected(option, selected),
+                  // Conditional Color for Selected State
+                  backgroundColor: isSelected
+                      ? Colors.green.shade100
+                      : (isDarkMode ? Colors.grey[800] : Colors.grey[100]),
+                  selectedColor: Colors.green.shade200,
+                  checkmarkColor: Colors.green.shade900,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? Colors.green.shade900
+                        : (isDarkMode ? Colors.white70 : Colors.black87),
+                    fontSize: 13,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: isSelected
+                          ? Colors.green
+                          : (isDarkMode
+                                ? Colors.grey[700]!
+                                : Colors.grey[300]!),
+                      width: isSelected ? 1.5 : 0.5,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
   }
 
   void _onDishSelected(DishItem dish) {
@@ -244,7 +327,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(
-                              alpha: Theme.of(context).brightness == Brightness.dark
+                              alpha:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
                                   ? 0.3
                                   : 0.05,
                             ),
@@ -263,13 +348,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           hintText:
                               "Search by dish name (e.g. phở, bún bò, cơm tấm)...",
                           hintStyle: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.grey[500]
                                 : Colors.grey[600],
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.grey[400]
                                 : Colors.grey,
                           ),
@@ -283,6 +370,56 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     ),
                   ),
 
+                  // Filter Sections
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFilterSection(
+                          context,
+                          title: 'Taste',
+                          options: [
+                            'Spicy',
+                            'Mild',
+                            'Sweet',
+                            'Salty',
+                            'Sour',
+                            'Umami',
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFilterSection(
+                          context,
+                          title: 'Preferences',
+                          options: [
+                            'Healthy',
+                            'Vegetarian',
+                            'Vegan',
+                            'High-protein',
+                            'Fast food',
+                            'Street food',
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFilterSection(
+                          context,
+                          title: 'Cuisine Type',
+                          options: [
+                            'Vietnamese',
+                            'Thai',
+                            'Japanese',
+                            'Korean',
+                            'Western',
+                            'Chinese',
+                            'Other',
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Dish Grid
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -292,7 +429,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         Text(
                           "Showing ${_dishes.length} dishes",
                           style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.grey[400]
                                 : Colors.grey[600],
                             fontWeight: FontWeight.w500,
