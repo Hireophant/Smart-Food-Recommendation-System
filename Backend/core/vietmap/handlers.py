@@ -1,9 +1,10 @@
 import aiohttp, os, json
 from core.vietmap.schemas import VietmapSearchResponse, VietmapReverseResponse, VietmapPlaceResponse,\
-    VietmapGeocodingResponseModel, VietmapAutocompleteResponse
+    VietmapGeocodingResponseModel, VietmapAutocompleteResponse, MapCoordinate
 from typing import Optional, Dict, Annotated, List, Any, cast
-from core import MapCoordinate
 from pydantic import PositiveFloat, BaseModel, ConfigDict, Field, PlainSerializer
+from fastapi import status, HTTPException
+from utils import Logger
 
 VIETMAP_API_KEY_ENVIRONMENT_NAME = "VIETMAP_API_KEY"
 VIETMAP_API_DISPLAY_TYPE = 1 # New response type, see API for reference.
@@ -32,7 +33,10 @@ class VietmapSearchInputSchema(BaseModel):
     
 VietmapAutocompleteInputSchema = VietmapSearchInputSchema
 
-class VietmapHandlers:
+class VietmapClientError(Exception):
+    """"""
+
+class VietmapClient:
     def __init__(self) -> None:
         api_key = os.getenv(VIETMAP_API_KEY_ENVIRONMENT_NAME)
         if not api_key:
@@ -40,11 +44,22 @@ class VietmapHandlers:
         self.__api_key = api_key
         self.__client = aiohttp.ClientSession()
     
-    async def __sendRequest(self, url: str, params: Dict[str, Any] = dict()) -> Optional[Any]:
+    async def __sendRequest(self, url: str, params: Dict[str, Any] = dict()) -> Any:
         if self.__client.closed:
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail="Vietmap client session is closed!")
         async with self.__client.get(url, params=params) as session:
-            session.raise_for_status()
+            if session.status == status.HTTP_404_NOT_FOUND: # Not found
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Not found")
+            elif session.status == status.HTTP_401_UNAUTHORIZED: # Unauthorize (possibly wrong API key)
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    detail="Authorization failed for Vietmap API (possibly wrong API key)")
+            elif not session.ok:
+                Logger.LogError(f"Vietmap API response with code '{session.status}', with reason '{session.reason}'")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    detail=f"Failed to query from Vietmap API")
+            
             return await session.json()
     
     async def __sendRequestList(self, url: str, params: Dict[str, Any] = dict()) -> Optional[List[Dict[str, Any]]]:
@@ -59,7 +74,9 @@ class VietmapHandlers:
         raw_params.update([('apiKey', self.__api_key), ('display_type', VIETMAP_API_DISPLAY_TYPE)])
 
     async def Search(self, inputs: VietmapSearchInputSchema) -> Optional[VietmapSearchResponse]:
-        params = {k: v for k, v in inputs.model_dump().items() if v is not None}
+        params = {k: v for k, v in inputs.model_dump(by_alias=True).items() if v is not None}
+        if 'text' in params:
+            params.update([('text', '"' + params['text'] + '"')])
         self.__finalize_params(params)
         
         res = await self.__sendRequestList(url=VIETMAP_SEARCH_URL, params=params)
@@ -68,21 +85,23 @@ class VietmapHandlers:
         return [VietmapGeocodingResponseModel(**val) for val in res]
     
     async def Autocomplete(self, inputs: VietmapSearchInputSchema) -> Optional[VietmapAutocompleteResponse]:
-        params = {k: v for k, v in inputs.model_dump().items() if v is not None}
+        params = {k: v for k, v in inputs.model_dump(by_alias=True).items() if v is not None}
+        if 'text' in params:
+            params.update([('text', '"' + params['text'] + '"')])
         self.__finalize_params(params)
         
         res = await self.__sendRequestList(url=VIETMAP_AUTOCOMPLETE_URL, params=params)
         return None if res is None else [VietmapGeocodingResponseModel(**val) for val in res]
     
     async def Place(self, ref_id: str) -> Optional[VietmapPlaceResponse]:
-        params = {"ref_id": ref_id}
+        params = {"refId": ref_id}
         self.__finalize_params(params)
         
         res = await self.__sendRequestDict(url=VIETMAP_PLACE_URL, params=params)
         return None if res is None else VietmapPlaceResponse(**res)
     
     async def Reverse(self, coords: MapCoordinate) -> Optional[VietmapReverseResponse]:
-        params = {"lat": coords.Latitude, "lon": coords.Longitude}
+        params = {"lat": coords.Latitude, "lng": coords.Longitude}
         self.__finalize_params(params)
         
         res = await self.__sendRequestList(VIETMAP_REVERSE_URL, params=params)

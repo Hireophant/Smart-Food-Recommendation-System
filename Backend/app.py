@@ -1,4 +1,4 @@
-import dotenv, schemas.errors
+import dotenv, schemas.errors, routers.maps
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,34 +18,34 @@ async def onInitialize() -> bool:
         return False
     Logger.Initialize()
     
-    #* Initialize MongoDB
-    from core.database.mongodb import MongoDB, MongoConfig
+    # #* Initialize MongoDB
+    # from core.database.mongodb import MongoDB, MongoConfig
     
-    # Try to get MongoDB config from environment first, then from config file
-    mongo_config = MongoConfig(
-        host=Config.Get().MongoDB.Host,
-        port=Config.Get().MongoDB.Port,
-        database=Config.Get().MongoDB.Database,
-        username=Config.Get().MongoDB.Username,
-        password=Config.Get().MongoDB.Password,
-        connection_string=Config.Get().MongoDB.ConnectionString
-    )
+    # # Try to get MongoDB config from environment first, then from config file
+    # mongo_config = MongoConfig(
+    #     host=Config.Get().MongoDB.Host,
+    #     port=Config.Get().MongoDB.Port,
+    #     database=Config.Get().MongoDB.Database,
+    #     username=Config.Get().MongoDB.Username,
+    #     password=Config.Get().MongoDB.Password,
+    #     connectionString=Config.Get().MongoDB.ConnectionString
+    # )
     
-    if not await MongoDB.initialize(mongo_config):
-        Logger.LogError("Failed to initialize MongoDB!")
-        return False
+    # if not await MongoDB.initialize(mongo_config):
+    #     Logger.LogError("Failed to initialize MongoDB!")
+    #     return False
     
-    # Create indexes
-    await MongoDB.create_indexes()
-    Logger.LogInfo("MongoDB setup completed successfully")
+    # # Create indexes
+    # await MongoDB.create_indexes()
+    # Logger.LogInfo("MongoDB setup completed successfully")
             
     return True
 
 #* Call when deinitialize the backend
 async def onDeinitialize():
-    #* Deinitialize MongoDB
-    from core.database.mongodb import MongoDB
-    await MongoDB.close()
+    # #* Deinitialize MongoDB
+    # from core.database.mongodb import MongoDB
+    # await MongoDB.close()
     
     return
 
@@ -63,6 +63,9 @@ async def appLifespan(app: FastAPI):
     await onDeinitialize()
 
 app = FastAPI(lifespan=appLifespan)
+
+# Including routers
+app.include_router(routers.maps.router)
 
 # Add rate limiter state
 app.state.limiter = limiter
