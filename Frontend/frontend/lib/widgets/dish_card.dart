@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
+import '../providers/favorites_provider.dart';
 
 class DishCard extends StatelessWidget {
   final DishItem item;
@@ -10,6 +12,8 @@ class DishCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isDishFavorite(item.id);
 
     return Container(
       decoration: BoxDecoration(
@@ -41,6 +45,46 @@ class DishCard extends StatelessWidget {
                     child: Icon(
                       Icons.broken_image,
                       color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                    ),
+                  ),
+                ),
+                // Favorite Button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.grey[600],
+                        size: 20,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        favoritesProvider.toggleDish(item);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isFavorite 
+                                ? '${item.name} removed from favorites' 
+                                : '${item.name} added to favorites'
+                            ),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

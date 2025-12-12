@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/food_model.dart';
+import '../providers/favorites_provider.dart';
 
 /// Widget hiển thị thẻ thông tin nhà hàng trong danh sách
 /// Hiển thị: Ảnh, Tên, Danh mục, Đánh giá, và Trạng thái (Open/Close).
@@ -12,6 +14,8 @@ class RestaurantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isRestaurantFavorite(item.id);
 
     return GestureDetector(
       onTap: onTap,
@@ -105,6 +109,46 @@ class RestaurantCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // Favorite Button
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey[600],
+                          size: 20,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          favoritesProvider.toggleRestaurant(item);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFavorite 
+                                  ? '${item.name} removed from favorites' 
+                                  : '${item.name} added to favorites'
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                   // Distance Badge
                   Positioned(
                     top: 8,
