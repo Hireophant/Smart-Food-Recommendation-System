@@ -252,13 +252,13 @@ class ToolExecutor:
                 "success": True,
                 "profile": {
                     "user_id": profile.user_id,
-                    "preferred_cuisines": profile.preferred_cuisines,
+                    "cuisines": profile.cuisines,
                     "spice_level": profile.spice_level,
                     "dietary_restrictions": profile.dietary_restrictions,
                     "allergies": profile.allergies,
                     "favorite_dishes": profile.favorite_dishes,
                     "dislikes": profile.dislikes,
-                    "budget_range": profile.budget_range
+                    "price_preference": profile.price_preference
                 }
             }
         else:
@@ -267,13 +267,13 @@ class ToolExecutor:
                 "success": True,
                 "profile": {
                     "user_id": user_id,
-                    "preferred_cuisines": [],
+                    "cuisines": [],
                     "spice_level": None,
                     "dietary_restrictions": [],
                     "allergies": [],
                     "favorite_dishes": [],
                     "dislikes": [],
-                    "budget_range": None
+                    "price_preference": None
                 },
                 "message": "No profile found, returning empty profile"
             }
