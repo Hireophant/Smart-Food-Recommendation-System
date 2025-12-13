@@ -19,6 +19,26 @@ VietmapCoordinate = Annotated[
 ]
 
 class VietmapSearchInputSchema(BaseModel):
+    """
+    Input parameters for Search and Autocomplete operations.
+    
+    Usage:
+        # Basic search
+        VietmapSearchInputSchema(Text="restaurant")
+        
+        # Search with location focus
+        VietmapSearchInputSchema(
+            Text="cafe",
+            Focus=MapCoordinate(Latitude=21.0285, Longitude=105.8542)
+        )
+        
+        # Search within radius
+        VietmapSearchInputSchema(
+            Text="hotel",
+            CircleCenter=MapCoordinate(Latitude=21.0285, Longitude=105.8542),
+            CircleRadius=2.5  # kilometers
+        )
+    """
     model_config = ConfigDict(extra="ignore")
     
     Text: str = Field(serialization_alias='text')
@@ -33,10 +53,17 @@ class VietmapSearchInputSchema(BaseModel):
     
 VietmapAutocompleteInputSchema = VietmapSearchInputSchema
 
-class VietmapClientError(Exception):
-    """"""
-
 class VietmapClient:
+    """
+    Async client for interacting with Vietmap API services.
+    
+    Provides methods for geocoding, reverse geocoding, place details, and autocomplete.
+    Requires VIETMAP_API_KEY environment variable to be set.
+    
+    Usage:
+        async with VietmapClient() as client:
+            results = await client.Search(VietmapSearchInputSchema(Text="Hanoi"))
+    """
     def __init__(self) -> None:
         api_key = os.getenv(VIETMAP_API_KEY_ENVIRONMENT_NAME)
         if not api_key:
@@ -74,6 +101,23 @@ class VietmapClient:
         raw_params.update([('apiKey', self.__api_key), ('display_type', VIETMAP_API_DISPLAY_TYPE)])
 
     async def Search(self, inputs: VietmapSearchInputSchema) -> Optional[VietmapSearchResponse]:
+        """
+        Search for places by text query with optional filters.
+        
+        Args:
+            inputs: Search parameters including text query and optional filters
+        
+        Returns:
+            List of geocoding results or None if no results found
+        
+        Example:
+            search_input = VietmapSearchInputSchema(
+                Text="coffee shop",
+                Focus=MapCoordinate(Latitude=21.0285, Longitude=105.8542),
+                CircleRadius=5.0
+            )
+            results = await client.Search(search_input)
+        """
         params = {k: v for k, v in inputs.model_dump(by_alias=True).items() if v is not None}
         if 'text' in params:
             params.update([('text', '"' + params['text'] + '"')])
@@ -85,6 +129,22 @@ class VietmapClient:
         return [VietmapGeocodingResponseModel(**val) for val in res]
     
     async def Autocomplete(self, inputs: VietmapSearchInputSchema) -> Optional[VietmapAutocompleteResponse]:
+        """
+        Get autocomplete suggestions for partial text input.
+        
+        Args:
+            inputs: Autocomplete parameters including partial text query
+        
+        Returns:
+            List of autocomplete suggestions or None if no results found
+        
+        Example:
+            autocomplete_input = VietmapAutocompleteInputSchema(
+                Text="Ha Noi",
+                CityId=1  # Limit to specific city
+            )
+            suggestions = await client.Autocomplete(autocomplete_input)
+        """
         params = {k: v for k, v in inputs.model_dump(by_alias=True).items() if v is not None}
         if 'text' in params:
             params.update([('text', '"' + params['text'] + '"')])
@@ -94,6 +154,23 @@ class VietmapClient:
         return None if res is None else [VietmapGeocodingResponseModel(**val) for val in res]
     
     async def Place(self, ref_id: str) -> Optional[VietmapPlaceResponse]:
+        """
+        Get detailed information about a specific place by reference ID.
+        
+        Args:
+            ref_id: Reference ID from Search or Autocomplete results
+        
+        Returns:
+            Detailed place information or None if not found
+        
+        Example:
+            # First get ref_id from search results
+            search_results = await client.Search(VietmapSearchInputSchema(Text="Hanoi Opera House"))
+            ref_id = search_results[0].ReferenceId
+            
+            # Then get detailed place info
+            place_details = await client.Place(ref_id)
+        """
         params = {"refId": ref_id}
         self.__finalize_params(params)
         
@@ -101,6 +178,19 @@ class VietmapClient:
         return None if res is None else VietmapPlaceResponse(**res)
     
     async def Reverse(self, coords: MapCoordinate) -> Optional[VietmapReverseResponse]:
+        """
+        Reverse geocode coordinates to get place information.
+        
+        Args:
+            coords: Map coordinates (latitude and longitude)
+        
+        Returns:
+            List of places at or near the coordinates or None if not found
+        
+        Example:
+            coords = MapCoordinate(Latitude=21.0285, Longitude=105.8542)
+            places = await client.Reverse(coords)
+        """
         params = {"lat": coords.Latitude, "lng": coords.Longitude}
         self.__finalize_params(params)
         

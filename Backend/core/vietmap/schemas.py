@@ -5,6 +5,12 @@ from dataclasses import dataclass
 
 @dataclass
 class MapCoordinate:
+    """
+    Represents geographic coordinates.
+    
+    Usage:
+        coords = MapCoordinate(Latitude=21.0285, Longitude=105.8542)
+    """
     Latitude: float
     Longitude: float
 
@@ -14,6 +20,14 @@ class VietmapBoundariesType(int, Enum):
     Ward = 2
 
 class VietmapBoundaries(BaseModel):
+    """
+    Administrative boundary information (city, district, or ward).
+    
+    Attributes:
+        Type: Boundary type (City=0, District=1, Ward=2)
+        Id: Boundary ID
+        FullName: Full name of the boundary
+    """
     model_config = ConfigDict(extra="ignore")
     
     Type: VietmapBoundariesType = Field(default=VietmapBoundariesType.City, validation_alias="type")
@@ -27,6 +41,19 @@ class VietmapEntryPoint(BaseModel):
     Name: str = Field(default='', validation_alias="name")
     
 class VietmapGeocodingResponseModel(BaseModel):
+    """
+    Geocoding result from Search, Autocomplete, or Reverse operations.
+    
+    Attributes:
+        ReferenceId: Unique reference ID for the place (use with Place method)
+        Distance: Distance from query point in kilometers
+        Address: Full address string
+        Name: Place name
+        Display: Display name
+        Boundaries: List of administrative boundaries (city, district, ward)
+        Categories: List of place categories
+        EntryPoints: List of entry points for the location
+    """
     model_config = ConfigDict(extra="ignore")
     
     ReferenceId: str = Field(default='', validation_alias="ref_id")
@@ -39,6 +66,24 @@ class VietmapGeocodingResponseModel(BaseModel):
     EntryPoints: List[VietmapEntryPoint] = Field(default_factory=list, validation_alias="entry_points")
     
 class VietmapPlaceResponseModel(BaseModel):
+    """
+    Detailed place information from Place method.
+    
+    Attributes:
+        Display: Display name
+        Name: Place name
+        HouseNumber: House or building number
+        Street: Street name
+        Address: Full address
+        CityId: City ID
+        CityName: City name
+        DistrictId: District ID
+        DistrictName: District name
+        WardId: Ward ID
+        WardName: Ward name
+        Latitude: Geographic latitude
+        Longitude: Geographic longitude
+    """
     model_config = ConfigDict(extra="ignore")
 
     Display: str = Field(default='', validation_alias="display")
