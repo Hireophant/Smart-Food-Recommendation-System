@@ -33,21 +33,37 @@ class DishCard extends StatelessWidget {
         children: [
           // Image
           Expanded(
-            flex: 4,
+            flex: 3, // Reduced flex for image to give more space to content
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.network(
-                  item.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    child: Icon(
-                      Icons.broken_image,
-                      color: isDarkMode ? Colors.grey[600] : Colors.grey,
-                    ),
-                  ),
-                ),
+                item.imageUrl.startsWith('http')
+                    ? Image.network(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.grey[200],
+                          child: Icon(
+                            Icons.broken_image,
+                            color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.grey[200],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                          ),
+                        ),
+                      ),
                 // Favorite Button
                 Positioned(
                   top: 8,
@@ -77,9 +93,9 @@ class DishCard extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              isFavorite 
-                                ? '${item.name} removed from favorites' 
-                                : '${item.name} added to favorites'
+                              isFavorite
+                                  ? '${item.name} removed from favorites'
+                                  : '${item.name} added to favorites',
                             ),
                             duration: const Duration(seconds: 1),
                           ),
@@ -96,7 +112,9 @@ class DishCard extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(
+                8.0,
+              ), // Reduced padding to save space
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -105,7 +123,9 @@ class DishCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white : const Color(0xFF1E1E1E),
+                      color: isDarkMode
+                          ? Colors.white
+                          : const Color(0xFF1E1E1E),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -118,10 +138,10 @@ class DishCard extends StatelessWidget {
                       color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       height: 1.4,
                     ),
-                    maxLines: 2,
+                    maxLines: 1, // Shortened to 1 line to prevent overflow
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
 
                   // Tags
                   Wrap(
@@ -130,8 +150,8 @@ class DishCard extends StatelessWidget {
                     children: item.tags.take(2).map((tag) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 6, // Slightly tighter tags
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: isDarkMode
@@ -155,26 +175,32 @@ class DishCard extends StatelessWidget {
 
                   const Spacer(),
 
-                  // Button
+                  // Button - Even smaller as requested
                   SizedBox(
                     width: double.infinity,
+                    height: 24, // Reduced to 24px
                     child: ElevatedButton(
                       onPressed: onTap,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1ABC9C), // Teal button
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: const Color(0xFF1ABC9C),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(
+                            4,
+                          ), // Slightly sharper corners
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 0,
-                        ), // Compact
+                        padding: EdgeInsets.zero,
+                        minimumSize:
+                            Size.zero, // Remove minimum size constraints
+                        tapTargetSize: MaterialTapTargetSize
+                            .shrinkWrap, // Remove touch target padding
                       ),
                       child: const Text(
-                        "Select dish",
+                        "Select",
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 11, // Smaller font
                           fontWeight: FontWeight.w600,
                         ),
                       ),

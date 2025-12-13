@@ -32,8 +32,8 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   bool _isLoading = true;
 
-  // Mock Current Location (Hanoi Center)
-  final LatLng _currentLocation = const LatLng(21.0285, 105.8542);
+  // Current Location (University of Science, VNU-HCM)
+  final LatLng _currentLocation = const LatLng(10.7628, 106.6825);
   List<LatLng> _routePoints = [];
   RestaurantItem? _selectedItemForRoute;
 
@@ -46,7 +46,7 @@ class _MapPageState extends State<MapPage> {
   Future<void> _loadData() async {
     SearchResult result;
     if (widget.selectedDish != null) {
-      result = await _querySystem.QueryRestaurantsByDish(
+      result = await _querySystem.findRestaurantsByDish(
         widget.selectedDish!.id,
       );
     } else if (widget.selectedRestaurant != null) {
@@ -54,7 +54,7 @@ class _MapPageState extends State<MapPage> {
       result = SearchResult(items: [widget.selectedRestaurant!]);
     } else {
       // Default: show generic search or all (mock behavior)
-      result = await _querySystem.QuerySearch("all");
+      result = await _querySystem.search("all");
     }
 
     setState(() {
