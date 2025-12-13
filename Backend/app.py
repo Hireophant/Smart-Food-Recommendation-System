@@ -1,4 +1,4 @@
-import dotenv, schemas.errors
+import dotenv, schemas.errors, routers.maps
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,33 +19,25 @@ async def onInitialize() -> bool:
     Logger.Initialize()
     
     #* Initialize MongoDB
-    from core.database.mongodb import MongoDB, MongoConfig
-    
-    # Try to get MongoDB config from environment first, then from config file
-    mongo_config = MongoConfig(
-        host=Config.Get().MongoDB.Host,
-        port=Config.Get().MongoDB.Port,
-        database=Config.Get().MongoDB.Database,
-        username=Config.Get().MongoDB.Username,
-        password=Config.Get().MongoDB.Password,
-        connection_string=Config.Get().MongoDB.ConnectionString
-    )
-    
-    if not await MongoDB.initialize(mongo_config):
-        Logger.LogError("Failed to initialize MongoDB!")
-        return False
-    
-    # Create indexes
+    from core.mongodb import MongoDB
+    await MongoDB.initialize()
     await MongoDB.create_indexes()
-    Logger.LogInfo("MongoDB setup completed successfully")
+    
+    #* Initialize AI Client (OpenAI)
+    from core.ai import AIClient
+    await AIClient.initialize()
             
     return True
 
 #* Call when deinitialize the backend
 async def onDeinitialize():
-    #* Deinitialize MongoDB
-    from core.database.mongodb import MongoDB
+    #* Close MongoDB connection
+    from core.mongodb import MongoDB
     await MongoDB.close()
+    
+    #* Close AI Client connection
+    from core.ai import AIClient
+    await AIClient.close()
     
     return
 
@@ -63,6 +55,9 @@ async def appLifespan(app: FastAPI):
     await onDeinitialize()
 
 app = FastAPI(lifespan=appLifespan)
+
+# Including routers
+app.include_router(routers.maps.router)
 
 # Add rate limiter state
 app.state.limiter = limiter

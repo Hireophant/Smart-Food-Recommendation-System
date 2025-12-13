@@ -1,6 +1,12 @@
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List
+from dataclasses import dataclass
+
+@dataclass
+class MapCoordinate:
+    Latitude: float
+    Longitude: float
 
 class VietmapBoundariesType(int, Enum):
     City = 0
