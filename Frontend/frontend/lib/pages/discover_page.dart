@@ -32,10 +32,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
   final Set<String> _selectedFilters = {};
 
   Future<void> _loadData() async {
-    // Fetch dishes via Query System with active filters
-    final dishes = await _querySystem.QueryDishes(
-      filters: _selectedFilters.toList(),
-    );
+    // Fetch dishes via Query System
+    final dishes = await _querySystem.getAllDishes();
     setState(() {
       _dishes = dishes;
       _isLoading = false;
@@ -144,8 +142,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 color: Colors.orange,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Icon(
-                Icons.restaurant_menu,
+              child: Icon(
+                // Mobile: Add Icon, Desktop: Restaurant Menu
+                MediaQuery.of(context).size.width < 600
+                    ? Icons.add
+                    : Icons.restaurant_menu,
                 color: Colors.white,
                 size: 20,
               ),
@@ -158,45 +159,49 @@ class _DiscoverPageState extends State<DiscoverPage> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              // Already on home page
-            },
-            child: Text(
-              "Home",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+          // Show Navigation Links ONLY on Desktop (> 600 width)
+          if (MediaQuery.of(context).size.width >= 600) ...[
+            TextButton(
+              onPressed: () {
+                // Already on home page
+              },
+              child: Text(
+                "Home",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
               ),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FavoritesPage()),
-              );
-            },
-            child: Text(
-              "Favorites",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FavoritesPage()),
+                );
+              },
+              child: Text(
+                "Favorites",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
               ),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
-            child: Text(
-              "Profile",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              },
+              child: Text(
+                "Profile",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
               ),
             ),
-          ),
+          ],
+
           // Theme Toggle Button (Sun/Moon)
           IconButton(
             icon: Icon(
@@ -457,7 +462,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                     crossAxisSpacing: 20,
                                     mainAxisSpacing: 20,
                                     childAspectRatio:
-                                        0.75, // Taller cards for image + content
+                                        0.7, // Taller cards to prevent overflow
                                   ),
                               itemBuilder: (context, index) {
                                 final item = _dishes[index];
