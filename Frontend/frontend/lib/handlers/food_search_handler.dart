@@ -13,6 +13,9 @@ import 'restaurant_handler.dart';
 abstract class FoodSearchHandler {
   // --- Discovery Flow ---
   Future<List<DishItem>> getAllDishes();
+  Future<List<DishItem>> searchDishes(
+    String query,
+  ); // New method for searching dishes
   Future<SearchResult> searchFoods(String query);
 
   // --- Restaurant Flow ---
@@ -30,6 +33,9 @@ abstract class FoodSearchHandler {
 class MockFoodSearchHandler implements FoodSearchHandler {
   // Use data from RestaurantHandler to ensure consistency
   List<RestaurantItem> get _mockFoods => MockRestaurantHandler.mockRestaurants;
+
+  // Utilize DishHandler for dish-related operations
+  final DishHandler _dishHandler = DishHandler();
 
   @override
   Future<SearchResult> searchFoods(String query) async {
@@ -72,6 +78,7 @@ class MockFoodSearchHandler implements FoodSearchHandler {
               rating: 4.0, // Default rating for OSM
               ratingCount: 10,
               imageUrl: 'assets/images/com_tam.png', // Fallback image
+              address: item['display_name'] ?? 'Unknown Address',
               description: item['display_name'],
               priceLevel: '\$\$',
               isOpen: true,
@@ -133,9 +140,12 @@ class MockFoodSearchHandler implements FoodSearchHandler {
 
   @override
   Future<List<DishItem>> getAllDishes() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    // Retrieve from DishHandler to ensure consistency
-    return DishHandler.allDishes;
+    return _dishHandler.getAllDishes();
+  }
+
+  @override
+  Future<List<DishItem>> searchDishes(String query) async {
+    return _dishHandler.searchDishes(query);
   }
 
   @override

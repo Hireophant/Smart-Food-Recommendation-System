@@ -15,6 +15,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 1. Cơm Tấm
     RestaurantItem(
       id: '1_1',
+      address: '84 Đặng Văn Ngữ, P. 10, Q. Phú Nhuận',
       name: 'Cơm Tấm Ba Ghiền',
       category: 'Cơm Tấm • Authentic',
       rating: 4.8,
@@ -29,6 +30,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '1_2',
+      address: 'Hẻm 73 Lê Văn Linh, P. 13, Q.4',
       name: 'Cơm Tấm Bãi Rác',
       category: 'Cơm Tấm • Authentic',
       rating: 4.5,
@@ -43,6 +45,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '1_3',
+      address: '82 Nguyễn Văn Trỗi, P. 8, Q. Phú Nhuận',
       name: 'Cơm Tấm Cali',
       category: 'Cơm Tấm • Authentic',
       rating: 3.9,
@@ -57,6 +60,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '1_4',
+      address: 'Chuỗi nhiều chi nhánh khắp TP. HCM',
       name: 'Cơm Tấm Phúc Lộc Thọ',
       category: 'Cơm Tấm • Authentic',
       rating: 4.2,
@@ -71,6 +75,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '1_5',
+      address: '54-56 Tản Đà, P. 10, Q.5',
       name: 'Cơm Tấm Thuận Kiều',
       category: 'Cơm Tấm • Authentic',
       rating: 3.9,
@@ -86,6 +91,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 2. Hủ Tiếu
     RestaurantItem(
       id: '2_1',
+      address: '72 Nguyễn Thượng Hiền, P. 5, Q.3',
       name: 'Hủ Tiếu Nam Vang Nhân Quán',
       category: 'Hủ Tiếu • Authentic',
       rating: 3.9,
@@ -100,6 +106,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '2_2',
+      address: 'A65 Nguyễn Trãi, P. Nguyễn Cư Trinh, Q.1',
       name: 'Hủ Tiếu Nam Vang Quỳnh',
       category: 'Hủ Tiếu • Authentic',
       rating: 4.0,
@@ -114,6 +121,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '2_3',
+      address: '43 Tôn Thất Đạm, P. Nguyễn Thái Bình, Q.1',
       name: 'Hủ Tiếu Cá Nam Lợi',
       category: 'Hủ Tiếu • Authentic',
       rating: 4.8,
@@ -128,6 +136,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '2_4',
+      address: '110 Hùng Vương, P. 9, Q.5',
       name: 'Hủ Tiếu Mỹ Tho Cả Cần',
       category: 'Hủ Tiếu • Authentic',
       rating: 4.8,
@@ -142,6 +151,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '2_5',
+      address: '55/4 Nguyễn Thị Minh Khai, P. Bến Nghé, Q.1',
       name: 'Hủ Tiếu Mực Ông Già Cali',
       category: 'Hủ Tiếu • Authentic',
       rating: 4.5,
@@ -157,6 +167,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 3. Bánh Mì
     RestaurantItem(
       id: '3_1',
+      address: '26 Lê Thị Riêng, P. Bến Thành, Q.1',
       name: 'Bánh Mì Huỳnh Hoa',
       category: 'Bánh Mì • Authentic',
       rating: 4.5,
@@ -171,6 +182,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '3_2',
+      address: '19 Huỳnh Khương Ninh, P. Đa Kao, Q.1',
       name: 'Bánh Mì Bảy Hổ',
       category: 'Bánh Mì • Authentic',
       rating: 4.2,
@@ -185,6 +197,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '3_3',
+      address: '53 Cao Thắng, P. 3, Q.3',
       name: 'Bánh Mì Hòa Mã',
       category: 'Bánh Mì • Authentic',
       rating: 4.8,
@@ -199,6 +212,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '3_4',
+      address: '50 Hàm Nghi, P. Bến Nghé, Q.1',
       name: 'Bánh Mì Như Lan',
       category: 'Bánh Mì • Authentic',
       rating: 4.0,
@@ -213,6 +227,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '3_5',
+      address: 'Trước số 39 Nguyễn Trãi, P. Bến Thành, Q.1',
       name: 'Bánh Mì 37 Nguyễn Trãi',
       category: 'Bánh Mì • Authentic',
       rating: 4.8,
@@ -228,6 +243,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 4. Phở
     RestaurantItem(
       id: '4_1',
+      address: '260C Pasteur, P. 8, Q.3',
       name: 'Phở Hòa Pasteur',
       category: 'Phở • Authentic',
       rating: 4.0,
@@ -242,6 +258,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '4_2',
+      address: '303 Võ Văn Tần, P. 5, Q.3',
       name: 'Phở Lệ',
       category: 'Phở • Authentic',
       rating: 4.2,
@@ -256,6 +273,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '4_3',
+      address: 'Hẻm 288 Nam Kỳ Khởi Nghĩa, P. 8, Q.3',
       name: 'Phở Dậu (Cư xá 288)',
       category: 'Phở • Authentic',
       rating: 4.2,
@@ -270,6 +288,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '4_4',
+      address: '63/6 Pasteur, P. Bến Nghé, Q.1',
       name: 'Phở Minh',
       category: 'Phở • Authentic',
       rating: 4.5,
@@ -284,6 +303,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '4_5',
+      address: '339 Lê Văn Sỹ, P. 13, Q.3',
       name: 'Phở Phú Vương',
       category: 'Phở • Authentic',
       rating: 4.5,
@@ -299,6 +319,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 5. Bún Bò Huế
     RestaurantItem(
       id: '5_1',
+      address: '242 Đề Thám, P. Phạm Ngũ Lão, Q.1',
       name: 'Bún Bò Huế Nam Giao',
       category: 'Bún Bò Huế • Authentic',
       rating: 4.2,
@@ -313,6 +334,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '5_2',
+      address: 'Hẻm 14B Nguyễn Thị Thập, P. Bình Thuận, Q.7',
       name: 'Bún Bò Huế 14B (Chú Há)',
       category: 'Bún Bò Huế • Authentic',
       rating: 3.9,
@@ -327,6 +349,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '5_3',
+      address: '135 Bành Văn Trân, P. 7, Q. Tân Bình',
       name: 'Bún Bò Huế Hạnh',
       category: 'Bún Bò Huế • Authentic',
       rating: 4.8,
@@ -341,6 +364,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '5_4',
+      address: 'Kios 7-8 Quốc lộ 1K, P. Linh Xuân, TP. Thủ Đức',
       name: 'Bún Bò Huế Giáo Toàn',
       category: 'Bún Bò Huế • Authentic',
       rating: 4.8,
@@ -355,6 +379,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '5_5',
+      address: '145 Bis Trần Hưng Đạo, P. Cô Giang, Q.1',
       name: 'Bún Bò Huế Chú Há (Ngọc Trinh)',
       category: 'Bún Bò Huế • Authentic',
       rating: 4.5,
@@ -370,6 +395,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 6. Súp Cua
     RestaurantItem(
       id: '6_1',
+      address: '43 Huỳnh Mẫn Đạt, Q. Bình Thạnh',
       name: 'Súp Cua Ghiền',
       category: 'Súp Cua • Authentic',
       rating: 4.5,
@@ -384,6 +410,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '6_2',
+      address: '33 Trần Thái Tông, Q. Tân Bình',
       name: 'Súp Cua Mợ Chảnh',
       category: 'Súp Cua • Authentic',
       rating: 4.5,
@@ -398,6 +425,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '6_3',
+      address: '239 Lương Nhữ Học, P. 11, Q.5',
       name: 'Súp Cua Cô Lan (Bong Bóng Cá)',
       category: 'Súp Cua • Authentic',
       rating: 4.8,
@@ -412,6 +440,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '6_4',
+      address: '549 Sư Vạn Hạnh, P. 12, Q.10',
       name: 'Súp Cua Hạnh',
       category: 'Súp Cua • Authentic',
       rating: 4.8,
@@ -426,6 +455,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '6_5',
+      address: '166 Phó Cơ Điều, P. 6, Q.11',
       name: 'Súp Cua Cô Bông (Chợ Thiếc)',
       category: 'Súp Cua • Authentic',
       rating: 4.5,
@@ -441,6 +471,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 7. Bánh Cuốn
     RestaurantItem(
       id: '7_1',
+      address: '127 Đinh Tiên Hoàng, P. Đa Kao, Q.1',
       name: 'Bánh Cuốn Tây Hồ',
       category: 'Bánh Cuốn • Authentic',
       rating: 4.5,
@@ -455,6 +486,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '7_2',
+      address: '11A Cao Thắng, P. 2, Q.3',
       name: 'Bánh Cuốn Hải Nam',
       category: 'Bánh Cuốn • Authentic',
       rating: 4.2,
@@ -469,6 +501,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '7_3',
+      address: 'Góc Nguyễn Thiện Thuật – Nguyễn Đình Chiểu, Q. 3',
       name: 'Bánh Cuốn Chợ Bàn Cờ',
       category: 'Bánh Cuốn • Authentic',
       rating: 4.0,
@@ -483,6 +516,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '7_4',
+      address: '55/19 Vạn Kiếp, P. 3, Q.Bình Thạnh',
       name: 'Bánh Cuốn Trứng Vạn Kiếp',
       category: 'Bánh Cuốn • Authentic',
       rating: 4.0,
@@ -497,6 +531,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '7_5',
+      address: '32 Hòa Hưng, P. 13, Q.10',
       name: 'Bánh Cuốn Lá Dứa',
       category: 'Bánh Cuốn • Authentic',
       rating: 4.2,
@@ -512,6 +547,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 8. Phá Lấu
     RestaurantItem(
       id: '8_1',
+      address: '243/30 Tôn Đản, P. 15, Q.4',
       name: 'Phá Lấu Dì Nủi',
       category: 'Phá Lấu • Authentic',
       rating: 4.2,
@@ -526,6 +562,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '8_2',
+      address: '22 Nguyễn Án, P. Nguyễn Thái Bình, Q.1',
       name: 'Phá Lấu Bò Cô Thảo',
       category: 'Phá Lấu • Authentic',
       rating: 4.2,
@@ -540,6 +577,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '8_3',
+      address: 'Số 1, Đường số 4, Cư xá Đô Thành, Q. 3',
       name: 'Phá Lấu Lì',
       category: 'Phá Lấu • Authentic',
       rating: 4.8,
@@ -554,6 +592,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '8_4',
+      address: '533 Bà Hạt, P. 8, Q.10',
       name: 'Phá Lấu Bò Bà Hạt',
       category: 'Phá Lấu • Authentic',
       rating: 4.0,
@@ -568,6 +607,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '8_5',
+      address: 'Tịnh Xá Trung Tâm, 7 Nguyễn Trung Trực, Q. 1',
       name: 'Phá Lấu Ngọc',
       category: 'Phá Lấu • Authentic',
       rating: 4.8,
@@ -583,6 +623,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 9. Chè
     RestaurantItem(
       id: '9_1',
+      address: 'Lô H Chung cư Ngô Gia Tự, P. 2, Q.10',
       name: 'Chè mâm Khánh Vy',
       category: 'Chè • Authentic',
       rating: 3.9,
@@ -597,6 +638,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '9_2',
+      address: '138 Châu Văn Liêm, P. 11, Q.5',
       name: 'Chè Hà Ký',
       category: 'Chè • Authentic',
       rating: 4.8,
@@ -611,6 +653,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '9_3',
+      address: '16C Kỳ Đồng, P. 9, Q.3',
       name: 'Chè Kỳ Đồng',
       category: 'Chè • Authentic',
       rating: 3.9,
@@ -625,6 +668,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '9_4',
+      address: '718 Nguyễn Đình Chiểu, P. 1, Q.3',
       name: 'Chè Hiển Khánh',
       category: 'Chè • Authentic',
       rating: 3.9,
@@ -639,6 +683,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '9_5',
+      address: '382 Nguyễn Tri Phương, P. 4, Q.10',
       name: 'Chè Thái Ý Phương',
       category: 'Chè • Authentic',
       rating: 3.9,
@@ -654,6 +699,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 10. Bún Riêu
     RestaurantItem(
       id: '10_1',
+      address: '287/66 Nguyễn Đình Chiểu, TP. HCM',
       name: 'Bún riêu cua ốc Cô Thủy',
       category: 'Bún Riêu • Authentic',
       rating: 4.5,
@@ -667,6 +713,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '10_2',
+      address: '219 Nguyễn Trãi, TP. HCM',
       name: 'Bún riêu cua ốc 219 Nguyễn Trãi',
       category: 'Bún Riêu • Authentic',
       rating: 4.8,
@@ -680,6 +727,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '10_3',
+      address: 'Hẻm 96 Phan Đình Phùng, TP. HCM',
       name: 'Bún riêu hẻm Ông Tiên',
       category: 'Bún Riêu • Authentic',
       rating: 4.8,
@@ -693,6 +741,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '10_4',
+      address: '120 Nguyễn Gia Trí, TP. HCM',
       name: 'Bún riêu Bảy Ghiền',
       category: 'Bún Riêu • Authentic',
       rating: 3.9,
@@ -706,6 +755,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '10_5',
+      address: '184/28 Nguyễn Xí, TP. HCM',
       name: 'Bún riêu Bà Phong',
       category: 'Bún Riêu • Authentic',
       rating: 4.0,
@@ -720,6 +770,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 11. Bún Thịt Nướng
     RestaurantItem(
       id: '11_1',
+      address: '149 Chấn Hưng, P. 6, Q. Tân Bình, TP.HCM',
       name: 'Bún Thịt Nướng Hải Đăng',
       category: 'Bún Thịt Nướng • Authentic',
       rating: 3.9,
@@ -733,6 +784,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '11_2',
+      address: '126 Lê Văn Sỹ, P. 10, Q. Phú Nhuận, TP.HCM',
       name: 'Bún Thịt Nướng Anh Ba',
       category: 'Bún Thịt Nướng • Authentic',
       rating: 4.5,
@@ -746,6 +798,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '11_3',
+      address: '65 Tân Thành, P. Tân Thành, Q. Tân Phú, TP.HCM',
       name: 'Cô Ba Sài Gòn',
       category: 'Bún Thịt Nướng • Authentic',
       rating: 4.8,
@@ -760,6 +813,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '11_4',
+      address: '175C Cô Giang, P. Cô Giang, Q. 1, TP.HCM',
       name: 'Chị Tuyền',
       category: 'Bún Thịt Nướng • Authentic',
       rating: 4.0,
@@ -773,6 +827,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '11_5',
+      address: '11/3 Đường 1C, P. Bình Hưng Hoà A, Q. Bình Tân, TP.HCM',
       name: 'Vị Sài Gòn',
       category: 'Bún Thịt Nướng • Authentic',
       rating: 3.9,
@@ -788,6 +843,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 12. Bún Mắm
     RestaurantItem(
       id: '12_1',
+      address: '257 Vĩnh Viễn, P. 4, Q. 10, TP.HCM',
       name: 'Bún Mắm Bạc Liêu',
       category: 'Bún Mắm • Authentic',
       rating: 4.5,
@@ -801,6 +857,8 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '12_2',
+      address:
+          'Chợ Bà Chiểu – Sạp 855–856 Diên Hồng, P. 1, Q. Bình Thạnh, TP.HCM',
       name: 'Bún Mắm Tài',
       category: 'Bún Mắm • Authentic',
       rating: 4.2,
@@ -815,6 +873,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '12_3',
+      address: '451 Phan Huy Ích, P. 14, Q. Gò Vấp, TP.HCM',
       name: 'Bún Mắm Cô Ba',
       category: 'Bún Mắm • Authentic',
       rating: 3.9,
@@ -828,6 +887,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '12_4',
+      address: '91A Lê Quang Sung, P. 2, Q. 6, TP.HCM',
       name: 'Bún Mắm 47',
       category: 'Bún Mắm • Authentic',
       rating: 4.5,
@@ -841,6 +901,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '12_5',
+      address: '404 Trần Phú, P. 7, Q. 5, TP.HCM',
       name: 'Bún Mắm Chị Năm',
       category: 'Bún Mắm • Authentic',
       rating: 3.9,
@@ -855,6 +916,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 13. Bánh Canh Cua
     RestaurantItem(
       id: '13_1',
+      address: '486/3 Vĩnh Viễn, P. 9, Q. 10, TP.HCM',
       name: 'Bánh canh cua Hoàng Lan',
       category: 'Bánh Canh Cua • Authentic',
       rating: 4.2,
@@ -868,6 +930,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '13_2',
+      address: '204–210 Tô Hiến Thành, P. 15, Q. 10, TP.HCM',
       name: 'Bánh canh cua Út Lệ',
       category: 'Bánh Canh Cua • Authentic',
       rating: 4.2,
@@ -881,6 +944,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '13_3',
+      address: '710–712 Nguyễn Kiệm, P. 4, Q. Phú Nhuận, TP.HCM',
       name: 'Bánh canh cua Cô Diệm',
       category: 'Bánh Canh Cua • Authentic',
       rating: 3.9,
@@ -894,6 +958,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '13_4',
+      address: '53 Vạn Kiếp, P. 3, Q. Bình Thạnh, TP.HCM',
       name: 'Bánh canh cua Mạ Tôi',
       category: 'Bánh Canh Cua • Authentic',
       rating: 3.9,
@@ -907,6 +972,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '13_5',
+      address: '395 Bùi Đình Túy, P. 14, Q. Bình Thạnh, TP.HCM',
       name: 'Bánh canh cua Hiền',
       category: 'Bánh Canh Cua • Authentic',
       rating: 4.8,
@@ -921,6 +987,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 14. Bánh Khọt
     RestaurantItem(
       id: '14_1',
+      address: '606/187 Đ. Ba Tháng Hai, P. 14, Q. 10, TP.HCM',
       name: 'Bánh khọt Thùy Lê',
       category: 'Bánh Khọt • Authentic',
       rating: 4.8,
@@ -934,6 +1001,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '14_2',
+      address: '78 Bình Giã, P. 13, Q. Tân Bình, TP.HCM',
       name: 'Bánh khọt Ban Mê',
       category: 'Bánh Khọt • Authentic',
       rating: 4.2,
@@ -947,6 +1015,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '14_3',
+      address: '216 Phạm Thái Bường, P. Tân Phong, Q. 7, TP.HCM',
       name: 'Bánh khọt Cô Ba Vũng Tàu',
       category: 'Bánh Khọt • Authentic',
       rating: 4.5,
@@ -960,6 +1029,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '14_4',
+      address: '71A Lê Trọng Tấn, P. Sơn Kỳ, Q. Tân Phú, TP.HCM',
       name: 'Bánh khọt Anh Triệu',
       category: 'Bánh Khọt • Authentic',
       rating: 4.2,
@@ -973,6 +1043,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '14_5',
+      address: '78/62 Đ. Nguyễn Văn Khối, P. 8, Q. Gò Vấp, TP.HCM',
       name: 'Bánh khọt Hải Âu',
       category: 'Bánh Khọt • Authentic',
       rating: 3.9,
@@ -987,6 +1058,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 15. Bánh Tráng Trộn
     RestaurantItem(
       id: '15_1',
+      address: '8A Nguyễn Trãi, P. 3, Q. 5, TP.HCM',
       name: 'Bánh tráng Cô Giang',
       category: 'Bánh Tráng Trộn • Authentic',
       rating: 4.0,
@@ -1000,6 +1072,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '15_2',
+      address: '41 Vườn Chuối, P. 4, Q. 3, TP.HCM',
       name: 'Bánh tráng chấm cô Gánh',
       category: 'Bánh Tráng Trộn • Authentic',
       rating: 3.9,
@@ -1013,6 +1086,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '15_3',
+      address: '34 Nguyễn Thượng Hiền, P. 5, Q. 3, TP.HCM',
       name: 'Bánh tráng trộn Long 34',
       category: 'Bánh Tráng Trộn • Authentic',
       rating: 4.8,
@@ -1026,6 +1100,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '15_4',
+      address: '14 Lê Liễu, P. Tân Quý, Q. Tân Phú, TP.HCM',
       name: 'Bánh tráng trộn Phương Thúy',
       category: 'Bánh Tráng Trộn • Authentic',
       rating: 4.2,
@@ -1039,6 +1114,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '15_5',
+      address: '1331/15/49 Lê Đức Thọ, P. 14, Q. Gò Vấp, TP.HCM',
       name: 'Bánh tráng trộn Gu Tui',
       category: 'Bánh Tráng Trộn • Authentic',
       rating: 3.9,
@@ -1053,6 +1129,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 16. Gỏi Cuốn
     RestaurantItem(
       id: '16_1',
+      address: '76 Võ Văn Tần, TP. HCM',
       name: 'Bếp Cuốn Sài Gòn',
       category: 'Gỏi Cuốn • Authentic',
       rating: 4.5,
@@ -1066,6 +1143,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '16_2',
+      address: '84/32 Bùi Viện, TP. HCM',
       name: 'Gỏi cuốn Minh Bùi Viện',
       category: 'Gỏi Cuốn • Authentic',
       rating: 4.8,
@@ -1079,6 +1157,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '16_3',
+      address: '26/26 Đỗ Quang Đẩu, TP. HCM',
       name: 'Gỏi cuốn Bà Dzú',
       category: 'Gỏi Cuốn • Authentic',
       rating: 4.8,
@@ -1092,6 +1171,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '16_4',
+      address: '384/91A Lý Thái Tổ, TP. HCM',
       name: 'Chị Huệ',
       category: 'Gỏi Cuốn • Authentic',
       rating: 4.2,
@@ -1105,6 +1185,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '16_5',
+      address: '424 Lạc Long Quân, TP. HCM',
       name: 'Gỏi cuốn tôm nhảy Lạc Long Quân',
       category: 'Gỏi Cuốn • Authentic',
       rating: 4.5,
@@ -1119,6 +1200,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 17. Ốc
     RestaurantItem(
       id: '17_1',
+      address: '235A Đ. Mai Xuân Thưởng, TP.HCM',
       name: 'Ốc 235A',
       category: 'Ốc • Authentic',
       rating: 4.5,
@@ -1132,6 +1214,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '17_2',
+      address: '25/5 Đ. Nguyễn Bỉnh Khiêm, TP.HCM',
       name: 'Ốc Khánh',
       category: 'Ốc • Authentic',
       rating: 4.5,
@@ -1145,6 +1228,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '17_3',
+      address: '534 Vĩnh Khánh, TP. HCM',
       name: 'Ốc Oanh',
       category: 'Ốc • Authentic',
       rating: 3.9,
@@ -1158,6 +1242,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '17_4',
+      address: '212B/D48 Nguyễn Trãi, TP. HCM',
       name: 'Ốc Đào',
       category: 'Ốc • Authentic',
       rating: 4.5,
@@ -1171,6 +1256,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '17_5',
+      address: '383 Vĩnh Khánh, TP. HCM',
       name: 'Ốc Thảo',
       category: 'Ốc • Authentic',
       rating: 3.9,
@@ -1185,6 +1271,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 18. Cơm Gà Xối Mỡ
     RestaurantItem(
       id: '18_1',
+      address: '169 Đường 15, P. Tân Quy, Q. 7, TP.HCM',
       name: 'Cơm gà xối mỡ Vi Anh',
       category: 'Cơm Gà Xối Mỡ • Authentic',
       rating: 4.8,
@@ -1198,6 +1285,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '18_2',
+      address: '117/1D Cống Quỳnh, P. Nguyễn Cư Trinh, Q. 1, TP.HCM',
       name: 'Cơm gà xối mỡ Su Su',
       category: 'Cơm Gà Xối Mỡ • Authentic',
       rating: 4.8,
@@ -1211,6 +1299,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '18_3',
+      address: '140 Lê Đại Hành, P. 7, Q. 11, TP.HCM',
       name: 'Cơm gà xối mỡ Thiên Hương',
       category: 'Cơm Gà Xối Mỡ • Authentic',
       rating: 4.0,
@@ -1224,6 +1313,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '18_4',
+      address: '217 Thạch Lam, P. Phú Thạnh, Q. Tân Phú, TP.HCM',
       name: 'Cơm gà xối mỡ Thạch Lam',
       category: 'Cơm Gà Xối Mỡ • Authentic',
       rating: 3.9,
@@ -1237,6 +1327,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '18_5',
+      address: '82 Nguyễn Công Trứ, Q. Bình Thạnh, TP.HCM',
       name: 'Cơm gà xối mỡ Sáng Ký',
       category: 'Cơm Gà Xối Mỡ • Authentic',
       rating: 4.0,
@@ -1251,6 +1342,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 19. Cháo Lòng
     RestaurantItem(
       id: '19_1',
+      address: '83/30 Đường Vành Đai Tây, TP. Thủ Đức, TP.HCM',
       name: 'Lòng Heo Cô Năm',
       category: 'Cháo Lòng • Authentic',
       rating: 3.9,
@@ -1264,6 +1356,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '19_2',
+      address: '99 Phù Đổng Thiên Vương, Q. 5, TP.HCM',
       name: 'Cháo Lòng',
       category: 'Cháo Lòng • Authentic',
       rating: 4.8,
@@ -1277,6 +1370,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '19_3',
+      address: '144 Phan Đăng Lưu, Q. Phú Nhuận, TP.HCM',
       name: 'Cháo Lòng 144',
       category: 'Cháo Lòng • Authentic',
       rating: 3.9,
@@ -1290,6 +1384,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '19_4',
+      address: '153/6 Nguyễn Thị Minh Khai, Q. 1, TP.HCM',
       name: 'Cháo Lòng 153',
       category: 'Cháo Lòng • Authentic',
       rating: 4.0,
@@ -1303,6 +1398,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '19_5',
+      address: '170B Võ Thị Sáu, Q. 3, TP.HCM',
       name: 'Cháo Lòng 170B',
       category: 'Cháo Lòng • Authentic',
       rating: 4.5,
@@ -1317,6 +1413,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     // 20. Lẩu Cá Kèo
     RestaurantItem(
       id: '20_1',
+      address: '87 Bà Huyện Thanh Quan, Võ Thị Sáu, Q. 3, TP.HCM',
       name: 'Lẩu cá kèo Bà Huyện Thanh Quan',
       category: 'Lẩu Cá Kèo • Authentic',
       rating: 4.8,
@@ -1330,6 +1427,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '20_2',
+      address: 'Hẻm 252 Lý Thường Kiệt, P. 14, Q. 10, TP.HCM',
       name: 'Lẩu cá kèo cô Thư',
       category: 'Lẩu Cá Kèo • Authentic',
       rating: 3.9,
@@ -1343,6 +1441,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '20_3',
+      address: '4 Sư Thiện Chiếu, Võ Thị Sáu, Q. 3, TP.HCM',
       name: 'Nhà hàng Mưa Rừng',
       category: 'Lẩu Cá Kèo • Authentic',
       rating: 4.2,
@@ -1356,6 +1455,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '20_4',
+      address: '2/7 Cao Thắng, P. 5, Q. 3, TP.HCM',
       name: 'Lẩu cá bống kèo Rau Đắng',
       category: 'Lẩu Cá Kèo • Authentic',
       rating: 3.9,
@@ -1369,6 +1469,7 @@ class MockRestaurantHandler implements RestaurantHandler {
     ),
     RestaurantItem(
       id: '20_5',
+      address: '209/48 Tôn Thất Thuyết, P. 3, Q. 4, TP.HCM',
       name: 'Lẩu cá kèo 48',
       category: 'Lẩu Cá Kèo • Authentic',
       rating: 4.5,

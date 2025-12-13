@@ -1,6 +1,7 @@
 import '../handlers/food_search_handler.dart';
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
+import 'chat_handler.dart';
 
 /// Query System - Trung tâm điều phối (Facade Pattern)
 ///
@@ -29,6 +30,11 @@ class QuerySystem {
     return _foodHandler.getAllDishes();
   }
 
+  /// Tìm kiếm món ăn theo tên hoặc tag (Cho thanh search ở Home)
+  Future<List<DishItem>> searchDishes(String query) {
+    return _foodHandler.searchDishes(query);
+  }
+
   /// Tìm kiếm món ăn hoặc nhà hàng (Cho chức năng Search)
   Future<SearchResult> search(String query) {
     return _foodHandler.searchFoods(query);
@@ -52,5 +58,21 @@ class QuerySystem {
   /// Lấy chi tiết thông tin nhà hàng (Nếu cần thiết cho Deep Link hoặc reload)
   Future<RestaurantItem?> getRestaurantDetails(String restaurantId) {
     return _foodHandler.getFoodDetails(restaurantId);
+  }
+  // =========================================================================
+  // CHATBOT
+  // =========================================================================
+
+  // Initialize ChatHandler
+  final ChatHandler _chatHandler = MockChatHandler();
+
+  /// Gửi tin nhắn tới AI Chatbot
+  Stream<ChatMessage> sendChatMessage(String message) {
+    return _chatHandler.sendMessage(message);
+  }
+
+  /// Lấy lịch sử trò chuyện
+  Future<List<ChatMessage>> getChatHistory() {
+    return _chatHandler.getChatHistory();
   }
 }
