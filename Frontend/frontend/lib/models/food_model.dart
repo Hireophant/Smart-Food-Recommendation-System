@@ -1,5 +1,6 @@
 /// Định nghĩa các model dùng trong app
 /// Theo Guideline: Định nghĩa rõ Input/Output
+library;
 
 /// Đại diện cho một nhà hàng/quán cafe (Restaurant Item)
 /// Model đại diện cho một Nhà hàng hoặc Địa điểm ăn uống
@@ -14,6 +15,7 @@ class RestaurantItem {
   final String? priceLevel; // $ - $$$$
   final bool isOpen;
   final String distance; // e.g., "1.2 km"
+  final String address; // Detailed address
   final List<String> tags; // e.g., ["Cozy", "Ba Dinh"]
   final double latitude; // Tọa độ Vĩ độ
   final double longitude; // Tọa độ Kinh độ
@@ -29,6 +31,7 @@ class RestaurantItem {
     this.priceLevel,
     this.isOpen = true,
     this.distance = '0 km',
+    this.address = '', // Default empty if not provided
     this.tags = const [],
     this.latitude = 21.0285, // Default Hanoi
     this.longitude = 105.8542,

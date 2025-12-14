@@ -35,15 +35,20 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Places serving",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey,
+              ),
             ),
             Text(
               widget.dish.name,
@@ -55,7 +60,14 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _restaurants.isEmpty
-          ? const Center(child: Text("No restaurants found"))
+          ? Center(
+              child: Text(
+                "No restaurants found",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _restaurants.length,
@@ -75,7 +87,6 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
                             builder: (_) => MapPage(
                               selectedDish: widget.dish,
                               selectedRestaurant: restaurant,
-                              isConfirmationMode: true,
                             ),
                           ),
                         );
