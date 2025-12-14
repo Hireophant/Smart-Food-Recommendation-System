@@ -1,4 +1,20 @@
-from handlers.maps import *
+from typing import Optional
+from schemas.maps import MapCoord
+from fastapi.exceptions import HTTPException
+from fastapi import status
+from pydantic import PositiveFloat
+from handlers.maps import (
+    MapsHandler,
+    MapSearchResponse,
+    MapReverseResponse,
+    MapAutocompleteResponse,
+    MapPlaceResponseModel
+)
+from handlers.data import (
+    DataHandlers,
+    DataRestaurantSearchResult,
+    DataRestaurantFilter
+)
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -68,3 +84,28 @@ class QuerySystem:
     @staticmethod
     async def MapsPlace(id: str) -> Optional[MapPlaceResponseModel]:
         return await MapsHandler.Place(id)
+    
+    @staticmethod
+    async def DataRestaurantSearch(focus_latitude: float,
+                                   focus_longitude: float,
+                                   query: Optional[str] = None,
+                                   radius: Optional[PositiveFloat] = None,
+                                   min_rating: Optional[float] = None,
+                                   category: Optional[str] = None,
+                                   province: Optional[str] = None,
+                                   district: Optional[str] = None,
+                                   limit: Optional[int] = None) -> DataRestaurantSearchResult:
+        handler = DataHandlers()
+        return await handler.RestaurantSearch(
+            focus_latitude=focus_latitude,
+            focus_longitude=focus_longitude,
+            filters=DataRestaurantFilter(
+                Query=query,
+                Radius=radius,
+                MinRating=min_rating,
+                Category=category,
+                Province=province,
+                District=district
+            ),
+            limit=limit
+        )

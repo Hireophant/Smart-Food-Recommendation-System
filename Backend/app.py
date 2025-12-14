@@ -1,4 +1,4 @@
-import dotenv, schemas.errors, routers.maps
+import dotenv, schemas.errors, routers.maps, routers.data
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi.errors import RateLimitExceeded
 from utils import Config, Logger
 from middleware.rate_limit import limiter
+from core.mongodb import MongoDB, MongoDBHandlers, MongoDBSearchInputSchema
 
 #* Call when initialize the backend
 async def onInitialize() -> bool:
@@ -18,24 +19,13 @@ async def onInitialize() -> bool:
         return False
     Logger.Initialize()
     
-    # #* Initialize MongoDB
-    # from core.database.mongodb import MongoDB, MongoConfig
+    #* Initialize MongoDB.
     
-    # # Try to get MongoDB config from environment first, then from config file
-    # mongo_config = MongoConfig(
-    #     host=Config.Get().MongoDB.Host,
-    #     port=Config.Get().MongoDB.Port,
-    #     database=Config.Get().MongoDB.Database,
-    #     username=Config.Get().MongoDB.Username,
-    #     password=Config.Get().MongoDB.Password,
-    #     connectionString=Config.Get().MongoDB.ConnectionString
-    # )
-    
-    # if not await MongoDB.initialize(mongo_config):
-    #     Logger.LogError("Failed to initialize MongoDB!")
-    #     return False
-    
-    # # Create indexes
+    if not await MongoDB.initialize():
+        Logger.LogError("Failed to initialize MongoDB!")
+        return False
+        
+    # Create indexes for optimal query performance
     # await MongoDB.create_indexes()
     # Logger.LogInfo("MongoDB setup completed successfully")
             
@@ -43,9 +33,8 @@ async def onInitialize() -> bool:
 
 #* Call when deinitialize the backend
 async def onDeinitialize():
-    # #* Deinitialize MongoDB
-    # from core.database.mongodb import MongoDB
-    # await MongoDB.close()
+    #* Deinitialize MongoDB
+    await MongoDB.close()
     
     return
 
@@ -66,6 +55,7 @@ app = FastAPI(lifespan=appLifespan)
 
 # Including routers
 app.include_router(routers.maps.router)
+app.include_router(routers.data.router)
 
 # Add rate limiter state
 app.state.limiter = limiter

@@ -1,6 +1,19 @@
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, BaseModel
 from enum import Enum
-from core.vietmap import *
+from typing import List
+from core.vietmap import (
+    VietmapBoundariesType,
+    VietmapBoundaries,
+    VietmapEntryPoint,
+    VietmapGeocodingResponseModel,
+    VietmapPlaceResponseModel
+)
+
+class MapCoord(BaseModel):
+    Latitude: float = Field(default=0.0, alias="lat", le=90, ge=-90,
+                            description="The latitude of the map coordinate")
+    Longitude: float = Field(default=0.0, alias="lon", le=180, ge=-180,
+                             description="The longitude of the map coordinate")
 
 class MapBoundariesType(str, Enum):
     Unknown = "unknown" # Special use, for handling unexpected case (most of the time no need)

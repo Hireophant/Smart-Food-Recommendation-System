@@ -5,12 +5,16 @@
 **Để sử dụng database và handler này, bạn cần:**
 
 1. **MongoDB Atlas Connection String**
-   - Connection string được lưu trong file `Backend/.env`:
-     ```bash
-     MONGODB_CONNECTION_STRING=mongodb+srv://username:password@clu#### **4. Search Nearby (Không có text)**
+- Connection string được lưu trong file `Backend/.env`:
+```bash
+MONGODB_CONNECTION_STRING=mongodb+srv://username:password@clu
+```
+#### **4. Search Nearby (Không có text)**
 
 ```python
-db #### **6. Get Top Rated**
+db
+```
+#### **6. Get Top Rated**
 
 ```python
 db = MongoDB.get_database()
@@ -28,7 +32,9 @@ result = await handler.GetTopRated(
 # Kết quả: rating >= 4.0, sorted by distance
 ```
 
-#### **7. Response Structure**tabase()
+#### **7. Response Structure**
+```python
+tabase()
 handler = MongoDBHandlers(db)
 
 # Tìm quán gần nhất, rating cao

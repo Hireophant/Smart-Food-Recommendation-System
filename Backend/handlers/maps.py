@@ -1,13 +1,11 @@
-from core.vietmap import *
-from schemas.maps import *
-from pydantic import PlainValidator
-from typing import Union
-
-class MapCoord(BaseModel):
-    Latitude: float = Field(default=0.0, alias="lat", le=90, ge=-90,
-                            description="The latitude of the map coordinate")
-    Longitude: float = Field(default=0.0, alias="lon", le=180, ge=-180,
-                             description="The longitude of the map coordinate")
+from core.vietmap import VietmapClient, VietmapSearchInputSchema, MapCoordinate
+from schemas.maps import (
+    MapGeocodingResponseModel,
+    MapPlaceResponseModel,
+    MapCoord
+)
+from typing import List, Optional
+from pydantic import PositiveFloat
 
 MapSearchResponse = List[MapGeocodingResponseModel]
 MapAutocompleteResponse = List[MapGeocodingResponseModel]
