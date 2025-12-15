@@ -8,6 +8,19 @@ import json
 import uuid
 from datetime import datetime
 
+"RATE LIMITING PER CONVERSATION"
+from collections import defaultdict
+import time
+MAX_CALLS_PER_CONVERSATION = 10
+CONVERSATION_CALL_COUNT = defaultdict(int)
+
+"CONVERSATION TTL (AUTO-EXPIRE CHAT)"
+CONVERSATION_LAST_ACTIVE = {}
+CONVERSATION_TTL_SECONDS = 1800  #30min
+
+"RETRY LOGIC FOR GEMINI API FAILURES"
+MAX_GEMINI_RETRIES = 2
+
 from .connection import AIClient
 from .schemas import (
     InputRequest,
@@ -103,6 +116,20 @@ class AIHandler:
         """
         # Generate IDs
         conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:12]}"
+        
+        now = time.time()
+
+        last_active = CONVERSATION_LAST_ACTIVE.get(conversation_id)
+        if last_active and (now - last_active) > CONVERSATION_TTL_SECONDS:
+            # Reset conversation
+            self.history.clear_conversation(conversation_id)
+            CONVERSATION_CALL_COUNT[conversation_id] = 0
+
+        # RATE LIMIT
+        CONVERSATION_CALL_COUNT[conversation_id] += 1
+        if CONVERSATION_CALL_COUNT[conversation_id] > MAX_CALLS_PER_CONVERSATION:
+            raise Exception("Rate limit exceeded for this conversation")
+
         message_id = f"msg_{uuid.uuid4().hex[:12]}"
         
         Logger.info(f"Processing chat for user {request.user_id} in conversation {conversation_id}")
@@ -132,10 +159,22 @@ class AIHandler:
             chat = self.model.start_chat(history=messages[:-1])
             
             # Send current message with tools
-            response = await chat.send_message_async(
-                messages[-1]["parts"][0],
-                tools=tools if tools else None
-            )
+            response = None
+            last_error = None
+            for attempt in range(MAX_GEMINI_RETRIES):
+                try:
+                    response = await chat.send_message_async(
+                        messages[-1]["parts"][0],
+                        tools=tools if tools else None
+                    )
+                    break
+                except Exception as e:
+                    last_error = e
+                    Logger.error(
+                        f"Gemini API error (attempt {attempt + 1}/{MAX_GEMINI_RETRIES}): {e}"
+                    )
+            if response is None:
+                raise last_error
             
             # Track all tool calls made
             all_tool_calls: List[ToolCall] = []
@@ -224,6 +263,8 @@ class AIHandler:
                 ]
             )
             
+            CONVERSATION_LAST_ACTIVE[conversation_id] = time.time()
+
             # 9. Return architecture-compliant response
             return AI_Output_Result(
                 message=final_message,

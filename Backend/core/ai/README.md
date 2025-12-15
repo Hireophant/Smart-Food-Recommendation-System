@@ -343,13 +343,13 @@ GEMINI_MODEL=gemini-1.5-flash  # or gemini-2.5-flash for latest
 ### Production TODO:
 
 - [ ] Replace in-memory storage with Redis/MongoDB
-- [ ] Integrate `search_restaurants` with MongoDB handlers
+- ✅ Integrate `search_restaurants` with MongoDB handlers
 - [ ] Add authentication/authorization
-- [ ] Add rate limiting per conversation
-- [ ] Implement conversation TTL (auto-expire old chats)
-- [ ] Add logging/monitoring for tool calls
-- [ ] Error handling for tool failures
-- [ ] Retry logic for Gemini API failures
+- ✅ Add rate limiting per conversation
+- ✅ Implement conversation TTL (auto-expire old chats)
+- ✅ Add logging/monitoring for tool calls
+- ✅ Error handling for tool failures
+- ✅ Retry logic for Gemini API failures
 
 ---
 

@@ -5,6 +5,9 @@ Implements tools that AI can call during conversation.
 
 from typing import Dict, Any, List
 from .schemas import UserTasteProfile
+from datetime import datetime
+from core.mongodb.restaurant_repo import search_restaurants_in_db
+from core.serp.search import search_food_from_query
 
 # Fix import for standalone execution
 try:
@@ -162,19 +165,41 @@ class ToolExecutor:
             Tool execution result
         """
         Logger.info(f"Executing tool: {function_name} with args: {function_args}")
-        
-        if function_name == "update_user_taste_profile":
-            return cls._update_taste_profile(function_args)
-        elif function_name == "get_user_taste_profile":
-            return cls._get_taste_profile(function_args)
-        elif function_name == "search_restaurants":
-            return cls._search_restaurants(function_args)
-        else:
-            return {
-                "error": f"Unknown tool: {function_name}",
-                "success": False
-            }
     
+        try:
+            if function_name == "update_user_taste_profile":
+                result = cls._update_taste_profile(function_args)
+
+            elif function_name == "get_user_taste_profile":
+                result = cls._get_taste_profile(function_args)
+
+            elif function_name == "search_restaurants":
+                result = cls._search_restaurants(function_args)
+            else:
+                Logger.warning({
+                    "event": "tool_unknown",
+                    "tool": function_name
+                })
+                return {
+                    "success": False,
+                    "error": f"Unknown tool: {function_name}"
+                }
+            Logger.success({
+                "event": "tool_success",
+                "tool": function_name
+            })
+            return result
+        except Exception as e:
+            Logger.error({
+                "event": "tool_failure",
+                "tool": function_name,
+                "error": str(e)
+            })
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
     @classmethod
     def _update_taste_profile(cls, args: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -230,6 +255,7 @@ class ToolExecutor:
                 if value not in profile.dislikes:
                     profile.dislikes.append(value)
         
+        profile.last_updated = datetime.utcnow()
         Logger.success(f"Updated taste profile for {user_id}: {category}={value} ({sentiment})")
         
         return {
@@ -280,38 +306,39 @@ class ToolExecutor:
     
     @classmethod
     def _search_restaurants(cls, args: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Search restaurants (mock implementation).
-        TODO: Integrate with MongoDB handlers
-        """
         query = args.get("query", "")
-        max_results = args.get("max_results", 5)
-        
-        Logger.info(f"Searching restaurants: query='{query}', max={max_results}")
-        
-        # Mock data for now
-        # TODO: Replace with actual MongoDB query
-        mock_results = [
-            {
-                "name": "Phở Thìn",
-                "cuisine": "Vietnamese",
-                "rating": 4.5,
-                "price_range": "budget",
-                "address": "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
-                "distance_km": 0.8
-            },
-            {
-                "name": "Bún Chả Hương Liên",
-                "cuisine": "Vietnamese",
-                "rating": 4.7,
-                "price_range": "budget",
-                "address": "24 Lê Văn Hưu, Hai Bà Trưng, Hà Nội",
-                "distance_km": 1.2
+        latitude = args.get("latitude")
+        longitude = args.get("longitude")
+
+        if latitude is None or longitude is None:
+            raise ValueError("latitude and longitude are required for restaurant search")
+
+        max_results = min(int(args.get("max_results", 5)), 10)
+        radius_km = max(0.5, min(float(args.get("radius_km", 5.0)), 10.0))
+
+        # 1. SEARCH IN MONGODB
+        db_results = search_restaurants_in_db(
+            query=query,
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            limit=max_results
+        )
+
+        if db_results:
+            return {
+                "success": True,
+                "source": "database",
+                "results": db_results,
+                "count": len(db_results)
             }
-        ]
-        
+
+        # 2. FALLBACK TO SERP
+        serp_results = search_food_from_query(query=query)
+
         return {
             "success": True,
-            "results": mock_results[:max_results],
-            "total_found": len(mock_results)
+            "source": "serp",
+            "results": serp_results[:max_results],
+            "count": len(serp_results)
         }
