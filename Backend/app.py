@@ -8,7 +8,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi.errors import RateLimitExceeded
 from utils import Config, Logger
 from middleware.rate_limit import limiter
-from core.mongodb import MongoDB, MongoDBHandlers, MongoDBSearchInputSchema
+from core.mongodb import MongoDB
+from core.ai import AIClient
 
 #* Call when initialize the backend
 async def onInitialize() -> bool:
@@ -25,6 +26,9 @@ async def onInitialize() -> bool:
         Logger.LogError("Failed to initialize MongoDB!")
         return False
         
+    #* Initialize AI
+    await AIClient.initialize()
+        
     # Create indexes for optimal query performance
     # await MongoDB.create_indexes()
     # Logger.LogInfo("MongoDB setup completed successfully")
@@ -35,6 +39,9 @@ async def onInitialize() -> bool:
 async def onDeinitialize():
     #* Deinitialize MongoDB
     await MongoDB.close()
+    
+    #* Deinitialize AI
+    await AIClient.close()
     
     return
 
