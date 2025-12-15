@@ -38,7 +38,7 @@ class _FavoritesPageState extends State<FavoritesPage>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
-          'My Favorites',
+          'Yêu thích',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -61,7 +61,7 @@ class _FavoritesPageState extends State<FavoritesPage>
                     children: [
                       Icon(Icons.restaurant_menu, size: 20),
                       SizedBox(width: 8),
-                      Text('Clear All Dishes'),
+                      Text('Xóa tất cả món ăn'),
                     ],
                   ),
                 ),
@@ -71,7 +71,7 @@ class _FavoritesPageState extends State<FavoritesPage>
                     children: [
                       Icon(Icons.store, size: 20),
                       SizedBox(width: 8),
-                      Text('Clear All Restaurants'),
+                      Text('Xóa tất cả nhà hàng'),
                     ],
                   ),
                 ),
@@ -82,7 +82,7 @@ class _FavoritesPageState extends State<FavoritesPage>
                     children: [
                       Icon(Icons.delete_sweep, size: 20, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Clear All', style: TextStyle(color: Colors.red)),
+                      Text('Xóa tất cả', style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
@@ -100,7 +100,7 @@ class _FavoritesPageState extends State<FavoritesPage>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Dishes'),
+                  const Text('Món ăn'),
                   const SizedBox(width: 4),
                   if (favoritesProvider.favoriteDishes.isNotEmpty)
                     Container(
@@ -129,7 +129,7 @@ class _FavoritesPageState extends State<FavoritesPage>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Restaurants'),
+                  const Text('Nhà hàng'),
                   const SizedBox(width: 4),
                   if (favoritesProvider.favoriteRestaurants.isNotEmpty)
                     Container(
@@ -171,8 +171,8 @@ class _FavoritesPageState extends State<FavoritesPage>
       return _buildEmptyState(
         context,
         icon: Icons.restaurant_menu,
-        title: 'No Favorite Dishes',
-        message: 'Start adding your favorite dishes to see them here!',
+        title: 'Chưa có món ăn yêu thích',
+        message: 'Hãy thêm món ăn vào danh sách yêu thích của bạn!',
       );
     }
 
@@ -194,8 +194,8 @@ class _FavoritesPageState extends State<FavoritesPage>
       return _buildEmptyState(
         context,
         icon: Icons.store,
-        title: 'No Favorite Restaurants',
-        message: 'Start adding your favorite restaurants to see them here!',
+        title: 'Chưa có nhà hàng yêu thích',
+        message: 'Hãy thêm nhà hàng vào danh sách yêu thích của bạn!',
       );
     }
 
@@ -222,7 +222,7 @@ class _FavoritesPageState extends State<FavoritesPage>
         onTap: () {
           // Navigate to dish details or restaurant list
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('View details for ${dish.name}')),
+            SnackBar(content: Text('Xem chi tiết cho ${dish.name}')),
           );
         },
         borderRadius: BorderRadius.circular(12),
@@ -293,10 +293,10 @@ class _FavoritesPageState extends State<FavoritesPage>
                   provider.removeDish(dish.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${dish.name} removed from favorites'),
+                      content: Text('${dish.name} đã xóa khỏi yêu thích'),
                       duration: const Duration(seconds: 2),
                       action: SnackBarAction(
-                        label: 'Undo',
+                        label: 'Hoàn tác',
                         onPressed: () => provider.addDish(dish),
                       ),
                     ),
@@ -376,11 +376,11 @@ class _FavoritesPageState extends State<FavoritesPage>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                '${restaurant.name} removed from favorites',
+                                '${restaurant.name} đã xóa khỏi yêu thích',
                               ),
                               duration: const Duration(seconds: 2),
                               action: SnackBarAction(
-                                label: 'Undo',
+                                label: 'Hoàn tác',
                                 onPressed: () =>
                                     provider.addRestaurant(restaurant),
                               ),
@@ -484,24 +484,27 @@ class _FavoritesPageState extends State<FavoritesPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All Favorites?'),
+        title: const Text('Xóa tất cả?'),
         content: const Text(
-          'This will remove all your favorite dishes and restaurants.',
+          'Hành động này sẽ xóa tất cả danh sách món ăn và nhà hàng yêu thích.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               provider.clearAll();
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All favorites cleared')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Đã xóa tất cả')));
             },
-            child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Xóa tất cả',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -513,16 +516,16 @@ class _FavoritesPageState extends State<FavoritesPage>
     FavoritesProvider provider, {
     required bool isDishes,
   }) {
-    final type = isDishes ? 'dishes' : 'restaurants';
+    final type = isDishes ? 'món ăn' : 'nhà hàng';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Clear All ${isDishes ? 'Dishes' : 'Restaurants'}?'),
-        content: Text('This will remove all your favorite $type.'),
+        title: Text('Xóa tất cả ${isDishes ? 'Món ăn' : 'Nhà hàng'}?'),
+        content: Text('Hành động này sẽ xóa tất cả $type yêu thích.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
@@ -534,9 +537,9 @@ class _FavoritesPageState extends State<FavoritesPage>
               Navigator.pop(context);
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text('All $type cleared')));
+              ).showSnackBar(SnackBar(content: Text('Đã xóa tất cả $type')));
             },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

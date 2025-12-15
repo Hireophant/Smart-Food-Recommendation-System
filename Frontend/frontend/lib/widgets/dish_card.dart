@@ -183,7 +183,7 @@ class DishCard extends StatelessWidget {
                       onPressed: onTap,
                       style: ElevatedButton.styleFrom(
                         visualDensity: VisualDensity.compact,
-                        backgroundColor: const Color(0xFF1ABC9C),
+                        backgroundColor: Colors.deepOrange, // Orange Theme
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -198,7 +198,7 @@ class DishCard extends StatelessWidget {
                             .shrinkWrap, // Remove touch target padding
                       ),
                       child: const Text(
-                        "Select",
+                        "Chọn", // Vietnamese
                         style: TextStyle(
                           fontSize: 11, // Smaller font
                           fontWeight: FontWeight.w600,

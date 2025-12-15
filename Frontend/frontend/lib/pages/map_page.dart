@@ -138,10 +138,10 @@ class _MapPageState extends State<MapPage> {
       appBar: AppBar(
         title: Column(
           children: [
-            const Text("Map & Routing", style: TextStyle(fontSize: 16)),
+            const Text("Bản đồ & Chỉ đường", style: TextStyle(fontSize: 16)),
             if (widget.selectedDish != null)
               Text(
-                "Finding: ${widget.selectedDish!.name}",
+                "Đang tìm: ${widget.selectedDish!.name}",
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
           ],
@@ -201,7 +201,7 @@ class _MapPageState extends State<MapPage> {
                               onTap: () => _onMarkerTap(item),
                               child: const Icon(
                                 Icons.location_on,
-                                color: Colors.red,
+                                color: Colors.orange, // Orange theme
                                 size: 40,
                               ),
                             ),
@@ -226,7 +226,7 @@ class _MapPageState extends State<MapPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "Routing to: ${_selectedItemForRoute!.name}",
+                              "Đang đi đến: ${_selectedItemForRoute!.name}",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -258,7 +258,7 @@ class _MapPageState extends State<MapPage> {
                                   color: Colors.grey,
                                 ),
                                 SizedBox(width: 8),
-                                Text("15 min"),
+                                Text("15 phút"),
                                 SizedBox(width: 16),
                                 Icon(
                                   Icons.straighten,
@@ -275,16 +275,15 @@ class _MapPageState extends State<MapPage> {
                                 // Simulate "Start Navigation"
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                      'Starting Turn-by-Turn Navigation...',
-                                    ),
+                                    content: Text('Bắt đầu chỉ đường...'),
                                   ),
                                 );
                               },
                               icon: const Icon(Icons.navigation),
-                              label: const Text("Start"),
+                              label: const Text("Bắt đầu"),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
+                                backgroundColor:
+                                    Colors.deepOrange, // Orange theme
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size(double.infinity, 45),
                               ),

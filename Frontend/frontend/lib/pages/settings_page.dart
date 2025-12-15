@@ -10,11 +10,11 @@ class SettingsPage extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Cài đặt')),
       body: ListView(
         children: [
           SwitchListTile(
-            title: const Text('Dark Mode'),
+            title: const Text('Chế độ tối'),
             value: themeProvider.isDarkMode,
             onChanged: (value) {
               final provider = Provider.of<ThemeProvider>(

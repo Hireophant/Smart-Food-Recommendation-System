@@ -125,20 +125,21 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            const CircleAvatar(
-              backgroundImage: AssetImage('assets/images/ai_avatar.png'),
+            CircleAvatar(
+              backgroundColor: Colors.transparent,
               radius: 16,
+              child: Image.asset('assets/images/ai_icon_orange.png'),
             ),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'AI Assistant',
+                  'Trợ lý AI',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  _isTyping ? 'Typing...' : 'Online',
+                  _isTyping ? 'Đang gõ...' : 'Trực tuyến',
                   style: const TextStyle(fontSize: 12, color: Colors.green),
                 ),
               ],
@@ -165,7 +166,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "AI is thinking...",
+                  "AI đang suy nghĩ...",
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
@@ -189,7 +190,7 @@ class _ChatPageState extends State<ChatPage> {
                     child: TextField(
                       controller: _textController,
                       decoration: InputDecoration(
-                        hintText: 'Type a message...',
+                        hintText: 'Nhập tin nhắn...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
