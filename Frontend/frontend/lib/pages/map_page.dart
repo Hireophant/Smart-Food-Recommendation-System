@@ -146,7 +146,11 @@ class _MapPageState extends State<MapPage> {
               ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            (Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[900]
+                : Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -163,8 +167,6 @@ class _MapPageState extends State<MapPage> {
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.smart_travel_system.frontend',
-                      // Making tiles look a bit darker via ColorFilter is tricky directly here without custom client
-                      // Just using standard OSM for now.
                     ),
                     // Route Polyline
                     if (_routePoints.isNotEmpty)
@@ -216,7 +218,7 @@ class _MapPageState extends State<MapPage> {
                     left: 20,
                     right: 20,
                     child: Card(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       elevation: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -230,6 +232,22 @@ class _MapPageState extends State<MapPage> {
                                 fontSize: 16,
                               ),
                             ),
+                            if (_selectedItemForRoute!.address.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  _selectedItemForRoute!.address,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white70
+                                        : Colors.black87,
+                                  ),
+                                ),
+                              ),
                             const SizedBox(height: 8),
                             const Row(
                               mainAxisAlignment: MainAxisAlignment.center,

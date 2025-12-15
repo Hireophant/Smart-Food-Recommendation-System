@@ -5,7 +5,7 @@ sqlalchemy
 aiosqlite
 overpy
 dirtyjson
-dotenv
+python-dotenv
 requests
 alembic
 pydantic[email]
@@ -16,3 +16,4 @@ slowapi
 motor
 pymongo
 pandas
+google-generativeai

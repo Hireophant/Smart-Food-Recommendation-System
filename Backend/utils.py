@@ -1,3 +1,9 @@
+"""Note: This 'utils' modules is a 'shared utility module',
+and can be use by both Core and Backend side.
+
+For any side, you can 'add' new utility to this module, but please refrain
+to 'modified' or 'remove' utility from this module if possible."""
+
 import logging.handlers
 import dirtyjson, logging, os, sys, datetime, queue, uuid, time
 from typing import Dict, List, cast, Any, Union, Optional

@@ -8,6 +8,7 @@ import 'restaurant_list_page.dart';
 import 'settings_page.dart';
 import 'favorites_page.dart';
 import 'profile_page.dart';
+import 'chat_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -37,6 +38,20 @@ class _DiscoverPageState extends State<DiscoverPage> {
     setState(() {
       _dishes = dishes;
       _isLoading = false;
+    });
+  }
+
+  // Search Handler
+  Future<void> _onSearchChanged(String query) async {
+    if (query.isEmpty) {
+      _loadData(); // Reload all dishes if query is empty
+      return;
+    }
+
+    // Call QuerySystem to search by name or tag
+    final results = await _querySystem.searchDishes(query);
+    setState(() {
+      _dishes = results;
     });
   }
 
@@ -134,30 +149,29 @@ class _DiscoverPageState extends State<DiscoverPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(4),
+        title: MediaQuery.of(context).size.width < 600
+            ? null
+            : Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Icon(
+                      Icons.restaurant_menu,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'FoodFinder',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                ],
               ),
-              child: Icon(
-                // Mobile: Add Icon, Desktop: Restaurant Menu
-                MediaQuery.of(context).size.width < 600
-                    ? Icons.add
-                    : Icons.restaurant_menu,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'FoodFinder',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-          ],
-        ),
         actions: [
           // Show Navigation Links ONLY on Desktop (> 600 width)
           if (MediaQuery.of(context).size.width >= 600) ...[
@@ -199,6 +213,27 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   color: isDarkMode ? Colors.white70 : Colors.black54,
                 ),
               ),
+            ),
+          ],
+          // Show Icons on Mobile (< 600 width)
+          if (MediaQuery.of(context).size.width < 600) ...[
+            IconButton(
+              icon: const Icon(Icons.favorite),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FavoritesPage()),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              },
             ),
           ],
 
@@ -344,6 +379,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ],
                       ),
                       child: TextField(
+                        onChanged: _onSearchChanged,
                         style: TextStyle(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
@@ -351,7 +387,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ),
                         decoration: InputDecoration(
                           hintText:
-                              "Search by dish name (e.g. phở, bún bò, cơm tấm)...",
+                              "Search by dish name or tags (e.g. phở, spicy)...",
                           hintStyle: TextStyle(
                             color:
                                 Theme.of(context).brightness == Brightness.dark
@@ -481,6 +517,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 ],
               ),
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChatPage()),
+          );
+        },
+        child: const CircleAvatar(
+          backgroundImage: AssetImage('assets/images/ai_avatar.png'),
+          radius: 28, // Fix size to fit FAB
+          backgroundColor: Colors.transparent,
+        ),
+      ),
     );
   }
 }

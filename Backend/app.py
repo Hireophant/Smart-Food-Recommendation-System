@@ -1,4 +1,4 @@
-import dotenv, schemas.errors
+import dotenv, schemas.errors, routers.maps, routers.data
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +8,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi.errors import RateLimitExceeded
 from utils import Config, Logger
 from middleware.rate_limit import limiter
+from core.mongodb import MongoDB
+from core.ai import AIClient
 
 #* Call when initialize the backend
 async def onInitialize() -> bool:
@@ -18,34 +20,28 @@ async def onInitialize() -> bool:
         return False
     Logger.Initialize()
     
-    #* Initialize MongoDB
-    from core.database.mongodb import MongoDB, MongoConfig
+    #* Initialize MongoDB.
     
-    # Try to get MongoDB config from environment first, then from config file
-    mongo_config = MongoConfig(
-        host=Config.Get().MongoDB.Host,
-        port=Config.Get().MongoDB.Port,
-        database=Config.Get().MongoDB.Database,
-        username=Config.Get().MongoDB.Username,
-        password=Config.Get().MongoDB.Password,
-        connection_string=Config.Get().MongoDB.ConnectionString
-    )
-    
-    if not await MongoDB.initialize(mongo_config):
+    if not await MongoDB.initialize():
         Logger.LogError("Failed to initialize MongoDB!")
         return False
-    
-    # Create indexes
-    await MongoDB.create_indexes()
-    Logger.LogInfo("MongoDB setup completed successfully")
+        
+    #* Initialize AI
+    await AIClient.initialize()
+        
+    # Create indexes for optimal query performance
+    # await MongoDB.create_indexes()
+    # Logger.LogInfo("MongoDB setup completed successfully")
             
     return True
 
 #* Call when deinitialize the backend
 async def onDeinitialize():
     #* Deinitialize MongoDB
-    from core.database.mongodb import MongoDB
     await MongoDB.close()
+    
+    #* Deinitialize AI
+    await AIClient.close()
     
     return
 
@@ -63,6 +59,10 @@ async def appLifespan(app: FastAPI):
     await onDeinitialize()
 
 app = FastAPI(lifespan=appLifespan)
+
+# Including routers
+app.include_router(routers.maps.router)
+app.include_router(routers.data.router)
 
 # Add rate limiter state
 app.state.limiter = limiter

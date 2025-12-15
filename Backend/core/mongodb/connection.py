@@ -46,7 +46,7 @@ class MongoDB:
                 # Try to get from environment variables
                 connection_string = os.getenv("MONGODB_CONNECTION_STRING")
                 if connection_string:
-                    config = MongoConfig(connection_string=connection_string)
+                    config = MongoConfig(connectionString=connection_string)
                 else:
                     # Use defaults
                     config = MongoConfig()

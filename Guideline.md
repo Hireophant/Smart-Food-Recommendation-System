@@ -1,45 +1,64 @@
 # DECOUPLED DEVELOPMENT GUIDELINES
-Mục tiêu: Giúp các bộ phận (Core, BE, FE, UI/UX) làm việc song song, giảm thiểu sự phụ thuộc (block) lẫn nhau và dễ dàng mở rộng dự án.
 
-## 1. Triết lý chung: "Interface First - Implementation Later"
-Để tránh việc Frontend phải ngồi chơi đợi Backend, hay UI đợi Logic, chúng ta sử dụng phương pháp Đóng gói (Wrapper/Handler).
-- Mọi giao tiếp giữa các tầng phải thông qua các hàm/lớp trung gian (Wrapper).
-- Nếu tính năng chưa sẵn sàng? Dùng Mock Data (dữ liệu giả) trả về từ Wrapper.
-- Khi tính năng sẵn sàng? Chỉ cần thay logic bên trong Wrapper, không sửa code gọi bên ngoài.
+> **Mục tiêu:** Giúp các bộ phận (Core, BE, FE, UI/UX) làm việc song song, giảm thiểu sự phụ thuộc (block) lẫn nhau và dễ dàng mở rộng dự án.
 
-## 2. Phân chia trách nhiệm (Roles)
+---
 
-| Bộ phận | Vai trò chính | Context cụ thể |
-|---|---|---|
-|**UI/UX**|Mặt tiền, Giao diện|Thiết kế thẩm mỹ, đặt các Placeholder cho dữ liệu động.|
-|**Front-end**|Logic hiển thị, Wiring|Kết nối UI với dữ liệu. Tạo các Mock Handlers để chạy UI trước khi có API thật.|
-|**Back-end**|Proxy, Secure Tools|Đóng vai trò Proxy Server. Cung cấp các API cần giấu key hoặc các logic mà Client không được phép làm trực tiếp.|
-|**Core**|Logic cốt lõi, Hạ tầng|Setup Supabase (Auth, DB Schema), viết logic xử lý chính, cung cấp implementation thật cho các Handlers.|
-## 3. Quy trình thực hiện (The Wrapper Pattern)
-### 3.1. Đối với UI/UX: "Placeholder là bạn"
+## 📌 Triết lý chung: "Interface First - Implementation Later"
+
+Để tránh việc Frontend phải ngồi chơi đợi Backend, hay UI đợi Logic, chúng ta có thể sử dụng phương pháp **Đóng gói (Wrapper/Handler)**:
+
+- **Giao tiếp qua lớp trung gian:** Mọi giao tiếp giữa các tầng nên thông qua các hàm/lớp trung gian (Wrapper).
+- **Chưa sẵn sàng?** → Mock Data (dữ liệu giả) từ Wrapper để làm tạm.
+- **Sẵn sàng rồi?** → Chỉ cần thay logic bên trong Wrapper, không động đến code gọi bên ngoài.
+
+---
+
+## 👥 Phân chia trách nhiệm
+
+| Bộ phận | Vai trò chính | Nhiệm vụ cụ thể |
+|---------|---------------|------------------|
+| **UI/UX** | Mặt tiền, Giao diện | Thiết kế thẩm mỹ, đặt các Placeholder cho dữ liệu động |
+| **Front-end** | Logic hiển thị, Wiring | Kết nối UI với dữ liệu. Tạo Mock Handlers để chạy UI trước khi có API thật |
+| **Back-end** | Proxy, Secure Tools | Đóng vai trò Proxy Server. Cung cấp API cần giấu key hoặc logic nhạy cảm |
+| **Core** | Logic cốt lõi, Hạ tầng | Setup Supabase (Auth, DB Schema), viết logic xử lý chính |
+
+---
+
+## 🔄 Quy trình thực hiện (The Wrapper Pattern)
+
+### 🎨 Đối với UI/UX: "Placeholder là bạn"
+
 Không hardcode cứng nhắc text trong code giao diện nếu text đó có khả năng thay đổi. Hãy biến nó thành biến số hoặc hàm trả về.
 
-**Quy tắc:**
-- Gặp các trường như Title, Label, Description -> Đặt Placeholder hoặc comment rõ ràng.
-- Tách nội dung cần hiển thị ra khỏi code giao diện (View).
+**Gợi ý:**
+- Gặp các trường như Title, Label, Description → Đặt Placeholder hoặc comment rõ ràng
+- Tách nội dung cần hiển thị ra khỏi code giao diện (View)
+
+**Ví dụ:**
 ```python
 ❌ Bad: Hardcode trực tiếp trong UI logic
 label.text = "Nhà hàng Cơm Tấm Sài Gòn"
 
-# ✅ Good: Dùng hàm wrapper để lấy dữ liệu (dễ dàng swap sau này)
+✅ Good: Dùng hàm wrapper để lấy dữ liệu (dễ dàng swap sau này)
 def get_ui_title(context_params...) -> str:
-    return "Placeholder Title" # FE sẽ thay thế logic này sau
+    return "Placeholder Title"  # FE sẽ thay thế logic này sau
 
 # Trong UI code
 label.text = get_ui_title(params...)
 ```
 
-### 3.2. Đối với Front-end: "Fake it until you make it"
+---
+
+### 💻 Đối với Front-end: "Fake it until you make it"
+
 Frontend không cần đợi Core/Backend viết xong API mới làm việc. Hãy tự tạo **Interface (Handler)** và trả về dữ liệu giả.
 
-**Quy tắc:**
-- Định nghĩa rõ đầu vào (Input) và đầu ra (Output) mong muốn.
-- Viết một Class/Function giả lập việc gọi API.
+**Gợi ý:**
+- Định nghĩa rõ đầu vào (Input) và đầu ra (Output) mong muốn
+- Viết một Class/Function giả lập việc gọi API
+
+**Ví dụ:**
 ```python
 # Định nghĩa Data Model mong muốn
 class RestaurantResult:
@@ -59,15 +78,21 @@ class RestaurantHandler:
 # Sử dụng ngay trong code chính (Business Logic)
 def on_user_search(keyword):
     handler = RestaurantHandler()
-    results = handler.search(keyword) # Code chạy mượt mà dù chưa có Backend
+    results = handler.search(keyword)  # Code chạy mượt mà dù chưa có Backend
     display_results(results)
 ```
-### 3.3. Đối với Core & Back-end: "Fill in the blank"
+
+---
+
+### ⚙️ Đối với Core & Back-end: "Fill in the blank"
+
 Nhiệm vụ của Core là biến những cái "Giả" ở trên thành "Thật".
 
-**Quy tắc:**
-- **Với Core (Supabase/Logic):** Implement logic thực tế vào bên trong các hàm của Handler mà Frontend đã định nghĩa (hoặc tạo Handler mới match với interface đó).
-- **Với Back-end (Proxy):** Expose các endpoint cho những tác vụ nhạy cảm (VD: Gọi 3rd party API cần Secret Key).
+**Gợi ý:**
+- **Core (Supabase/Logic):** Implement logic thực tế vào Handler mà Frontend đã định nghĩa
+- **Back-end (Proxy):** Expose các endpoint cho tác vụ nhạy cảm (VD: gọi 3rd party API cần Secret Key)
+
+**Ví dụ:**
 ```python
 # Core team vào sửa lại Class Handler cũ của Frontend
 class RestaurantHandler:
@@ -80,12 +105,17 @@ class RestaurantHandler:
         return parse_response(response)
 ```
 
-## 4. Xử lý Mismatch (Converters)
-Khi ghép nối (Merge), thường xuyên xảy ra việc: *Frontend cần format A, nhưng Backend/Core trả về format B*.
+---
 
-**Giải pháp:** Dùng Converter (Adapter Pattern). Không sửa logic gốc của cả 2 bên, hãy sửa ở giữa.
+## 🔌 Xử lý Mismatch (Converters)
 
-- **Chiến lược 1:** Convert Trực tiếp (Cho logic đơn giản)
+Khi ghép nối (Merge), thường xảy ra: *Frontend cần format A, nhưng Backend/Core trả về format B*.
+
+**Giải pháp:** Dùng **Converter (Adapter Pattern)**. Không sửa logic gốc của cả 2 bên, hãy sửa ở giữa.
+
+### Chiến lược 1: Convert Trực tiếp
+
+*Dùng cho logic đơn giản*
 ```python
 backend_data = backend_api.get_data()
 
@@ -95,7 +125,10 @@ frontend_model = FrontendInput(
     geo_lat=backend_data['location']['lat']
 )
 ```
-- **Chiến lược 2:** Converter Reusable (Khuyên dùng). Ta tách logic convert ra riêng để code gọn gàng và tái sử dụng được.
+
+### Chiến lược 2: Converter Reusable
+
+*Khuyên dùng - Tách logic convert ra riêng để code gọn gàng và tái sử dụng*
 ```python
 # File: converters.py
 def backend_to_frontend_adapter(be_data) -> FrontendInput:
@@ -110,44 +143,59 @@ clean_input = backend_to_frontend_adapter(raw_data) # Code rất sạch
 process_ui(clean_input)
 ```
 
-## 5. Lưu ý quan trọng (Best Practices)
-- **Giao tiếp là chìa khóa:**
-    + Trước khi implement tính năng mới, hãy thống nhất Input/Output (Data contract).
-    + Nếu tự tạo Wrapper để làm tính năng mới, hãy báo cho team để đánh giá tính khả thi về mặt kỹ thuật.
-- **Làm việc song song (Parallel Workflow):**
-    + FE cứ mock data mà chạy UI.
-    + BE/Core cứ viết logic xử lý data.
-    + Cuối cùng ráp lại bằng cách thay ruột Handler hoặc dùng Converter. Đừng ai đợi ai cả.
-- **Supabase Context:**
-    + Auth, Security Rules (RLS), Table Structure là trách nhiệm của Core.
-    + Frontend chỉ gọi Supabase SDK qua các Handler đã được Core cấu hình hoặc hướng dẫn.
-- **Clean Code:**
-    + Không bắt buộc quá khắt khe, nhưng ưu tiên sự rõ ràng (Readability).
-    + Tên biến/hàm nên mô tả đúng chức năng (e.g., `get_user_profile` thay vì `get_data`).
+---
 
-## 6. Query System: Trung tâm điều phối công việc (Optional - cho FE/BE)
+## 💡 Lưu ý quan trọng (Best Practices)
 
-### 6.1. Query System là gì?
-**Query System** là một lớp trung gian nằm bên trên tầng Handlers, đóng vai trò là "trung tâm điều phối" - nhận yêu cầu công việc từ một bên và giao việc cho đúng Handler xử lý.
+### 💬 Giao tiếp là chìa khóa
+- Trước khi implement tính năng mới, nên thống nhất Input/Output (Data contract)
+- Nếu tự tạo Wrapper để làm tính năng mới, nên báo cho team để đánh giá tính khả thi
 
-*Phần này là tùy chọn (Optional), chủ yếu dành cho Front-end/Back-end. Core và UI/UX chỉ cần biết sơ qua là được.*
+### 🔀 Làm việc song song (Parallel Workflow)
+- FE cứ mock data mà chạy UI
+- BE/Core cứ viết logic xử lý data
+- Cuối cùng ráp lại bằng cách thay ruột Handler hoặc dùng Converter
+- **Đừng ai đợi ai cả!**
 
-**Ví dụ minh họa:**  
-Hãy tưởng tượng bạn đi khám bệnh lần đầu - bạn chưa biết mình cần vào phòng khám nào. Đầu tiên, bạn sẽ gặp **"lễ tân/tiếp tân"**, kể triệu chứng, và lễ tân sẽ chuyển bạn tới đúng **"chuyên khoa/phòng khám"** phù hợp.
+### 🗄️ Supabase Context
+- Auth, Security Rules (RLS), Table Structure là trách nhiệm của Core
+- Frontend nên gọi Supabase SDK qua các Handler đã được Core cấu hình
 
-- **Query System** = Lễ tân (trung tâm điều phối)
-- **Handlers** = Các chuyên khoa/phòng khám
+### ✨ Clean Code
+- Không bắt buộc quá khắt khe, nhưng ưu tiên sự rõ ràng (Readability)
+- Tên biến/hàm nên mô tả đúng chức năng (VD: `get_user_profile` thay vì `get_data`)
 
-### 6.2. Tại sao nên có Query System?
+---
 
-Giả sử có hai bên: **A** (người dùng) và **B** (người cung cấp dịch vụ).  
-**B** có hai Handler:
-- `QueryHandler`: có các chức năng `QueryBook`, `QueryAuthor`
-- `StoreHandler`: có các chức năng `StoreBook`, `StoreAuthor`
+## 🎯 Query System: Trung tâm điều phối công việc
 
-**A** muốn dùng ba tính năng: `QueryBook`, `QueryAuthor`, và `StoreBook`.
+> **Lưu ý:** Phần này là tùy chọn (Optional), chủ yếu dành cho Front-end/Back-end. Core và UI/UX chỉ cần biết sơ qua là được.
 
-#### Cách đơn giản (không dùng Query System):
+### Query System là gì?
+
+**Query System** là một lớp trung gian nằm bên trên tầng Handlers, đóng vai trò "trung tâm điều phối" - nhận yêu cầu công việc từ một bên và giao việc cho đúng Handler xử lý.
+
+**Ví dụ dễ hiểu:**
+
+Tưởng tượng bạn đi khám bệnh lần đầu:
+- Bạn chưa biết cần vào phòng khám nào
+- Gặp **"lễ tân"** → kể triệu chứng → lễ tân chuyển tới đúng **"phòng khám"**
+
+```
+Query System = Lễ tân (điều phối)
+Handlers = Các phòng khám (chuyên môn)
+```
+
+### Tại sao nên có Query System?
+
+**Bối cảnh:**
+- **A** (người dùng) và **B** (người cung cấp dịch vụ)
+- **B** có hai Handler:
+  - `QueryHandler`: chứa `QueryBook`, `QueryAuthor`
+  - `StoreHandler`: chứa `StoreBook`, `StoreAuthor`
+- **A** muốn dùng: `QueryBook`, `QueryAuthor`, `StoreBook`
+
+#### ❌ Cách đơn giản (không dùng Query System)
 **A** gọi trực tiếp:
 ```python
 # A phải biết chính xác Handler nào có chức năng gì
@@ -156,18 +204,18 @@ result2 = QueryHandler().QueryAuthor(...)
 result3 = StoreHandler().StoreBook(...)
 ```
 
-**Vấn đề phát sinh:**
+**Vấn đề gì xảy ra?**
 
-1. **A phải biết quá nhiều chi tiết cấu trúc nội bộ của B:**
-   - A không chỉ biết "công việc cần làm" mà còn phải biết "Handler nào làm việc đó".
-   - Nếu B thay đổi cấu trúc (ví dụ: đổi từ `StoreHandler` sang `NewStoreHandler`), A cũng phải sửa code theo.
-   - Về phía B: các Handler trở nên "cứng nhắc" vì có bên ngoài đang dùng trực tiếp. Muốn thay đổi thì phải lo ảnh hưởng tới tất cả bên dùng, hoặc bị buộc phải over-engineer ngay từ đầu để cover mọi tình huống.
+**1. A phải biết quá nhiều chi tiết nội bộ của B:**
+- A không chỉ biết "công việc cần làm" mà còn phải biết "Handler nào làm"
+- B thay đổi cấu trúc (VD: `StoreHandler` → `NewStoreHandler`) → A phải sửa code theo
+- Handler trở nên cứng nhắc, khó thay đổi vì sợ ảnh hưởng bên ngoài
 
-2. **Vấn đề bảo mật/giới hạn chức năng:**
-   - Nếu A dùng thẳng Handler, toàn bộ chức năng của Handler đều bị lộ ra ngoài.
-   - Khó kiểm soát được việc A chỉ nên dùng một số chức năng nhất định.
+**2. Vấn đề bảo mật:**
+- A dùng thẳng Handler → toàn bộ chức năng đều lộ ra
+- Khó kiểm soát A chỉ dùng một số chức năng nhất định
 
-#### Giải pháp: Query System
+#### ✅ Giải pháp: Query System
 
 **Query System** đứng ở giữa A và các Handler của B. A chỉ cần nói "công việc cần làm", không cần biết Handler nào sẽ xử lý.
 
@@ -180,20 +228,23 @@ result3 = QuerySystem().StoreBook(...)
 
 **Lợi ích:**
 
-- **A không cần biết cách làm, chỉ cần biết công việc:**  
-  Giả sử ban đầu để làm công việc X, B phải làm Y. Sau này B thay đổi, để làm X thì phải làm Z và W.  
-  → A không cần quan tâm, nó chỉ nhờ B "làm công việc X". B tự biết cách làm mới như thế nào.
+✅ **A chỉ cần biết công việc, không cần biết cách làm**
+- Ban đầu: Làm X → gọi Y
+- Sau này: Làm X → gọi Z và W
+- A không cần quan tâm, cứ nhờ "làm X" là được
 
-- **Dễ dàng thay đổi cấu trúc nội bộ:**  
-  B có thể thoải mái thay đổi Handler, thêm/bớt bước xử lý bên trong mà không ảnh hưởng tới A.
+✅ **B dễ dàng thay đổi cấu trúc nội bộ**
+- Thoải mái đổi Handler, thêm/bớt bước xử lý
+- Không ảnh hưởng tới A
 
-- **Kiểm soát bảo mật tốt hơn:**  
-  Query System chỉ "nhận" những công việc được phép từ A. Các chức năng khác của Handler sẽ không bị lộ ra ngoài.
+✅ **Kiểm soát bảo mật tốt hơn**
+- Query System chỉ expose những công việc được phép
+- Chức năng khác của Handler không bị lộ
 
-### 6.3. Ví dụ code minh họa
+### Ví dụ code minh họa
 
 ```python
-# ===== Các Handler của B =====
+# ========== Các Handler của B ==========
 
 class QueryHandler:
     def QueryBook(self, *args):
@@ -266,29 +317,38 @@ result = QuerySystem().QueryAuthor(...)
 result = QuerySystem().StoreBook(...)
 ```
 
-### 6.4. Khi nào nên dùng Query System?
+### Khi nào nên dùng Query System?
 
-**Nên dùng:**
-- Giữa **UI/UX** và **Front-end**: Front-end cung cấp Query System để UI/UX gọi các "công việc" mà không cần biết logic bên trong.
-- Trong nội bộ **Back-end**: Giữa **Router/Route** và **Handlers**. Router chỉ nhận input từ Front-end và "nhờ Query System làm công việc", thay vì Router trực tiếp gọi Handler.
+**💡 Gợi ý sử dụng:**
 
-**Lưu ý cho Back-end:**
-- Trong một số trường hợp, Query System có thể hơi dư thừa vì **Router/Route** đã đóng vai trò trung gian giữa Front-end và Back-end.
-- Tuy nhiên, vẫn có thể áp dụng Query System giữa Router và Handlers để:
-  - Tách bạch rõ ràng: Router chỉ xử lý HTTP request/response, Query System quản lý logic "gọi đúng Handler".
-  - Dễ dàng thay đổi cách thức xử lý công việc mà không ảnh hưởng tới Router.
+**1. Giữa UI/UX và Front-end**
+- FE cung cấp Query System
+- UI/UX gọi "công việc" mà không cần biết logic bên trong
+
+**2. Trong nội bộ Back-end** (giữa Router và Handlers)
+- Router nhận input từ FE
+- Nhờ Query System làm công việc
+- Thay vì Router gọi trực tiếp Handler
+
+**📝 Lưu ý cho Back-end:**
+
+Trong một số trường hợp, Query System có thể hơi dư thừa vì Router đã đóng vai trò trung gian.
+
+Tuy nhiên, vẫn có thể áp dụng để:
+- ✅ Tách bạch rõ ràng: Router xử lý HTTP, Query System quản lý logic
+- ✅ Dễ thay đổi cách xử lý mà không ảnh hưởng Router
 
 ---
 
-# CHI TIẾT GUIDELINE CHO TỪNG BÊN
+# 📋 CHI TIẾT CHO TỪNG BÊN
 
-## 1. Khu vực làm việc (Workspace Boundaries)
+## 🗂️ Khu vực làm việc (Workspace Boundaries)
 
-Để tránh tình trạng các bên xâm phạm code lẫn nhau (như Core đi chỉnh code của Backend), ta cần phân chia rõ phạm vi làm việc của các bên.
+Để tránh các bên xâm phạm code lẫn nhau (VD: Core đi sửa code Backend), nên phân chia rõ phạm vi làm việc.
 
-### 1.1. Phía Front-end và UI/UX
+### 🎨 Phía Front-end và UI/UX
 
-Tùy theo Framework, cách chia có thể khác nhau, nhưng chủ yếu gồm ba phần:
+Tùy Framework, cách chia có thể khác nhau. Chủ yếu gồm:
 
 ```
 UI/
@@ -306,9 +366,9 @@ Frontend/
           Frontend hạn chế sửa code khu vực này.
 ```
 
-### 1.2. Phía Back-end
+### ⚙️ Phía Back-end
 
-Tương tự, Back-end cũng chia thành hai phần:
+Tương tự, Back-end chia thành:
 
 ```
 Backend/
@@ -320,9 +380,9 @@ Backend/
           Backend và các bên khác hạn chế sửa code khu vực này.
 ```
 
-### 1.3. Quy tắc làm việc cho Core
+### 🔧 Quy tắc cho Core
 
-Core bao gồm nhiều Modules kết hợp lại. Để tránh chồng chéo, mỗi Module nên có một phần riêng:
+Core bao gồm nhiều Modules. Để tránh chồng chéo, mỗi Module nên có phần riêng:
 
 ```
 Core/
@@ -333,9 +393,9 @@ Core/
   └── ...
 ```
 
-**Nguyên tắc Module:**
-- Các module nên **độc lập** với nhau, không nên có quá nhiều liên quan.
-- Nếu một module xử lý quá nhiều thứ, có thể chia thành **sub-module**:
+**💡 Gợi ý:**
+- Các module nên **độc lập**, không quá nhiều liên quan
+- Module quá phức tạp? Chia thành **sub-module**:
 
 ```
 Core/
@@ -345,11 +405,11 @@ Core/
           └── Sub-Sub-Module1/ (Không khuyến khích)
 ```
 
-**Lưu ý:**
-- Nên giữ quy tắc **"tối đa 2 tầng"** (tránh Sub-Sub-Module) để code không quá phức tạp.
-- Nếu module quá dày, có thể chia thành nhiều sub-module rồi gom lại cho dễ maintain. Tuy nhiên, cái này là tùy chọn - nếu không cần thiết thì thôi, không sao.
+**📌 Lưu ý:**
+- Nên giữ **tối đa 2 tầng** (tránh Sub-Sub-Module) cho đơn giản
+- Module quá dày? Chia sub-module rồi gom lại (tùy chọn, không bắt buộc)
 
-### 1.4. Quy luật của khu vực làm việc
+### ⚖️ Quy luật khu vực làm việc
 
 #### a. Làm việc trong phạm vi của mình
 - **Chỉ nên làm việc "trong" khu vực của mình.**
@@ -366,26 +426,29 @@ Core/
 - **Lưu ý:** Một project có thể có nhiều file `.gitignore` ở các thư mục khác nhau. Mỗi file sẽ ignore relative với thư mục nó nằm trong.
 - **Quan trọng:** Đừng push file `.gitignore` lên GitHub nếu nó chứa config cá nhân hoặc không cần thiết cho team.
 
-### 1.5. Tại sao cần phân chia khu vực làm việc?
+### 🤔 Tại sao cần phân chia khu vực?
 
-1. **Tránh nhầm lẫn:** "Ơ, phần này tự nhiên ai sửa code của mình thế???"
-2. **Dễ dàng tìm lỗi:** Khi có bug, biết rõ đứa nào chịu trách nhiệm để blame (hoặc fix).
-3. **Tăng tính độc lập (Decoupled):**
-   - Giúp các bên làm việc song song hiệu quả hơn.
-   - Giảm xung đột file (conflict). Ví dụ: Backend đang edit `app.py`, nếu Core cũng edit thì sẽ conflict.
+✅ **Tránh nhầm lẫn**
+- "Ơ, ai sửa code của mình thế???"
+
+✅ **Dễ tìm lỗi**
+- Có bug → biết ai chịu trách nhiệm
+
+✅ **Tăng tính độc lập**
+- Làm việc song song hiệu quả hơn
+- Giảm conflict (VD: Backend edit `app.py`, Core cũng edit → conflict!)
 
 ---
 
-## 2. Thiết kế Handlers và Query System
+## 🏗️ Thiết kế Handlers và Query System
 
-Về cơ bản, có 3 cách implement cho 3 tình huống: **Tĩnh (Static)**, **Object**, và **Singleton**.
+Có 3 cách implement: **Static**, **Object**, **Singleton**.
 
-*Dưới đây minh họa cho Handler. Query System cũng thiết kế tương tự.*
+> Dưới đây minh họa cho Handler. Query System cũng thiết kế tương tự.
 
-### 2.1. Cách 1: Tĩnh (Static)
+### 1️⃣ Cách 1: Static
 
-**Khi nào dùng:**  
-Trường hợp đơn giản, không cần khởi tạo hay giữ state gì trước khi gọi.
+**Khi nào dùng:** Đơn giản, không cần khởi tạo hay giữ state
 
 ```python
 class StaticHandlerEx:
@@ -404,10 +467,9 @@ StaticHandlerEx.GetBook(...)
 StaticHandlerEx.SetBook(...)
 ```
 
-### 2.2. Cách 2: Object
+### 2️⃣ Cách 2: Object
 
-**Khi nào dùng:**  
-Khi cần giữ **state local riêng** cho mỗi lần gọi, hoặc cần khởi tạo mỗi lần sử dụng.
+**Khi nào dùng:** Cần giữ **state riêng** cho mỗi lần gọi, hoặc khởi tạo mỗi lần dùng
 
 ```python
 class ObjectHandlerEx:
@@ -432,10 +494,9 @@ handler.GetBook(...)
 handler.SetBook(...)
 ```
 
-### 2.3. Cách 3: Singleton (Design Pattern)
+### 3️⃣ Cách 3: Singleton
 
-**Khi nào dùng:**  
-Khi cần **khởi tạo một lần duy nhất** trong suốt quá trình chạy chương trình (không phải mỗi lần dùng). Hỗ trợ lazy initialization.
+**Khi nào dùng:** Cần **khởi tạo một lần duy nhất** trong suốt chương trình (lazy initialization)
 
 ```python
 class SingletonHandlerEx:
@@ -475,51 +536,64 @@ print(SingletonHandlerEx().global_state)  # Output: 2
 # Lưu ý: initialize() chỉ được gọi một lần duy nhất
 ```
 
-### 2.4. Lựa chọn thiết kế phù hợp
+### 💡 Lựa chọn thiết kế phù hợp
 
-**Nguyên tắc:**
-- **Ưu tiên đơn giản trước:** Nếu Static đủ dùng, đừng dùng Object hay Singleton.
-- **Chọn đúng tình huống:**
-  - Static → Không cần state, không thay đổi trong suốt quá trình chạy.
-  - Object → Cần state riêng cho mỗi lần gọi.
-  - Singleton → Cần khởi tạo một lần và dùng chung state global.
+**Gợi ý:**
 
----
+✅ **Ưu tiên đơn giản**
+- Static đủ dùng? Đừng dùng Object hay Singleton
 
-## 3. Quy tắc Hộp đen (Black-box Rule) và Giao tiếp giữa các bên
-
-### 3.1. Quy tắc Hộp đen
-
-Khi bạn dùng ChatGPT, Gemini, Claude, hay Copilot để code, bạn có biết bên trong nó chạy như thế nào không?
-
-*"Input được feed vào, forward qua từng layer, mỗi layer gồm attention layer và neural layers..."*
-
-**NAHHH, biết làm cái gì?**
-
-Câu hỏi đúng hơn là: **"Lúc bạn xài, bạn có CẦN biết nó chạy như nào không?"**
-
-→ Đáp án: **KHÔNG!** Bạn chỉ cần biết nó có tính năng gì, input/output là gì, xài thế nào. **Chấm hết.**
+✅ **Chọn đúng tình huống:**
+- **Static** → Không cần state, không thay đổi
+- **Object** → Cần state riêng mỗi lần gọi
+- **Singleton** → Khởi tạo một lần, dùng chung state global
 
 ---
 
-**Áp dụng vào đây:**
+## ⬛ Quy tắc Hộp đen (Black-box Rule)
 
-- Guideline này chỉ quy định **Input/Output** giữa các bên nên theo các quy tắc đã nêu.
-- **Cái ruột bên trong?** → **"Bạn làm thế nào cũng được!"**
-- Team không quan tâm logic bên trong, chỉ quan tâm **"đầu vào/đầu ra"** thôi.
-- **Không có coding convention phức tạp**, không ép buộc style code. Chỉ có Input, Output!
+### Câu hỏi vui
 
-*Mình là sinh viên, không phải lập trình viên của Google hay Microsoft. Thế thôi!*
+Khi dùng ChatGPT, Gemini, Claude, bạn có biết bên trong nó chạy thế nào?
 
-### 3.2. Giao tiếp giữa các bên
+*"Input feed vào, forward qua layers, attention mechanisms..."*
 
-#### a. Về phía "cho" - Core cung cấp cho Backend/Frontend
+**NAHHH, biết làm gì?**
 
-Core có thể cung cấp output dưới dạng:
-- **Một đống functions**
-- **Client classes** (giống như Handler)
+Câu hỏi đúng: **"Lúc xài, bạn CẦN biết nó chạy thế nào không?"**
 
-**Các cách thiết kế Client (tương tự Handler):**
+→ **KHÔNG!** Chỉ cần biết:
+- Tính năng gì?
+- Input/Output gì?
+- Xài thế nào?
+
+**Chấm hết.**
+
+---
+
+### Áp dụng vào đây
+
+✅ **Guideline chỉ quy định Input/Output**
+- Cái ruột bên trong? **Làm thế nào cũng được!**
+- Team chỉ quan tâm đầu vào/đầu ra
+- **Không có coding convention phức tạp**
+- Không ép style code
+
+> Mình là sinh viên, không phải dev Google/Microsoft. Thế thôi! 😄
+
+---
+
+## 💬 Giao tiếp giữa các bên
+
+### Core cung cấp cho Backend/Frontend
+
+Core có thể cung cấp:
+- Một đống functions
+- Client classes (giống Handler)
+
+**Các cách thiết kế Client:**
+
+*(Tương tự Handler - xem phần trên)*
 
 **Client Tĩnh (Static):**
 ```python
@@ -583,9 +657,9 @@ class SingletonClient:
 SingletonClient().DoTask(...)
 ```
 
-#### b. Chi tiết giao tiếp của các bên
+### Chi tiết giao tiếp
 
-Mỗi bên cần cung cấp thông tin về **Input/Output** rõ ràng:
+Mỗi bên cần cung cấp thông tin **Input/Output** rõ ràng:
 
 | Bên | Cần cung cấp |
 |-----|--------------|
@@ -594,15 +668,20 @@ Mỗi bên cần cung cấp thông tin về **Input/Output** rõ ràng:
 | **Front-end** | Giống Core, nhưng là tính năng/chức năng cung cấp |
 | **UI/UX** | Cần nhận những gì từ Front-end |
 
-#### c. Tài liệu (Documentation)
+### 📚 Tài liệu (Documentation)
 
-Mỗi Module Core, Backend (có thể không cần nếu có auto-gen docs), Frontend và UI/UX sẽ viết một file docs.
+Mỗi Module nên viết file docs:
+- ✅ Core: Mỗi Module một file
+- ⚠️ Backend: Tùy chọn (có auto-gen docs thì không cần)
+- ✅ Frontend: Mỗi Module/tính năng một file
+- ✅ UI/UX: Mô tả cần gì từ FE
 
-**Template docs sẽ được cung cấp sau trong file riêng.**
+> Template docs sẽ cung cấp sau trong file riêng
 
 ---
 
-**Note:** Guideline này vẫn đang được mở rộng và cập nhật tùy theo tình hình thực tế của dự án.
+**📌 Lưu ý cuối:** Guideline này vẫn đang được mở rộng và cập nhật theo tình hình thực tế dự án.
 
 ---
-Code vui vẻ nhá
+
+**Code vui vẻ nhá!** 🚀✨
