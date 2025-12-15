@@ -15,6 +15,7 @@ from handlers.data import (
     DataRestaurantSearchResult,
     DataRestaurantFilter
 )
+from handlers.serp import SerpStaticHandler
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -109,3 +110,13 @@ class QuerySystem:
             ),
             limit=limit
         )
+
+    @staticmethod
+    async def SerpSearch(query: str) -> dict:
+        """Perform a SERP search and return the raw response."""
+        return await SerpStaticHandler.search_food(query)
+
+    @staticmethod
+    async def SerpFoodSnippets(query: str) -> list:
+        """Perform a SERP search and return only food-related snippets."""
+        return await SerpStaticHandler.search_food_snippets(query)
