@@ -11,6 +11,7 @@ class RestaurantItem {
   final double rating;
   final int ratingCount;
   final String imageUrl; // URL ảnh (Network Image)
+  final String address; // Địa chỉ nhà hàng
   final String? description;
   final String? priceLevel; // $ - $$$$
   final bool isOpen;
@@ -26,6 +27,7 @@ class RestaurantItem {
     required this.rating,
     this.ratingCount = 0,
     required this.imageUrl,
+    required this.address,
     this.description,
     this.priceLevel,
     this.isOpen = true,

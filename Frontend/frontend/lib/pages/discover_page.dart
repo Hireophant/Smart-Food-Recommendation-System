@@ -149,7 +149,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, _) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 height: 120,
                 color: Colors.grey[300],
                 child: const Icon(Icons.restaurant, size: 50),

@@ -72,6 +72,7 @@ class MockFoodSearchHandler implements FoodSearchHandler {
               rating: 4.0, // Default rating for OSM
               ratingCount: 10,
               imageUrl: 'assets/images/com_tam.png', // Fallback image
+              address: item['display_name'] ?? 'Địa chỉ đang cập nhật',
               description: item['display_name'],
               priceLevel: '\$\$',
               isOpen: true,
