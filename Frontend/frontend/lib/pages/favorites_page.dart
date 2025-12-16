@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
 import '../models/food_model.dart';
 import '../providers/favorites_provider.dart';
-import 'restaurant_detail_page.dart';
+import 'map_page.dart';
 
 /// Trang Favorites - Hiển thị danh sách món ăn và nhà hàng yêu thích
 class FavoritesPage extends StatefulWidget {
@@ -13,7 +13,8 @@ class FavoritesPage extends StatefulWidget {
   State<FavoritesPage> createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProviderStateMixin {
+class _FavoritesPageState extends State<FavoritesPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -103,7 +104,10 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                   const SizedBox(width: 4),
                   if (favoritesProvider.favoriteDishes.isNotEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(10),
@@ -129,7 +133,10 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                   const SizedBox(width: 4),
                   if (favoritesProvider.favoriteRestaurants.isNotEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(10),
@@ -179,7 +186,10 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildRestaurantsTab(BuildContext context, FavoritesProvider provider) {
+  Widget _buildRestaurantsTab(
+    BuildContext context,
+    FavoritesProvider provider,
+  ) {
     if (provider.favoriteRestaurants.isEmpty) {
       return _buildEmptyState(
         context,
@@ -199,7 +209,11 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildDishCard(BuildContext context, DishItem dish, FavoritesProvider provider) {
+  Widget _buildDishCard(
+    BuildContext context,
+    DishItem dish,
+    FavoritesProvider provider,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -250,10 +264,7 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                     const SizedBox(height: 4),
                     Text(
                       dish.description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -267,7 +278,8 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                             style: const TextStyle(fontSize: 10),
                           ),
                           padding: EdgeInsets.zero,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         );
                       }).toList(),
                     ),
@@ -298,7 +310,11 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildRestaurantCard(BuildContext context, RestaurantItem restaurant, FavoritesProvider provider) {
+  Widget _buildRestaurantCard(
+    BuildContext context,
+    RestaurantItem restaurant,
+    FavoritesProvider provider,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -308,7 +324,7 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+              builder: (_) => MapPage(selectedRestaurant: restaurant),
             ),
           );
         },
@@ -318,7 +334,9 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Image.network(
                 restaurant.imageUrl,
                 width: double.infinity,
@@ -357,11 +375,14 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                           provider.removeRestaurant(restaurant.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('${restaurant.name} removed from favorites'),
+                              content: Text(
+                                '${restaurant.name} removed from favorites',
+                              ),
                               duration: const Duration(seconds: 2),
                               action: SnackBarAction(
                                 label: 'Undo',
-                                onPressed: () => provider.addRestaurant(restaurant),
+                                onPressed: () =>
+                                    provider.addRestaurant(restaurant),
                               ),
                             ),
                           );
@@ -371,10 +392,7 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                   ),
                   Text(
                     restaurant.category,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -413,7 +431,8 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                             style: const TextStyle(fontSize: 10),
                           ),
                           padding: EdgeInsets.zero,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         );
                       }).toList(),
                     ),
@@ -427,7 +446,8 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, {
+  Widget _buildEmptyState(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String message,
@@ -438,11 +458,7 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(icon, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               title,
@@ -456,10 +472,7 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -472,7 +485,9 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Favorites?'),
-        content: const Text('This will remove all your favorite dishes and restaurants.'),
+        content: const Text(
+          'This will remove all your favorite dishes and restaurants.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -493,7 +508,11 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
     );
   }
 
-  void _showClearDialog(BuildContext context, FavoritesProvider provider, {required bool isDishes}) {
+  void _showClearDialog(
+    BuildContext context,
+    FavoritesProvider provider, {
+    required bool isDishes,
+  }) {
     final type = isDishes ? 'dishes' : 'restaurants';
     showDialog(
       context: context,
@@ -513,9 +532,9 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                 provider.clearRestaurants();
               }
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('All $type cleared')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('All $type cleared')));
             },
             child: const Text('Clear', style: TextStyle(color: Colors.red)),
           ),

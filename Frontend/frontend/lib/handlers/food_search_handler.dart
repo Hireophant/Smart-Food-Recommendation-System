@@ -2,167 +2,35 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
+import 'dish_handler.dart';
+import 'restaurant_handler.dart';
 
-/// Handler giao tiếp giữa UI và Backend/Core
+/// Handler Interface (Core/Backend Contract)
+///
+/// Định nghĩa các "Hành động" mà Frontend cần.
+/// Core/Backend sẽ implement interface này.
+/// Xem thêm: Guideline.md -> Mục 3.2 "Fake it until you make it"
 abstract class FoodSearchHandler {
-  /// Tìm kiếm nhà hàng theo từ khóa
+  // --- Discovery Flow ---
+  Future<List<DishItem>> getAllDishes();
   Future<SearchResult> searchFoods(String query);
 
-  /// Lấy danh sách tất cả nhà hàng
+  // --- Restaurant Flow ---
   Future<SearchResult> getAllFoods();
-
-  /// Lấy chi tiết
-  Future<RestaurantItem?> getFoodDetails(String id);
-
-  /// Lấy menu
-  Future<List<MenuItem>> getMenu(String id);
-
-  /// Lấy danh sách món ăn (Mới - Cho luồng Dish-first)
-  Future<List<DishItem>> getAllDishes();
-
-  /// Tìm nhà hàng bán món này
   Future<SearchResult> getRestaurantsByDish(String dishId);
+  Future<RestaurantItem?> getFoodDetails(String id);
+  Future<List<MenuItem>> getMenu(String id);
 }
 
 /// Implementation hiện tại - Mock Data kết hợp OSM Search
 ///
 /// Class này giả lập việc gọi API từ Backend.
 /// - Dữ liệu cứng (Hardcoded) được dùng để hiển thị các quán mẫu đẹp mắt.
-/// - Tích hợp gọi API OpenStreetMap (Nominatim) để tìm kiếm địa điểm thực tế.
+/// - T tích hợp gọi API OpenStreetMap (Nominatim) để tìm kiếm địa điểm thực tế.
 class MockFoodSearchHandler implements FoodSearchHandler {
-  /// Mock data - matches the screenshot
-  static final List<RestaurantItem> _mockFoods = [
-    RestaurantItem(
-      id: '1',
-      name: 'THAIYEN CAFE Quan Thanh',
-      category: 'Cafe • Coffee • Beverages',
-      rating: 4.7,
-      ratingCount: 143,
-      imageUrl:
-          'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600',
-      description: 'Cozy • Ba Dinh',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.2 km',
-      tags: ['Cozy', 'Ba Dinh'],
-      latitude: 21.0365,
-      longitude: 105.8432,
-    ),
-    RestaurantItem(
-      id: '2',
-      name: 'Cafe de Flore 46',
-      category: 'Cafe • French • Pastries',
-      rating: 4.7,
-      ratingCount: 154,
-      imageUrl:
-          'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=600',
-      description: 'Premium • Romantic',
-      priceLevel: '\$\$\$',
-      isOpen: true,
-      distance: '0.8 km',
-      tags: ['Premium', 'Romantic'],
-      latitude: 21.0335,
-      longitude: 105.8500,
-    ),
-    RestaurantItem(
-      id: '3',
-      name: 'Le Petit Café',
-      category: 'Cafe • European • Desserts',
-      rating: 4.8,
-      ratingCount: 312,
-      imageUrl:
-          'https://images.unsplash.com/photo-1498804103079-a6351b050096?q=80&w=600',
-      description: 'Quiet • Books',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '2.3 km',
-      tags: ['Quiet', 'Books'],
-      latitude: 21.0250,
-      longitude: 105.8400,
-    ),
-    RestaurantItem(
-      id: '4',
-      name: 'Vi Ha Noi Restaurant & Cafe',
-      category: 'Vietnamese • Pho • Traditional',
-      rating: 4.6,
-      ratingCount: 187,
-      imageUrl:
-          'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=600',
-      description: 'Authentic • Local',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.5 km',
-      tags: ['Authentic', 'Local'],
-      latitude: 21.0380,
-      longitude: 105.8450,
-    ),
-    RestaurantItem(
-      id: '5',
-      name: 'Garden Coffee Doi Can',
-      category: 'Cafe • Garden • Outdoor Seating',
-      rating: 4.4,
-      ratingCount: 421,
-      imageUrl:
-          'https://images.unsplash.com/photo-1505935428862-770b6f24f629?q=80&w=600',
-      description: 'Garden • Relaxing',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.9 km',
-      tags: ['Garden', 'Relaxing'],
-      latitude: 21.0340,
-      longitude: 105.8280,
-    ),
-    RestaurantItem(
-      id: '6',
-      name: 'Vua. Ca Phe',
-      category: 'Cafe • Specialty Coffee • Modern',
-      rating: 4.9,
-      ratingCount: 576,
-      imageUrl:
-          'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=600',
-      description: 'Top Rated • Specialty',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.1 km',
-      tags: ['Top Rated', 'Specialty'],
-      latitude: 21.0300,
-      longitude: 105.8550,
-    ),
-    RestaurantItem(
-      id: '7',
-      name: 'Song Sanh Café & Roastery',
-      category: 'Cafe • Roastery • Specialty Coffee',
-      rating: 4.7,
-      ratingCount: 398,
-      imageUrl:
-          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=600',
-      description: 'Roastery • Artisan',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.8 km',
-      tags: ['Roastery', 'Artisan'],
-      latitude: 21.0290,
-      longitude: 105.8480,
-    ),
-    RestaurantItem(
-      id: '8',
-      name: 'Highlands Coffee Quan Thanh',
-      category: 'Cafe • Vietnamese Coffee • Beverages',
-      rating: 4.1,
-      ratingCount: 2145,
-      imageUrl:
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600',
-      description: 'Popular • WiFi',
-      priceLevel: '\$\$',
-      isOpen: true,
-      distance: '1.3 km',
-      tags: ['Popular', 'WiFi'],
-      latitude: 21.0370,
-      longitude: 105.8420,
-    ),
-  ];
+  // Use data from RestaurantHandler to ensure consistency
+  List<RestaurantItem> get _mockFoods => MockRestaurantHandler.mockRestaurants;
 
-  @override
   @override
   Future<SearchResult> searchFoods(String query) async {
     // 1. Search in local mock data
@@ -203,8 +71,7 @@ class MockFoodSearchHandler implements FoodSearchHandler {
               category: item['type'] ?? 'Place',
               rating: 4.0, // Default rating for OSM
               ratingCount: 10,
-              imageUrl:
-                  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=600', // Random food image
+              imageUrl: 'assets/images/com_tam.png', // Fallback image
               description: item['display_name'],
               priceLevel: '\$\$',
               isOpen: true,
@@ -249,27 +116,17 @@ class MockFoodSearchHandler implements FoodSearchHandler {
     return [
       MenuItem(
         id: '1',
-        name: 'Signature Coffee',
+        name: 'Signature Dish',
         description: 'Best in town',
-        price: 4.5,
-        imageUrl:
-            'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=300',
+        price: 50000,
+        imageUrl: 'assets/images/com_tam.png',
       ),
       MenuItem(
         id: '2',
-        name: 'Croissant',
-        description: 'Buttery goodness',
-        price: 3.0,
-        imageUrl:
-            'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=300',
-      ),
-      MenuItem(
-        id: '3',
-        name: 'Pho Bo',
-        description: 'Traditional Beef Noodle',
-        price: 6.0,
-        imageUrl:
-            'https://images.unsplash.com/photo-1582878826618-c05326eff950?q=80&w=300',
+        name: 'Special Drink',
+        description: 'Refeshing',
+        price: 25000,
+        imageUrl: 'assets/images/che.png',
       ),
     ];
   }
@@ -277,90 +134,19 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   @override
   Future<List<DishItem>> getAllDishes() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return [
-      DishItem(
-        id: '1',
-        name: 'Phở Bò',
-        description: 'Traditional Vietnamese beef noodle soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1582878826618-c05326eff950?q=80&w=600',
-        tags: ['Umami', 'Mild'],
-      ),
-      DishItem(
-        id: '2',
-        name: 'Bún Bò Huế',
-        description: 'Spicy beef noodle soup from Hue',
-        imageUrl:
-            'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600',
-        tags: ['Spicy', 'Umami'],
-      ),
-      DishItem(
-        id: '3',
-        name: 'Cơm Tấm',
-        description: 'Broken rice with grilled pork chop',
-        imageUrl:
-            'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=600', // Alternative rice image
-        tags: ['Salty', 'Sweet'],
-      ),
-      DishItem(
-        id: '4',
-        name: 'Pad Thai',
-        description: 'Stir-fried rice noodles with shrimp',
-        imageUrl:
-            'https://images.unsplash.com/photo-1559314809-0d155014e29e?q=80&w=600',
-        tags: ['Sweet', 'Sour'],
-      ),
-      DishItem(
-        id: '5',
-        name: 'Tom Yum Goong',
-        description: 'Hot and sour Thai soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1548681528-6a5c45b66b42?q=80&w=600',
-        tags: ['Spicy', 'Sour'],
-      ),
-      DishItem(
-        id: '6',
-        name: 'Sushi Platter',
-        description: 'Assorted fresh sushi',
-        imageUrl:
-            'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=600',
-        tags: ['Umami', 'Mild'],
-      ),
-      DishItem(
-        id: '7',
-        name: 'Ramen',
-        description: 'Japanese noodle soup',
-        imageUrl:
-            'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=600',
-        tags: ['Umami', 'Salty'],
-      ),
-      DishItem(
-        id: '8',
-        name: 'Bibimbap',
-        description: 'Korean mixed rice bowl',
-        imageUrl:
-            'https://images.unsplash.com/photo-1596797038530-2c107229654b?q=80&w=600',
-        tags: ['Spicy', 'Umami'],
-      ),
-    ];
+    // Retrieve from DishHandler to ensure consistency
+    return DishHandler.allDishes;
   }
 
   @override
   Future<SearchResult> getRestaurantsByDish(String dishId) async {
-    // Mock logic: return a subset based on id odd/even to verify filtering visual
-    // In real app, this would query backend for restaurants having this dish
     await Future.delayed(const Duration(milliseconds: 500));
-    final all = await getAllFoods();
-    // Simulate some filtering
-    final filtered = all.items
-        .where((r) => r.id.hashCode % 2 == dishId.hashCode % 2)
-        .toList();
 
-    // Always return at least some for demo if empty
-    if (filtered.isEmpty) {
-      return SearchResult(items: all.items.take(3).toList());
-    }
+    // Use the logic from RestaurantHandler to map dishId to Name
+    // For simplicity, we can instantiate MockRestaurantHandler or just use similar logic
+    // Since FoodSearchHandler is somewhat redundant with RestaurantHandler, ideally they merge.
+    // But for now, let's delegate.
 
-    return SearchResult(items: filtered);
+    return MockRestaurantHandler().getRestaurantsByDish(dishId);
   }
 }
