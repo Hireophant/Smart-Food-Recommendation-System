@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/dish_model.dart';
+import '../models/food_model.dart';
+import '../models/filter_tag_model.dart';
 import '../handlers/query_system.dart';
 import '../widgets/dish_card.dart';
+import '../widgets/search_bar_widget.dart';
+import '../widgets/advanced_filter_sheet.dart';
 import '../providers/theme_provider.dart';
 import 'restaurant_list_page.dart';
-import 'settings_page.dart';
+import 'restaurant_detail_page.dart';
 import 'favorites_page.dart';
-import 'profile_page.dart';
+import 'chat_page.dart';
+
+/// Tag mặc định cho filter
+final List<FilterTag> defaultTags = [
+  FilterTag(id: 'vietnamese', label: 'Món Việt', icon: Icons.restaurant),
+  FilterTag(id: 'asian', label: 'Món Á', icon: Icons.ramen_dining),
+  FilterTag(id: 'western', label: 'Món Tây', icon: Icons.fastfood),
+  FilterTag(id: 'cafe', label: 'Cafe', icon: Icons.local_cafe),
+  FilterTag(id: 'dessert', label: 'Tráng miệng', icon: Icons.cake),
+  FilterTag(id: 'vegan', label: 'Chay', icon: Icons.spa),
+  FilterTag(id: 'cheap', label: 'Bình dân', icon: Icons.attach_money),
+  FilterTag(id: 'luxury', label: 'Cao cấp', icon: Icons.diamond),
+  FilterTag(id: 'cozy', label: 'Ấm cúng', icon: Icons.favorite),
+  FilterTag(id: 'family', label: 'Gia đình', icon: Icons.family_restroom),
+];
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -19,8 +39,15 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   // Use QuerySystem instead of direct Handler
   final QuerySystem _querySystem = QuerySystem(); // Facade
+  final MapController _mapController = MapController();
+  
   List<DishItem> _dishes = [];
+  List<RestaurantItem> _allRestaurants = [];
+  List<RestaurantItem> _filteredRestaurants = [];
+  List<String> _selectedTags = [];
+  String _searchQuery = '';
   bool _isLoading = true;
+  bool _isMapLoading = true;
 
   @override
   void initState() {
@@ -31,10 +58,168 @@ class _DiscoverPageState extends State<DiscoverPage> {
   Future<void> _loadData() async {
     // Fetch dishes via Query System
     final dishes = await _querySystem.getAllDishes();
+    // Fetch restaurants for map
+    final restaurantsResult = await _querySystem.search('all');
+    
     setState(() {
       _dishes = dishes;
+      _allRestaurants = restaurantsResult.items;
+      _filteredRestaurants = restaurantsResult.items;
       _isLoading = false;
     });
+    
+    // Simulate map loading delay
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {
+          _isMapLoading = false;
+        });
+      }
+    });
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredRestaurants = _allRestaurants.where((restaurant) {
+        // Filter theo search query
+        final matchesSearch = _searchQuery.isEmpty ||
+            restaurant.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            restaurant.category.toLowerCase().contains(_searchQuery.toLowerCase());
+
+        // Filter theo tags
+        final matchesTags = _selectedTags.isEmpty ||
+            _selectedTags.any((tag) => restaurant.tags.any(
+                (restaurantTag) => restaurantTag.toLowerCase().contains(tag.toLowerCase())));
+
+        return matchesSearch && matchesTags;
+      }).toList();
+    });
+  }
+
+  void _onSearch(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+    _applyFilters();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AdvancedFilterSheet(
+        availableTags: defaultTags,
+        selectedTagIds: _selectedTags,
+        onApplyFilter: (tags) {
+          setState(() {
+            _selectedTags = tags;
+          });
+          _applyFilters();
+        },
+      ),
+    );
+  }
+
+  void _onMarkerTap(RestaurantItem restaurant) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildRestaurantQuickView(restaurant),
+    );
+  }
+
+  Widget _buildRestaurantQuickView(RestaurantItem restaurant) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              restaurant.imageUrl,
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, _) => Container(
+                height: 120,
+                color: Colors.grey[300],
+                child: const Icon(Icons.restaurant, size: 50),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            restaurant.name,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            restaurant.category,
+            style: TextStyle(
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                '${restaurant.rating} (${restaurant.ratingCount})',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.location_on, color: Theme.of(context).primaryColor, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                restaurant.distance,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Xem chi tiết'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onDishSelected(DishItem dish) {
@@ -56,61 +241,62 @@ class _DiscoverPageState extends State<DiscoverPage> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(4),
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1ABC9C), Color(0xFF16A085)],
+                ),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
-                Icons.restaurant_menu,
+                Icons.restaurant,
                 color: Colors.white,
-                size: 20,
+                size: 22,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             const Text(
-              'FoodFinder',
+              'Gợi Ý Món Ngon',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ],
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () {
               // Already on home page
             },
-            child: Text(
-              "Home",
+            icon: Icon(
+              Icons.home,
+              size: 18,
+              color: isDarkMode
+                  ? Colors.white70
+                  : Theme.of(context).primaryColor,
+            ),
+            label: Text(
+              "Trang chủ",
               style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          TextButton(
+          TextButton.icon(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const FavoritesPage()),
               );
             },
-            child: Text(
-              "Favorites",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
+            icon: Icon(
+              Icons.favorite,
+              size: 18,
+              color: isDarkMode ? Colors.white70 : Colors.black54,
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
-            child: Text(
-              "Profile",
+            label: Text(
+              "Yêu thích",
               style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+                color: isDarkMode ? Colors.white70 : Colors.black87,
               ),
             ),
           ),
@@ -120,21 +306,32 @@ class _DiscoverPageState extends State<DiscoverPage> {
               themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
               color: Theme.of(context).primaryColor,
             ),
-            tooltip: themeProvider.isDarkMode
-                ? 'Switch to Light Mode'
-                : 'Switch to Dark Mode',
+            tooltip: themeProvider.isDarkMode ? 'Chế độ sáng' : 'Chế độ tối',
             onPressed: () {
               themeProvider.toggleTheme();
             },
           ),
-          // Settings Button
+          // Chatbot Button với icon đẹp hơn
           IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            tooltip: 'Trợ lý ảo',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
+                MaterialPageRoute(builder: (_) => const ChatPage()),
               );
             },
           ),
@@ -145,141 +342,162 @@ class _DiscoverPageState extends State<DiscoverPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  // Hero Section
-                  Container(
-                    width: double.infinity,
-                    height: 250,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920', // Food pattern or generic food background
-                        ),
-                        fit: BoxFit.cover,
-                        opacity: 0.3,
-                      ),
-                      color: Color(0xFFFFC045), // Orange/Yellow
-                    ),
+                  // Map Section with Search & Filter
+                  SizedBox(
+                    height: 400,
                     child: Stack(
                       children: [
-                        // Gradient Overlay
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.orangeAccent.withValues(alpha: 0.8),
-                                Colors.amber.withValues(alpha: 0.6),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        // Map
+                        FlutterMap(
+                          mapController: _mapController,
+                          options: const MapOptions(
+                            initialCenter: LatLng(10.762622, 106.660172), // Ho Chi Minh City
+                            initialZoom: 12.0,
+                            minZoom: 5.0,
+                            maxZoom: 18.0,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: Theme.of(context).brightness == Brightness.dark
+                                  ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                                  : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                              subdomains: const ['a', 'b', 'c', 'd'],
+                              userAgentPackageName: 'com.foodfinder.app',
+                            ),
+                            MarkerLayer(
+                              markers: _filteredRestaurants.map((restaurant) {
+                                return Marker(
+                                  point: LatLng(
+                                    restaurant.latitude,
+                                    restaurant.longitude,
+                                  ),
+                                  width: 40,
+                                  height: 40,
+                                  child: GestureDetector(
+                                    onTap: () => _onMarkerTap(restaurant),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Theme.of(context).primaryColor,
+                                      size: 40,
+                                      shadows: const [
+                                        Shadow(blurRadius: 3, color: Colors.black54),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+
+                        // Map Loading Indicator
+                        if (_isMapLoading)
+                          Container(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black.withValues(alpha: 0.7)
+                                : Colors.white.withValues(alpha: 0.7),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Đang tải bản đồ...',
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        // Content
-                        Center(
+
+                        // Search Bar & Filter Overlay
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          right: 16,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                "Find your perfect dish",
-                                style: TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 1.0,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(0, 3),
-                                      blurRadius: 8,
-                                      color: Colors.black87,
-                                    ),
-                                    Shadow(
-                                      offset: Offset(0, 1),
-                                      blurRadius: 3,
-                                      color: Colors.black54,
-                                    ),
-                                  ],
-                                ),
-                                textAlign: TextAlign.center,
+                              SearchBarWidget(
+                                onSearch: _onSearch,
+                                onFilterTap: _showFilterSheet,
                               ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                "Filter by taste and discover restaurants near you",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(0, 1),
-                                      blurRadius: 4,
-                                      color: Colors.black54,
-                                    ),
-                                  ],
+                              if (_selectedTags.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _selectedTags.map((tag) {
+                                      return Chip(
+                                        label: Text(
+                                          tag,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                        deleteIcon: const Icon(Icons.close, size: 16),
+                                        onDeleted: () {
+                                          setState(() {
+                                            _selectedTags.remove(tag);
+                                            _applyFilters();
+                                          });
+                                        },
+                                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
 
-                  // Search Bar Overlay specific styling (Optional, keeping simple here)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 24,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF2C2C2C)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade300,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(
-                              alpha: Theme.of(context).brightness == Brightness.dark
-                                  ? 0.3
-                                  : 0.05,
+                        // Results Count at Bottom
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black87,
-                        ),
-                        decoration: InputDecoration(
-                          hintText:
-                              "Search by dish name (e.g. phở, bún bò, cơm tấm)...",
-                          hintStyle: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[500]
-                                : Colors.grey[600],
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[400]
-                                : Colors.grey,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 20,
+                            child: Text(
+                              "${_filteredRestaurants.length} nhà hàng",
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
 
@@ -290,12 +508,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Showing ${_dishes.length} dishes",
+                          "Hiển thị ${_dishes.length} món ăn",
                           style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.grey[400]
                                 : Colors.grey[600],
                             fontWeight: FontWeight.w500,
+                            fontSize: 16,
                           ),
                         ),
                         const SizedBox(height: 16),
