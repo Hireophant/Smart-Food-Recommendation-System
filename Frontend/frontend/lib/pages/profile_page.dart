@@ -50,7 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
-          'Profile',
+          'Tài khoản',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -58,7 +58,9 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: const Icon(Icons.edit),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit profile feature coming soon!')),
+                const SnackBar(
+                  content: Text('Tính năng chỉnh sửa sắp ra mắt!'),
+                ),
               );
             },
           ),
@@ -121,11 +123,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       fit: BoxFit.cover,
                     ),
                   )
-                : const Icon(
-                    Icons.person,
-                    size: 50,
-                    color: Color(0xFF1ABC9C),
-                  ),
+                : const Icon(Icons.person, size: 50, color: Color(0xFF1ABC9C)),
           ),
           const SizedBox(height: 16),
 
@@ -143,10 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
           // Email
           Text(
             _userProfile.email,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: 8),
 
@@ -163,11 +158,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 const Icon(Icons.calendar_today, size: 14, color: Colors.white),
                 const SizedBox(width: 6),
                 Text(
-                  'Joined ${_userProfile.joinDate}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                  ),
+                  'Đã tham gia ${_userProfile.joinDate}',
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],
             ),
@@ -177,7 +169,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatsSection(BuildContext context, FavoritesProvider favoritesProvider) {
+  Widget _buildStatsSection(
+    BuildContext context,
+    FavoritesProvider favoritesProvider,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -187,7 +182,7 @@ class _ProfilePageState extends State<ProfilePage> {
               context,
               icon: Icons.favorite,
               count: favoritesProvider.totalFavorites,
-              label: 'Favorites',
+              label: 'Yêu thích',
               color: Colors.red,
             ),
           ),
@@ -197,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
               context,
               icon: Icons.rate_review,
               count: _userProfile.reviewsCount,
-              label: 'Reviews',
+              label: 'Đánh giá',
               color: Colors.orange,
             ),
           ),
@@ -207,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
               context,
               icon: Icons.photo_library,
               count: _userProfile.photosCount,
-              label: 'Photos',
+              label: 'Ảnh',
               color: Colors.blue,
             ),
           ),
@@ -216,7 +211,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, {
+  Widget _buildStatCard(
+    BuildContext context, {
     required IconData icon,
     required int count,
     required String label,
@@ -233,18 +229,12 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 8),
             Text(
               '$count',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -252,7 +242,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSettingsSection(BuildContext context, ThemeProvider themeProvider) {
+  Widget _buildSettingsSection(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
@@ -263,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildSettingsTile(
               context,
               icon: Icons.dark_mode,
-              title: 'Dark Mode',
+              title: 'Chế độ tối',
               trailing: Switch(
                 value: themeProvider.isDarkMode,
                 onChanged: (value) => themeProvider.toggleTheme(),
@@ -274,12 +267,14 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildSettingsTile(
               context,
               icon: Icons.notifications,
-              title: 'Notifications',
+              title: 'Thông báo',
               trailing: Switch(
                 value: true,
                 onChanged: (value) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Notification settings coming soon!')),
+                    const SnackBar(
+                      content: Text('Cài đặt thông báo sắp ra mắt!'),
+                    ),
                   );
                 },
                 activeThumbColor: Theme.of(context).colorScheme.primary,
@@ -289,11 +284,11 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildSettingsTile(
               context,
               icon: Icons.language,
-              title: 'Language',
-              subtitle: 'English',
+              title: 'Ngôn ngữ',
+              subtitle: 'Tiếng Việt',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Language settings coming soon!')),
+                  const SnackBar(content: Text('Cài đặt ngôn ngữ sắp ra mắt!')),
                 );
               },
             ),
@@ -301,11 +296,11 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildSettingsTile(
               context,
               icon: Icons.location_on,
-              title: 'Location',
+              title: 'Vị trí',
               subtitle: 'Hanoi, Vietnam',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Location settings coming soon!')),
+                  const SnackBar(content: Text('Cài đặt vị trí sắp ra mắt!')),
                 );
               },
             ),
@@ -327,20 +322,17 @@ class _ProfilePageState extends State<ProfilePage> {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Activity',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Hoạt động',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             _buildActivityTile(
               context,
               icon: Icons.history,
-              title: 'Search History',
+              title: 'Lịch sử tìm kiếm',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Search history coming soon!')),
+                  const SnackBar(content: Text('Lịch sử tìm kiếm sắp ra mắt!')),
                 );
               },
             ),
@@ -348,10 +340,10 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActivityTile(
               context,
               icon: Icons.bookmark,
-              title: 'Saved Searches',
+              title: 'Tìm kiếm đã lưu',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Saved searches coming soon!')),
+                  const SnackBar(content: Text('Tìm kiếm đã lưu sắp ra mắt!')),
                 );
               },
             ),
@@ -359,10 +351,10 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActivityTile(
               context,
               icon: Icons.map,
-              title: 'Visited Places',
+              title: 'Địa điểm đã đến',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Visited places coming soon!')),
+                  const SnackBar(content: Text('Địa điểm đã đến sắp ra mắt!')),
                 );
               },
             ),
@@ -383,10 +375,12 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActionTile(
               context,
               icon: Icons.privacy_tip,
-              title: 'Privacy Policy',
+              title: 'Chính sách quyền riêng tư',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Privacy policy coming soon!')),
+                  const SnackBar(
+                    content: Text('Chính sách quyền riêng tư sắp ra mắt!'),
+                  ),
                 );
               },
             ),
@@ -394,10 +388,12 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActionTile(
               context,
               icon: Icons.help,
-              title: 'Help & Support',
+              title: 'Trợ giúp & Hỗ trợ',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Help & support coming soon!')),
+                  const SnackBar(
+                    content: Text('Trợ giúp & Hỗ trợ sắp ra mắt!'),
+                  ),
                 );
               },
             ),
@@ -405,7 +401,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActionTile(
               context,
               icon: Icons.info,
-              title: 'About',
+              title: 'Giới thiệu',
               onTap: () {
                 _showAboutDialog(context);
               },
@@ -414,7 +410,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildActionTile(
               context,
               icon: Icons.logout,
-              title: 'Logout',
+              title: 'Đăng xuất',
               textColor: Colors.red,
               onTap: () {
                 _showLogoutDialog(context);
@@ -426,7 +422,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSettingsTile(BuildContext context, {
+  Widget _buildSettingsTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
@@ -442,7 +439,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildActivityTile(BuildContext context, {
+  Widget _buildActivityTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -455,7 +453,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildActionTile(BuildContext context, {
+  Widget _buildActionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     Color? textColor,
@@ -463,10 +462,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     return ListTile(
       leading: Icon(icon, color: textColor),
-      title: Text(
-        title,
-        style: TextStyle(color: textColor),
-      ),
+      title: Text(title, style: TextStyle(color: textColor)),
       trailing: Icon(Icons.chevron_right, color: textColor),
       onTap: onTap,
     );
@@ -476,17 +472,17 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About FoodFinder'),
+        title: const Text('Về Ứng dụng'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Smart Food Recommendation System'),
+            Text('Hệ thống gợi ý món ăn thông minh'),
             SizedBox(height: 8),
-            Text('Version 1.0.0'),
+            Text('Phiên bản 1.0.0'),
             SizedBox(height: 16),
             Text(
-              'AI-powered restaurant recommendation system using geospatial queries and intelligent scoring algorithms.',
+              'Hệ thống gợi ý nhà hàng sử dụng AI, truy vấn địa lý và thuật toán tính điểm thông minh.',
               style: TextStyle(fontSize: 12),
             ),
           ],
@@ -494,7 +490,7 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const Text('Đóng'),
           ),
         ],
       ),
@@ -505,21 +501,21 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                const SnackBar(content: Text('Đã đăng xuất thành công')),
               );
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

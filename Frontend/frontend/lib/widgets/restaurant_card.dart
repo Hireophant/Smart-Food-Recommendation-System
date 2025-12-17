@@ -44,7 +44,9 @@ class RestaurantCard extends StatelessWidget {
                     width: double.infinity,
                     height: double.infinity,
                     decoration: BoxDecoration(
-                      color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.grey[200],
+                      color: isDarkMode
+                          ? const Color(0xFF2C2C2C)
+                          : Colors.grey[200],
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
@@ -92,17 +94,16 @@ class RestaurantCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                          color: Colors.green.withValues(
+                            alpha: 0.2,
+                          ), // Keeping green for Open status is standard
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50),
-                            width: 1,
-                          ),
+                          border: Border.all(color: Colors.green, width: 1),
                         ),
                         child: const Text(
-                          'Open',
+                          'Mở cửa', // Transalated
                           style: TextStyle(
-                            color: Color(0xFF4CAF50),
+                            color: Colors.green,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -138,9 +139,9 @@ class RestaurantCard extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                isFavorite 
-                                  ? '${item.name} removed from favorites' 
-                                  : '${item.name} added to favorites'
+                                isFavorite
+                                    ? 'Đã xóa ${item.name} khỏi yêu thích'
+                                    : 'Đã thêm ${item.name} vào yêu thích',
                               ),
                               duration: const Duration(seconds: 1),
                             ),
@@ -191,7 +192,9 @@ class RestaurantCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isDarkMode ? Colors.white : const Color(0xFF1E1E1E),
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF1E1E1E),
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -202,7 +205,9 @@ class RestaurantCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                            color: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[700],
                             fontSize: 11,
                           ),
                         ),
@@ -218,13 +223,17 @@ class RestaurantCard extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isDarkMode
-                                    ? const Color(0xFF1ABC9C).withValues(alpha: 0.15)
-                                    : const Color(0xFFE0F2F1),
+                                    ? Colors.deepOrange.withValues(
+                                        alpha: 0.15,
+                                      ) // Orange theme
+                                    : Colors.deepOrange.shade50,
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: isDarkMode
-                                      ? const Color(0xFF1ABC9C).withValues(alpha: 0.3)
-                                      : const Color(0xFF1ABC9C).withValues(alpha: 0.2),
+                                      ? Colors.deepOrange.withValues(alpha: 0.3)
+                                      : Colors.deepOrange.withValues(
+                                          alpha: 0.2,
+                                        ),
                                   width: 0.5,
                                 ),
                               ),
@@ -232,8 +241,8 @@ class RestaurantCard extends StatelessWidget {
                                 tag,
                                 style: TextStyle(
                                   color: isDarkMode
-                                      ? const Color(0xFF1ABC9C)
-                                      : const Color(0xFF009688),
+                                      ? Colors.deepOrangeAccent
+                                      : Colors.deepOrange,
                                   fontSize: 10,
                                 ),
                               ),
@@ -257,7 +266,9 @@ class RestaurantCard extends StatelessWidget {
                             Text(
                               '${item.rating} (${item.ratingCount})',
                               style: TextStyle(
-                                color: isDarkMode ? Colors.white : const Color(0xFF1E1E1E),
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF1E1E1E),
                                 fontSize: 11,
                               ),
                             ),
@@ -266,7 +277,8 @@ class RestaurantCard extends StatelessWidget {
                         Text(
                           item.priceLevel ?? '',
                           style: const TextStyle(
-                            color: Color(0xFF4CAF50),
+                            color: Colors
+                                .green, // Price level green is standard (money)
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

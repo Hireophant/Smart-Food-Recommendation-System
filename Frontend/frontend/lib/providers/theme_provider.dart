@@ -11,7 +11,9 @@ class ThemeProvider with ChangeNotifier {
 
   /// Toggle giữa Dark và Light mode
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
+        : ThemeMode.light;
     notifyListeners(); // Thông báo cho UI rebuild
   }
 
@@ -21,45 +23,35 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Light Theme
-  ThemeData get lightTheme {
-    return ThemeData(
+  // Light Theme
+  ThemeData get lightTheme => ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.deepOrange, // Changed to Orange
+      primary: Colors.deepOrange,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: const Color(0xFFFAFAFA), // Light grey/white
-      primaryColor: const Color(0xFF1ABC9C), // Teal
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF1ABC9C),
-        primary: const Color(0xFF1ABC9C),
-        secondary: const Color(0xFF16A085),
-        brightness: Brightness.light,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      useMaterial3: true,
-    );
-  }
+    ),
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+    ),
+  );
 
-  /// Dark Theme
-  ThemeData get darkTheme {
-    return ThemeData(
+  // Dark Theme
+  ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.deepOrange, // Changed to Orange
+      primary: Colors.deepOrange,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF121212), // Dark background
-      primaryColor: const Color(0xFF1ABC9C), // Keep teal accent
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF1ABC9C),
-        primary: const Color(0xFF1ABC9C),
-        secondary: const Color(0xFF16A085),
-        brightness: Brightness.dark,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1E1E1E),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      useMaterial3: true,
-    );
-  }
+    ),
+    scaffoldBackgroundColor: const Color(0xFF1E1E1E),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF1E1E1E),
+      elevation: 0,
+      centerTitle: true,
+    ),
+  );
 }

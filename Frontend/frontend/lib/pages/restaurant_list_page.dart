@@ -44,7 +44,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Places serving",
+              "Địa điểm phục vụ",
               style: TextStyle(
                 fontSize: 14,
                 color: isDarkMode ? Colors.grey[400] : Colors.grey,
@@ -62,7 +62,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
           : _restaurants.isEmpty
           ? Center(
               child: Text(
-                "No restaurants found",
+                "Không tìm thấy nhà hàng nào",
                 style: TextStyle(
                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                 ),
