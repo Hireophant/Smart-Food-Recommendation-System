@@ -1,82 +1,73 @@
-import 'dart:async';
+import '../models/chat_message_model.dart';
 
-/// Model cho tin nhắn chat
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
-}
-
-/// Interface cho Chat Handler
-abstract class ChatHandler {
-  /// Gửi tin nhắn và nhận phản hồi (Stream để hỗ trợ typing effect hoặc multi-part response)
-  Stream<ChatMessage> sendMessage(String message);
-
-  /// Lấy lịch sử chat (nếu có lưu trữ)
-  Future<List<ChatMessage>> getChatHistory();
-}
-
-/// Mock Implementation giả lập AI
-class MockChatHandler implements ChatHandler {
-  final List<ChatMessage> _history = [
-    ChatMessage(
-      text: "Chào bạn! Mình có thể giúp gì cho bạn hôm nay?",
-      isUser: false,
-      timestamp: DateTime.now(),
-    ),
+/// Chat Handler - Mock implementation
+/// TODO: Backend sẽ thay thế bằng API thật
+class ChatHandler {
+  // Mock responses
+  static final List<Map<String, dynamic>> _mockResponses = [
+    {
+      'keywords': ['xin chào', 'hello', 'hi', 'chào'],
+      'response':
+          'Xin chào! Tôi là trợ lý ảo của Gợi ý Món Ngon. Tôi có thể giúp bạn tìm nhà hàng, gợi ý món ăn. Bạn cần gì nhỉ?',
+      'quickReplies': ['Tìm nhà hàng', 'Gợi ý món ăn', 'Món gì ngon?'],
+    },
+    {
+      'keywords': ['tìm nhà hàng', 'nhà hàng', 'quán'],
+      'response':
+          'Bạn muốn tìm nhà hàng ở khu vực nào? Hoặc bạn có món ăn yêu thích nào không?',
+      'quickReplies': ['Phở', 'Bún bò', 'Cơm tấm', 'Cafe'],
+    },
+    {
+      'keywords': ['phở', 'pho'],
+      'response':
+          'Phở là món ăn tuyệt vời! Tôi tìm thấy 12 nhà hàng phở gần bạn. Bạn thích phở bò hay phở gà?',
+      'quickReplies': ['Phở bò', 'Phở gà', 'Xem trên bản đồ'],
+    },
+    {
+      'keywords': ['gợi ý', 'món gì', 'ăn gì'],
+      'response':
+          'Hôm nay bạn có thể thử các món này: Phở bò, Bún chả, Cơm tấm, hoặc Bánh mì. Bạn thích món nào?',
+      'quickReplies': ['Phở bò', 'Bún chả', 'Cơm tấm', 'Bánh mì'],
+    },
+    {
+      'keywords': ['cảm ơn', 'thank', 'thanks'],
+      'response': 'Không có gì! Nếu cần gì thêm, cứ hỏi tôi nhé! 😊',
+      'quickReplies': ['Tìm món khác', 'Xem bản đồ'],
+    },
   ];
 
-  @override
-  Future<List<ChatMessage>> getChatHistory() async {
-    // Giả lập delay loading
-    await Future.delayed(const Duration(milliseconds: 500));
-    return List.from(_history);
-  }
+  /// Gửi tin nhắn và nhận phản hồi từ bot (Mock)
+  static Future<BotResponse> sendMessage(String userMessage) async {
+    // Giả lập delay network
+    await Future.delayed(const Duration(milliseconds: 800));
 
-  @override
-  Stream<ChatMessage> sendMessage(String message) async* {
-    // 1. Lưu tin nhắn user
-    final userMsg = ChatMessage(
-      text: message,
-      isUser: true,
-      timestamp: DateTime.now(),
-    );
-    _history.add(userMsg);
+    // Tìm response phù hợp
+    final lowerMessage = userMessage.toLowerCase();
 
-    // 2. Giả lập "AI đang suy nghĩ..."
-    await Future.delayed(const Duration(seconds: 1));
-
-    // 3. Logic phản hồi giả
-    String responseText;
-    final lowerMsg = message.toLowerCase();
-
-    if (lowerMsg.contains("frontend") || lowerMsg.contains("giao diện")) {
-      responseText =
-          "Về Frontend, mình được xây dựng bằng Flutter. Mình tuân thủ kiến trúc 'Interface First' trong Guideline.md, sử dụng QuerySystem làm trung tâm điều phối.";
-    } else if (lowerMsg.contains("tìm") || lowerMsg.contains("search")) {
-      responseText =
-          "Bạn có thể tìm kiếm món ăn bằng cách nhập tên hoặc tag (như 'Cay', 'Nóng') vào thanh tìm kiếm ở trang Khám phá.";
-    } else if (lowerMsg.contains("hello") || lowerMsg.contains("chào")) {
-      responseText = "Chào bạn! Rất vui được gặp bạn.";
-    } else {
-      responseText =
-          "Thú vị quá! Hiện tại mình chỉ là bản demo nên chưa hiểu hết ý bạn, nhưng mình có thể giúp bạn giải đáp về kiến trúc Frontend của dự án này.";
+    for (var mockResponse in _mockResponses) {
+      final keywords = mockResponse['keywords'] as List<String>;
+      if (keywords.any((keyword) => lowerMessage.contains(keyword))) {
+        return BotResponse(
+          message: mockResponse['response'] as String,
+          quickReplies: (mockResponse['quickReplies'] as List?)?.cast<String>(),
+        );
+      }
     }
 
-    // 4. Trả về phản hồi AI
-    final aiMsg = ChatMessage(
-      text: responseText,
-      isUser: false,
-      timestamp: DateTime.now(),
+    // Default response
+    return BotResponse(
+      message:
+          'Hmm, tôi không hiểu lắm. Bạn có thể hỏi tôi về nhà hàng, món ăn, hoặc địa điểm ăn uống nhé!',
+      quickReplies: ['Tìm nhà hàng', 'Gợi ý món ăn', 'Trợ giúp'],
     );
-    _history.add(aiMsg);
+  }
 
-    yield aiMsg;
+  /// Lấy tin nhắn chào mừng
+  static BotResponse getWelcomeMessage() {
+    return BotResponse(
+      message:
+          'Xin chào! Tôi là trợ lý ảo. Tôi có thể giúp bạn tìm nhà hàng và gợi ý món ăn. Bạn muốn làm gì?',
+      quickReplies: ['Tìm nhà hàng', 'Gợi ý món ăn', 'Món ngon gần đây'],
+    );
   }
 }

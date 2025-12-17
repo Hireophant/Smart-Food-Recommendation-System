@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/chat_message_model.dart';
 import '../handlers/chat_handler.dart';
-import '../handlers/query_system.dart';
+import '../widgets/message_bubble.dart';
+import '../widgets/chat_input.dart';
 
+/// Trang Chat với Bot
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -10,111 +13,101 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final QuerySystem _querySystem = QuerySystem();
-  final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
-  bool _isTyping = false;
+  final ScrollController _scrollController = ScrollController();
+  List<String>? _currentQuickReplies;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _initChat();
   }
 
-  Future<void> _loadHistory() async {
-    final history = await _querySystem.getChatHistory();
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Khởi tạo chat với tin nhắn chào mừng
+  void _initChat() {
+    final welcome = ChatHandler.getWelcomeMessage();
     setState(() {
-      _messages.addAll(history);
+      _messages.add(
+        ChatMessage(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          content: welcome.message,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+      _currentQuickReplies = welcome.quickReplies;
     });
+  }
+
+  /// Gửi tin nhắn
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty) return;
+
+    // Thêm tin nhắn của user
+    final userMessage = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      content: text,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+
+    setState(() {
+      _messages.add(userMessage);
+      _currentQuickReplies = null;
+      _isLoading = true;
+    });
+
     _scrollToBottom();
+
+    // Gọi handler để lấy phản hồi (Mock)
+    try {
+      final response = await ChatHandler.sendMessage(text);
+
+      // Thêm tin nhắn phản hồi từ bot
+      final botMessage = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        content: response.message,
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+
+      setState(() {
+        _messages.add(botMessage);
+        _currentQuickReplies = response.quickReplies;
+        _isLoading = false;
+      });
+
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi xảy ra, vui lòng thử lại')),
+        );
+      }
+    }
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
-      });
-    }
-  }
-
-  void _handleSubmitted(String text) {
-    if (text.trim().isEmpty) return;
-
-    _textController.clear();
-    setState(() {
-      _isTyping = true;
-      _messages.add(
-        ChatMessage(text: text, isUser: true, timestamp: DateTime.now()),
-      );
+      }
     });
-    _scrollToBottom();
-
-    // Listen to the stream
-    _querySystem.sendChatMessage(text).listen((message) {
-      setState(() {
-        _messages.add(message);
-        if (!message.isUser) {
-          _isTyping = false;
-        }
-      });
-      _scrollToBottom();
-    });
-  }
-
-  Widget _buildMessage(ChatMessage message) {
-    final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isUser
-              ? Colors.blueAccent
-              : (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[200]),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isUser ? const Radius.circular(16) : Radius.zero,
-            bottomRight: isUser ? Radius.zero : const Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: isUser
-                    ? Colors.white
-                    : (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black87),
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}",
-              style: TextStyle(
-                fontSize: 10,
-                color: isUser ? Colors.white70 : Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -125,101 +118,147 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.transparent,
-              radius: 16,
-              child: Image.asset('assets/images/ai_icon_orange.png'),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Trợ lý AI',
+                  'Trợ lý ảo',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  _isTyping ? 'Đang gõ...' : 'Trực tuyến',
-                  style: const TextStyle(fontSize: 12, color: Colors.green),
+                  'Luôn sẵn sàng hỗ trợ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
               ],
             ),
           ],
         ),
-        elevation: 1,
       ),
       body: Column(
         children: [
+          // Messages List
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return _buildMessage(_messages[index]);
-              },
-            ),
+            child: _messages.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: isDarkMode
+                              ? Colors.grey[700]
+                              : Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Bắt đầu cuộc trò chuyện',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      return MessageBubble(message: _messages[index]);
+                    },
+                  ),
           ),
-          if (_isTyping)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "AI đang suy nghĩ...",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ),
+
+          // Quick Replies
+          if (_currentQuickReplies != null && _currentQuickReplies!.isNotEmpty)
+            QuickReplyChips(
+              quickReplies: _currentQuickReplies!,
+              onTap: _sendMessage,
             ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).appBarTheme.backgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  offset: const Offset(0, -1),
-                  blurRadius: 2,
-                  color: Colors.black.withValues(alpha: 0.05),
-                ),
-              ],
-            ),
-            child: SafeArea(
+
+          // Typing Indicator
+          if (_isLoading)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      decoration: InputDecoration(
-                        hintText: 'Nhập tin nhắn...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: isDarkMode
-                            ? Colors.grey[800]
-                            : Colors.grey[100],
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                      ),
-                      onSubmitted: _handleSubmitted,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? const Color(0xFF2C2C2C)
+                          : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  FloatingActionButton(
-                    onPressed: () => _handleSubmitted(_textController.text),
-                    mini: true,
-                    elevation: 0,
-                    child: const Icon(Icons.send),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTypingDot(),
+                        const SizedBox(width: 4),
+                        _buildTypingDot(delay: 200),
+                        const SizedBox(width: 4),
+                        _buildTypingDot(delay: 400),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+
+          // Input Field
+          ChatInput(onSend: _sendMessage, isLoading: _isLoading),
         ],
       ),
+    );
+  }
+
+  Widget _buildTypingDot({int delay = 0}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.4, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
+      onEnd: () {
+        // Loop animation
+        Future.delayed(Duration(milliseconds: delay), () {
+          if (mounted && _isLoading) {
+            setState(() {});
+          }
+        });
+      },
     );
   }
 }
