@@ -240,6 +240,7 @@ class VietmapClient:
         params_d = {}
         if inputs.Options is not None:
             params_d = {k:v for k, v in inputs.Options.model_dump(by_alias=True).items() if v is not None}
+        params_d['points_encoded'] = "false"
         self.__finalize_params(params_d, include_display=False)
         params = list(params_d.items())
         params.extend(('point', MapCoordinateToVietmapString(p)) for p in inputs.Point)

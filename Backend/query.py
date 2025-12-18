@@ -1,5 +1,6 @@
 from typing import Optional
 from schemas.maps import MapCoord, MapRouteOptions, MapRouteResponseModel
+from core.vietmap import VietmapRouteVehicleType, VietmapRouteAvoidType
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from pydantic import PositiveFloat
@@ -15,6 +16,9 @@ from handlers.data import (
     DataRestaurantSearchResult,
     DataRestaurantFilter
 )
+from handlers.ai import AIHandler
+from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableModelInfoSchema
+from typing import List
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -28,6 +32,40 @@ class QuerySystem:
         elif lat is not None and lon is not None:
             return MapCoord(lat=lat, lon=lon)
         return None
+
+    @staticmethod
+    def __parse_route_points(points: List[str]) -> List[MapCoord]:
+        if len(points) < 2 or len(points) > 15:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Route requires between 2 and 15 points"
+            )
+
+        parsed: List[MapCoord] = []
+        for raw in points:
+            raw = (raw or "").strip()
+            parts = [p.strip() for p in raw.split(",")]
+            if len(parts) != 2:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Each 'point' must have format 'lat,lon'"
+                )
+            try:
+                lat = float(parts[0])
+                lon = float(parts[1])
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Each 'point' must contain valid float latitude and longitude"
+                )
+            if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lon <= 180.0):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Latitude must be within [-90, 90] and longitude within [-180, 180]"
+                )
+            parsed.append(MapCoord(lat=lat, lon=lon))
+
+        return parsed
 
     @staticmethod
     async def MapsSearch(query: str,
@@ -101,6 +139,21 @@ class QuerySystem:
                 detail="Failed to perform maps route!"
             )
         return result
+
+    @staticmethod
+    async def MapsRouteFromQuery(point: List[str],
+                                 vehicle: Optional[VietmapRouteVehicleType] = None,
+                                 avoid: Optional[List[VietmapRouteAvoidType]] = None) -> MapRouteResponseModel:
+        points = QuerySystem.__parse_route_points(point)
+
+        options = None
+        if vehicle is not None or avoid is not None:
+            options = MapRouteOptions(
+                Vehicle=vehicle or VietmapRouteVehicleType.Car,
+                Avoid=avoid
+            )
+
+        return await QuerySystem.MapsRoute(points=points, options=options)
     
     @staticmethod
     async def DataRestaurantSearch(focus_latitude: float,
@@ -126,3 +179,11 @@ class QuerySystem:
             ),
             limit=limit
         )
+        
+    @staticmethod
+    async def AIGenerate(model_name: str, payload: AIGenerateRequestSchema) -> AIMessageSchema:
+        return await AIHandler.Generate(model_name=model_name, payload=payload)
+
+    @staticmethod
+    async def AIGetAvailableModels() -> List[AIAvailableModelInfoSchema]:
+        return await AIHandler.GetAvailableModels()

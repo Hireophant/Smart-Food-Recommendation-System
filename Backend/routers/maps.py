@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Query
 from middleware.auth import VerifyAccessToken
 from middleware.rate_limit import limiter
 from query import QuerySystem
@@ -7,11 +7,11 @@ from schemas.errors import ErrorResponseSchema
 from schemas.maps import (
     MapGeocodingResponseModel,
     MapPlaceResponseModel,
-    MapRouteRequestModel,
     MapRouteResponseModel
 )
+from core.vietmap import VietmapRouteVehicleType, VietmapRouteAvoidType
 from pydantic import Field, StringConstraints, PositiveFloat
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 
 router = APIRouter(prefix="/maps", tags=["Maps Informations"])
 
@@ -139,7 +139,7 @@ async def reverse(request: Request,
     return CollectionsResponseSchema[MapGeocodingResponseModel](data=result)
 
 
-@router.post(
+@router.get(
     "/route", name="Route", status_code=status.HTTP_200_OK,
     response_model=ObjectResponseSchema[MapRouteResponseModel],
     description="Get route information between 2..15 points",
@@ -150,8 +150,25 @@ async def reverse(request: Request,
     }
 )
 @limiter.limit("20/minute")
-async def route(request: Request,
-                payload: MapRouteRequestModel,
-                _ = Depends(VerifyAccessToken)):
-    result = await QuerySystem.MapsRoute(points=payload.Points, options=payload.Options)
+async def route(
+    request: Request,
+    point: Annotated[
+        List[str],
+        Query(
+            min_length=2,
+            max_length=15,
+            description="Repeatable points in format 'lat,lon'. Example: point=10.1,106.2&point=10.2,106.3"
+        )
+    ],
+    vehicle: Annotated[
+        Optional[VietmapRouteVehicleType],
+        Query(description="Routing vehicle type")
+    ] = None,
+    avoid: Annotated[
+        Optional[List[VietmapRouteAvoidType]],
+        Query(description="Repeatable avoid options (e.g. avoid=toll&avoid=ferry)")
+    ] = None,
+    _=Depends(VerifyAccessToken)
+):
+    result = await QuerySystem.MapsRouteFromQuery(point=point, vehicle=vehicle, avoid=avoid)
     return ObjectResponseSchema[MapRouteResponseModel](data=result)
