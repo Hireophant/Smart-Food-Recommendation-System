@@ -1,10 +1,19 @@
 import aiohttp, os, json
-from core.vietmap.schemas import VietmapSearchResponse, VietmapReverseResponse, VietmapPlaceResponse,\
-    VietmapGeocodingResponseModel, VietmapAutocompleteResponse, MapCoordinate
-from typing import Optional, Dict, Annotated, List, Any, cast
+from core.vietmap.schemas import (
+    VietmapSearchResponse,
+    VietmapReverseResponse,
+    VietmapPlaceResponse,
+    VietmapGeocodingResponseModel,
+    VietmapAutocompleteResponse,
+    MapCoordinate,
+    VietmapRouteResult
+)
+from typing import Optional, Dict, Annotated, List, Any, cast, Tuple, Union
 from pydantic import PositiveFloat, BaseModel, ConfigDict, Field, PlainSerializer
 from fastapi import status, HTTPException
 from utils import Logger
+from enum import StrEnum
+from dataclasses import dataclass, field
 
 VIETMAP_API_KEY_ENVIRONMENT_NAME = "VIETMAP_API_KEY"
 VIETMAP_API_DISPLAY_TYPE = 1 # New response type, see API for reference.
@@ -12,10 +21,14 @@ VIETMAP_SEARCH_URL = "https://maps.vietmap.vn/api/search/v4"
 VIETMAP_AUTOCOMPLETE_URL = "https://maps.vietmap.vn/api/autocomplete/v4"
 VIETMAP_PLACE_URL = "https://maps.vietmap.vn/api/place/v4"
 VIETMAP_REVERSE_URL = "https://maps.vietmap.vn/api/reverse/v4"
+VIETMAP_ROUTE_URL = "https://maps.vietmap.vn/api/route/v3"
+
+def MapCoordinateToVietmapString(coord: MapCoordinate) -> str:
+    return f"{coord.Latitude},{coord.Longitude}"
 
 VietmapCoordinate = Annotated[
     MapCoordinate,
-    PlainSerializer(lambda mc: f"{mc.Latitude},{mc.Longitude}", return_type="str")
+    PlainSerializer(lambda mc: MapCoordinateToVietmapString(mc), return_type="str")
 ]
 
 class VietmapSearchInputSchema(BaseModel):
@@ -53,6 +66,30 @@ class VietmapSearchInputSchema(BaseModel):
     
 VietmapAutocompleteInputSchema = VietmapSearchInputSchema
 
+class VietmapRouteVehicleType(StrEnum):
+    Car = "car"
+    Motorcycle = "motorcycle"
+    Truck = "truck"
+
+class VietmapRouteAvoidType(StrEnum):
+    Toll = "toll"
+    Ferry = "ferry"
+    
+VietmapRouteAvoid = Annotated[
+    List[VietmapRouteAvoidType],
+    PlainSerializer(lambda l: ','.join(str(i) for i in set(l)), return_type=str)
+]
+
+
+class VietmapRouteInputOptions(BaseModel):
+    Vehicle: VietmapRouteVehicleType = Field(default=VietmapRouteVehicleType.Car, serialization_alias="vehicle")
+    Avoid: Optional[VietmapRouteAvoid] = Field(default=None, serialization_alias="avoid")
+
+@dataclass
+class VietmapRouteInput:
+    Point: List[VietmapCoordinate] = field(default_factory=list)
+    Options: Optional[VietmapRouteInputOptions] = None
+
 class VietmapClient:
     """
     Async client for interacting with Vietmap API services.
@@ -71,7 +108,7 @@ class VietmapClient:
         self.__api_key = api_key
         self.__client = aiohttp.ClientSession()
     
-    async def __sendRequest(self, url: str, params: Dict[str, Any] = dict()) -> Any:
+    async def __sendRequest(self, url: str, params: Union[Dict[str, Any], List[Tuple[str, Any]]] = dict()) -> Any:
         if self.__client.closed:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Vietmap client session is closed!")
@@ -89,16 +126,18 @@ class VietmapClient:
             
             return await session.json()
     
-    async def __sendRequestList(self, url: str, params: Dict[str, Any] = dict()) -> Optional[List[Dict[str, Any]]]:
+    async def __sendRequestList(self, url: str, params: Union[Dict[str, Any], List[Tuple[str, Any]]] = dict()) -> Optional[List[Dict[str, Any]]]:
         res = await self.__sendRequest(url, params=params)
         return None if res is None else cast(List[Dict[str, Any]], res)
     
-    async def __sendRequestDict(self, url: str, params: Dict[str, Any] = dict()) -> Optional[Dict[str, Any]]:
+    async def __sendRequestDict(self, url: str, params: Union[Dict[str, Any], List[Tuple[str, Any]]] = dict()) -> Optional[Dict[str, Any]]:
         res = await self.__sendRequest(url, params=params)
         return None if res is None else cast(Dict[str, Any], res)
     
-    def __finalize_params(self, raw_params: Dict[str, Any]):
-        raw_params.update([('apiKey', self.__api_key), ('display_type', VIETMAP_API_DISPLAY_TYPE)])
+    def __finalize_params(self, raw_params: Dict[str, Any], include_display: bool = True):
+        raw_params.update([('apiKey', self.__api_key)])
+        if include_display:
+            raw_params.update([('display_type', VIETMAP_API_DISPLAY_TYPE)])
 
     async def Search(self, inputs: VietmapSearchInputSchema) -> Optional[VietmapSearchResponse]:
         """
@@ -196,6 +235,17 @@ class VietmapClient:
         
         res = await self.__sendRequestList(VIETMAP_REVERSE_URL, params=params)
         return None if res is None else [VietmapGeocodingResponseModel(**val) for val in res]
+    
+    async def Route(self, inputs: VietmapRouteInput) -> Optional[VietmapRouteResult]:
+        params_d = {}
+        if inputs.Options is not None:
+            params_d = {k:v for k, v in inputs.Options.model_dump(by_alias=True).items() if v is not None}
+        self.__finalize_params(params_d, include_display=False)
+        params = list(params_d.items())
+        params.extend(('point', MapCoordinateToVietmapString(p)) for p in inputs.Point)
+        
+        res = await self.__sendRequestDict(VIETMAP_ROUTE_URL, params=params)
+        return None if res is None else VietmapRouteResult(**res)
     
     async def Close(self):
         await self.__client.close()

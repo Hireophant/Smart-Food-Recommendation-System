@@ -1,6 +1,6 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
-from typing import List
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
 @dataclass
@@ -104,3 +104,81 @@ VietmapSearchResponse = List[VietmapGeocodingResponseModel]
 VietmapPlaceResponse = VietmapPlaceResponseModel
 VietmapReverseResponse = List[VietmapGeocodingResponseModel]
 VietmapAutocompleteResponse = List[VietmapGeocodingResponseModel]
+
+class VietmapRouteInstructionSign(int, Enum):
+    UTurn = -98
+    LeftUTurn = -8
+    KeepLeft = -7
+    TurnSharpLeft = -3
+    TurnLeft = -2
+    TurnSlightLeft = -1
+    ContinueOnStreet = 0
+    TurnSlightRight = 1
+    TurnRight = 2
+    TurnSharpRight = 3
+    KeepRight = 7
+    RightUTurn = 8
+    Unknown = 32767
+    
+    @staticmethod
+    def FromInteger(val: int) -> "VietmapRouteInstructionSign":
+        try:
+            return VietmapRouteInstructionSign(val)
+        except Exception:
+            return VietmapRouteInstructionSign.Unknown
+        
+class VietmapRouteStatusCode(str, Enum):
+    Unknown = ""
+    Ok = "OK"
+    InvalidRequest = "INVALID_REQUEST"
+    OverDailyLimit = "OVER_DAILY_LIMIT"
+    MaxPointsExceed = "MAX_POINTS_EXCEED"
+    ErrorUnknown = "ERROR_UNKNOWN"
+    ZeroResults = "ZERO_RESULTS"
+
+    @staticmethod
+    def FromString(val: str) -> "VietmapRouteStatusCode":
+        try:
+            return VietmapRouteStatusCode(val)
+        except Exception:
+            return VietmapRouteStatusCode.Unknown
+
+class VietmapRouteInstructionModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    Distance: float = Field(default=0, validation_alias="distance")
+    Heading: int = Field(default=0, validation_alias="heading")
+    InstructionSign: VietmapRouteInstructionSign = Field(default=VietmapRouteInstructionSign.Unknown, validation_alias="sign")
+    Interval: Tuple[int, int] = Field(default=(0, 0), validation_alias="interval")
+    InstructionText: str = Field(default="", validation_alias="text")
+    TimeMs: int = Field(default=0, validation_alias="time")
+    StreetName: str = Field(default="", validation_alias="street_name")
+
+    @field_validator("InstructionSign", mode="before")
+    @classmethod
+    def __sign_validate(cls, v):
+        return VietmapRouteInstructionSign.FromInteger(int(v))
+
+class VietmapRoutePathModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    Distance: float = Field(default=0, validation_alias="distance")
+    Weight: float = Field(default=0, validation_alias="weight")
+    TimeMs: int = Field(default=0, validation_alias="time")
+    Transfers: int = Field(default=0, validation_alias="transfers")
+    BoundingBox: Tuple[float, float, float, float] = Field(default=(0, 0, 0, 0), validation_alias="bbox")
+    Points: List[Tuple[float, float]] = Field(default_factory=list, validation_alias="points")
+    Instructions: List[VietmapRouteInstructionModel] = Field(default_factory=list, validation_alias="instructions")
+
+class VietmapRouteResult(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    License: str = Field(default="", validation_alias="license")
+    Code: VietmapRouteStatusCode = Field(default=VietmapRouteStatusCode.Unknown, validation_alias="code")
+    Messages: Optional[str] = Field(default=None, validation_alias="messages")
+    Paths: List[VietmapRoutePathModel] = Field(default_factory=list, validation_alias="paths")
+    
+    @field_validator("Code", mode="before")
+    @classmethod
+    def __code_validate(cls, v):
+        return VietmapRouteStatusCode.FromString(str(v))

@@ -1,8 +1,16 @@
-from core.vietmap import VietmapClient, VietmapSearchInputSchema, MapCoordinate
+from core.vietmap import (
+    VietmapClient,
+    VietmapSearchInputSchema,
+    MapCoordinate,
+    VietmapRouteInput,
+    VietmapRouteInputOptions
+)
 from schemas.maps import (
     MapGeocodingResponseModel,
     MapPlaceResponseModel,
-    MapCoord
+    MapCoord,
+    MapRouteOptions,
+    MapRouteResponseModel
 )
 from typing import List, Optional
 from pydantic import PositiveFloat
@@ -11,6 +19,7 @@ MapSearchResponse = List[MapGeocodingResponseModel]
 MapAutocompleteResponse = List[MapGeocodingResponseModel]
 MapReverseResponse = List[MapGeocodingResponseModel]
 MapPlaceResponse = MapPlaceResponseModel
+MapRouteResponse = MapRouteResponseModel
 
 class MapsHandler:
     """Map handlers for map tasks (static handlers)."""
@@ -77,3 +86,19 @@ class MapsHandler:
         async with VietmapClient() as client:
             result = await client.Place(id)
             return None if not result else MapPlaceResponseModel.FromVietmap(result)
+
+    @staticmethod
+    async def Route(points: List[MapCoord],
+                    options: Optional[MapRouteOptions] = None) -> Optional[MapRouteResponseModel]:
+        v_points = [MapCoordinate(p.Latitude, p.Longitude) for p in points]
+
+        v_options = None
+        if options is not None:
+            v_options = VietmapRouteInputOptions(
+                Vehicle=options.Vehicle,
+                Avoid=options.Avoid
+            )
+
+        async with VietmapClient() as client:
+            result = await client.Route(VietmapRouteInput(Point=v_points, Options=v_options))
+            return None if not result else MapRouteResponseModel.FromVietmap(result)

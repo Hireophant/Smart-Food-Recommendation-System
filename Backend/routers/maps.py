@@ -4,7 +4,12 @@ from middleware.rate_limit import limiter
 from query import QuerySystem
 from schemas import ObjectResponseSchema, CollectionsResponseSchema
 from schemas.errors import ErrorResponseSchema
-from schemas.maps import MapGeocodingResponseModel, MapPlaceResponseModel
+from schemas.maps import (
+    MapGeocodingResponseModel,
+    MapPlaceResponseModel,
+    MapRouteRequestModel,
+    MapRouteResponseModel
+)
 from pydantic import Field, StringConstraints, PositiveFloat
 from typing import Annotated, Optional
 
@@ -132,3 +137,21 @@ async def reverse(request: Request,
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Failed to performing maps reverses!")
     return CollectionsResponseSchema[MapGeocodingResponseModel](data=result)
+
+
+@router.post(
+    "/route", name="Route", status_code=status.HTTP_200_OK,
+    response_model=ObjectResponseSchema[MapRouteResponseModel],
+    description="Get route information between 2..15 points",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponseSchema},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponseSchema},
+    }
+)
+@limiter.limit("20/minute")
+async def route(request: Request,
+                payload: MapRouteRequestModel,
+                _ = Depends(VerifyAccessToken)):
+    result = await QuerySystem.MapsRoute(points=payload.Points, options=payload.Options)
+    return ObjectResponseSchema[MapRouteResponseModel](data=result)

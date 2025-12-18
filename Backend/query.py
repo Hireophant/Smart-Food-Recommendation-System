@@ -1,5 +1,5 @@
 from typing import Optional
-from schemas.maps import MapCoord
+from schemas.maps import MapCoord, MapRouteOptions, MapRouteResponseModel
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from pydantic import PositiveFloat
@@ -87,6 +87,23 @@ class QuerySystem:
     @staticmethod
     async def MapsPlace(id: str) -> Optional[MapPlaceResponseModel]:
         return await MapsHandler.Place(id)
+
+    @staticmethod
+    async def MapsRoute(points: List[MapCoord],
+                        options: Optional[MapRouteOptions] = None) -> MapRouteResponseModel:
+        if len(points) < 2 or len(points) > 15:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Route requires between 2 and 15 points"
+            )
+
+        result = await MapsHandler.Route(points=points, options=options)
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to perform maps route!"
+            )
+        return result
     
     @staticmethod
     async def DataRestaurantSearch(focus_latitude: float,

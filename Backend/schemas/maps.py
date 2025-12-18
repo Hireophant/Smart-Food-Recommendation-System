@@ -1,12 +1,19 @@
 from pydantic import ConfigDict, Field, BaseModel
 from enum import Enum
-from typing import List
+from typing import List, Optional, Tuple
 from core.vietmap import (
     VietmapBoundariesType,
     VietmapBoundaries,
     VietmapEntryPoint,
     VietmapGeocodingResponseModel,
-    VietmapPlaceResponseModel
+    VietmapPlaceResponseModel,
+    VietmapRouteResult,
+    VietmapRoutePathModel,
+    VietmapRouteInstructionModel,
+    VietmapRouteInstructionSign,
+    VietmapRouteStatusCode,
+    VietmapRouteVehicleType,
+    VietmapRouteAvoidType
 )
 
 class MapCoord(BaseModel):
@@ -153,4 +160,127 @@ class MapPlaceResponseModel(BaseModel):
                     FullName=inputs.WardName
                 )
             )
+        )
+
+
+class MapRouteOptions(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    Vehicle: VietmapRouteVehicleType = Field(
+        default=VietmapRouteVehicleType.Car,
+        validation_alias="vehicle",
+        serialization_alias="vehicle",
+        description="Routing vehicle type (car, motorcycle, truck)"
+    )
+    Avoid: Optional[List[VietmapRouteAvoidType]] = Field(
+        default=None,
+        validation_alias="avoid",
+        serialization_alias="avoid",
+        description="Things to avoid (e.g. toll, ferry)"
+    )
+
+
+class MapRouteRequestModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    Points: List[MapCoord] = Field(
+        ...,
+        min_length=2,
+        max_length=15,
+        validation_alias="points",
+        serialization_alias="points",
+        description="Route points (2..15). Each point is {lat, lon}."
+    )
+    Options: Optional[MapRouteOptions] = Field(
+        default=None,
+        validation_alias="options",
+        serialization_alias="options",
+        description="Route options"
+    )
+
+
+class MapRouteInstruction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    Distance: float = Field(default=0.0, serialization_alias="distance",
+                            description="Instruction distance (meters, as returned by Vietmap)")
+    Heading: int = Field(default=0, serialization_alias="heading",
+                         description="Heading in degrees")
+    InstructionSign: VietmapRouteInstructionSign = Field(
+        default=VietmapRouteInstructionSign.Unknown,
+        serialization_alias="sign",
+        description="Turn/sign code"
+    )
+    Interval: Tuple[int, int] = Field(default=(0, 0), serialization_alias="interval",
+                                      description="Polyline interval indices")
+    InstructionText: str = Field(default="", serialization_alias="text",
+                                 description="Human readable instruction")
+    TimeMs: int = Field(default=0, serialization_alias="time",
+                        description="Instruction duration in milliseconds")
+    StreetName: str = Field(default="", serialization_alias="street_name",
+                            description="Street name")
+
+    @staticmethod
+    def FromVietmap(inputs: VietmapRouteInstructionModel) -> "MapRouteInstruction":
+        return MapRouteInstruction(
+            Distance=inputs.Distance,
+            Heading=inputs.Heading,
+            InstructionSign=inputs.InstructionSign,
+            Interval=inputs.Interval,
+            InstructionText=inputs.InstructionText,
+            TimeMs=inputs.TimeMs,
+            StreetName=inputs.StreetName
+        )
+
+
+class MapRoutePath(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    Distance: float = Field(default=0.0, serialization_alias="distance",
+                            description="Path distance (meters, as returned by Vietmap)")
+    Weight: float = Field(default=0.0, serialization_alias="weight",
+                          description="Path weight (as returned by Vietmap)")
+    TimeMs: int = Field(default=0, serialization_alias="time",
+                        description="Path duration in milliseconds")
+    Transfers: int = Field(default=0, serialization_alias="transfers",
+                           description="Number of transfers (if applicable)")
+    BoundingBox: Tuple[float, float, float, float] = Field(default=(0, 0, 0, 0), serialization_alias="bbox",
+                                                           description="Bounding box")
+    Points: List[Tuple[float, float]] = Field(default_factory=list, serialization_alias="points",
+                                              description="Route geometry points")
+    Instructions: List[MapRouteInstruction] = Field(default_factory=list, serialization_alias="instructions",
+                                                    description="Turn-by-turn instructions")
+
+    @staticmethod
+    def FromVietmap(inputs: VietmapRoutePathModel) -> "MapRoutePath":
+        return MapRoutePath(
+            Distance=inputs.Distance,
+            Weight=inputs.Weight,
+            TimeMs=inputs.TimeMs,
+            Transfers=inputs.Transfers,
+            BoundingBox=inputs.BoundingBox,
+            Points=list(inputs.Points),
+            Instructions=[MapRouteInstruction.FromVietmap(i) for i in inputs.Instructions]
+        )
+
+
+class MapRouteResponseModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    License: str = Field(default="", serialization_alias="license",
+                         description="License string")
+    Code: VietmapRouteStatusCode = Field(default=VietmapRouteStatusCode.Unknown, serialization_alias="code",
+                                        description="Routing status code")
+    Messages: Optional[str] = Field(default=None, serialization_alias="messages",
+                                   description="Optional message")
+    Paths: List[MapRoutePath] = Field(default_factory=list, serialization_alias="paths",
+                                     description="Route paths")
+
+    @staticmethod
+    def FromVietmap(inputs: VietmapRouteResult) -> "MapRouteResponseModel":
+        return MapRouteResponseModel(
+            License=inputs.License,
+            Code=inputs.Code,
+            Messages=inputs.Messages,
+            Paths=[MapRoutePath.FromVietmap(p) for p in inputs.Paths]
         )
