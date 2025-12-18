@@ -11,11 +11,11 @@ class RestaurantItem {
   final double rating;
   final int ratingCount;
   final String imageUrl; // URL ảnh (Network Image)
+  final String address; // Địa chỉ nhà hàng
   final String? description;
   final String? priceLevel; // $ - $$$$
   final bool isOpen;
   final String distance; // e.g., "1.2 km"
-  final String address; // Detailed address
   final List<String> tags; // e.g., ["Cozy", "Ba Dinh"]
   final double latitude; // Tọa độ Vĩ độ
   final double longitude; // Tọa độ Kinh độ
@@ -27,11 +27,11 @@ class RestaurantItem {
     required this.rating,
     this.ratingCount = 0,
     required this.imageUrl,
+    required this.address,
     this.description,
     this.priceLevel,
     this.isOpen = true,
     this.distance = '0 km',
-    this.address = '', // Default empty if not provided
     this.tags = const [],
     this.latitude = 21.0285, // Default Hanoi
     this.longitude = 105.8542,

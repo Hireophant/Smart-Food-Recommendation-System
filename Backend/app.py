@@ -1,4 +1,4 @@
-import dotenv, schemas.errors, routers.maps, routers.data, routers.ai
+import dotenv, schemas.errors, routers.maps, routers.data
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from utils import Config, Logger
 from middleware.rate_limit import limiter
 from core.mongodb import MongoDB
-from core.llm.models import Models
-# from core.ai import AIClient
+from core.ai import AIClient
 
 #* Call when initialize the backend
 async def onInitialize() -> bool:
@@ -27,18 +26,13 @@ async def onInitialize() -> bool:
         Logger.LogError("Failed to initialize MongoDB!")
         return False
         
-    # #* Initialize AI
-    # await AIClient.initialize()
+    #* Initialize AI
+    await AIClient.initialize()
         
     # Create indexes for optimal query performance
     # await MongoDB.create_indexes()
     # Logger.LogInfo("MongoDB setup completed successfully")
-    
-    #* Initialize LLM
-    if not Models.LoadModels():
-        Logger.LogError("Failed to load LLM models information!")
-        return False
-    
+            
     return True
 
 #* Call when deinitialize the backend
@@ -46,8 +40,8 @@ async def onDeinitialize():
     #* Deinitialize MongoDB
     await MongoDB.close()
     
-    # #* Deinitialize AI
-    # await AIClient.close()
+    #* Deinitialize AI
+    await AIClient.close()
     
     return
 
@@ -69,7 +63,6 @@ app = FastAPI(lifespan=appLifespan)
 # Including routers
 app.include_router(routers.maps.router)
 app.include_router(routers.data.router)
-app.include_router(routers.ai.router)
 
 # Add rate limiter state
 app.state.limiter = limiter

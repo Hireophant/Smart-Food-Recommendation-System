@@ -15,9 +15,6 @@ from handlers.data import (
     DataRestaurantSearchResult,
     DataRestaurantFilter
 )
-from handlers.ai import AIHandler
-from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableModelInfoSchema
-from typing import List
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -116,7 +113,6 @@ class QuerySystem:
                                    district: Optional[str] = None,
                                    limit: Optional[int] = None) -> DataRestaurantSearchResult:
         handler = DataHandlers()
-
         return await handler.RestaurantSearch(
             focus_latitude=focus_latitude,
             focus_longitude=focus_longitude,
@@ -130,11 +126,3 @@ class QuerySystem:
             ),
             limit=limit
         )
-
-    @staticmethod
-    async def AIGenerate(model_name: str, payload: AIGenerateRequestSchema) -> AIMessageSchema:
-        return await AIHandler.Generate(model_name=model_name, payload=payload)
-
-    @staticmethod
-    async def AIGetAvailableModels() -> List[AIAvailableModelInfoSchema]:
-        return await AIHandler.GetAvailableModels()

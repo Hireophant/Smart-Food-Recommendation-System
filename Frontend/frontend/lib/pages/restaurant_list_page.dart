@@ -3,7 +3,7 @@ import '../models/dish_model.dart';
 import '../models/food_model.dart';
 import '../handlers/query_system.dart';
 import '../widgets/restaurant_card.dart';
-import 'map_page.dart';
+import 'restaurant_detail_page.dart';
 
 class RestaurantListPage extends StatefulWidget {
   final DishItem dish;
@@ -44,7 +44,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Địa điểm phục vụ",
+              "Nhà hàng phục vụ",
               style: TextStyle(
                 fontSize: 14,
                 color: isDarkMode ? Colors.grey[400] : Colors.grey,
@@ -62,9 +62,10 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
           : _restaurants.isEmpty
           ? Center(
               child: Text(
-                "Không tìm thấy nhà hàng nào",
+                "Không tìm thấy nhà hàng",
                 style: TextStyle(
                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 16,
                 ),
               ),
             )
@@ -80,13 +81,12 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
                     child: RestaurantCard(
                       item: restaurant,
                       onTap: () {
-                        // Navigate to MapPage in Confirmation Mode
+                        // Navigate to Restaurant Detail Page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MapPage(
-                              selectedDish: widget.dish,
-                              selectedRestaurant: restaurant,
+                            builder: (_) => RestaurantDetailPage(
+                              restaurant: restaurant,
                             ),
                           ),
                         );

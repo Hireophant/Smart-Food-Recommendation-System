@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
 import '../models/food_model.dart';
 import '../providers/favorites_provider.dart';
-import 'map_page.dart';
+import 'restaurant_detail_page.dart';
 
 /// Trang Favorites - Hiển thị danh sách món ăn và nhà hàng yêu thích
 class FavoritesPage extends StatefulWidget {
@@ -324,7 +324,7 @@ class _FavoritesPageState extends State<FavoritesPage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MapPage(selectedRestaurant: restaurant),
+              builder: (_) => RestaurantDetailPage(restaurant: restaurant),
             ),
           );
         },

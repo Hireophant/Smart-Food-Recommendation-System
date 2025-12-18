@@ -13,9 +13,7 @@ import 'restaurant_handler.dart';
 abstract class FoodSearchHandler {
   // --- Discovery Flow ---
   Future<List<DishItem>> getAllDishes();
-  Future<List<DishItem>> searchDishes(
-    String query,
-  ); // New method for searching dishes
+  Future<List<DishItem>> searchDishes(String query);
   Future<SearchResult> searchFoods(String query);
 
   // --- Restaurant Flow ---
@@ -34,13 +32,16 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   // Use data from RestaurantHandler to ensure consistency
   List<RestaurantItem> get _mockFoods => MockRestaurantHandler.mockRestaurants;
 
-  // Utilize DishHandler for dish-related operations
-  final DishHandler _dishHandler = DishHandler();
-
   @override
   Future<SearchResult> searchFoods(String query) async {
     // 1. Search in local mock data
     final lowerQuery = query.toLowerCase();
+
+    // If query is "all", return all restaurants
+    if (lowerQuery == 'all') {
+      return SearchResult(items: _mockFoods);
+    }
+
     final localResults = _mockFoods
         .where(
           (restaurant) =>
@@ -78,7 +79,7 @@ class MockFoodSearchHandler implements FoodSearchHandler {
               rating: 4.0, // Default rating for OSM
               ratingCount: 10,
               imageUrl: 'assets/images/com_tam.png', // Fallback image
-              address: item['display_name'] ?? 'Unknown Address',
+              address: item['display_name'] ?? 'Địa chỉ đang cập nhật',
               description: item['display_name'],
               priceLevel: '\$\$',
               isOpen: true,
@@ -140,12 +141,19 @@ class MockFoodSearchHandler implements FoodSearchHandler {
 
   @override
   Future<List<DishItem>> getAllDishes() async {
-    return _dishHandler.getAllDishes();
+    await Future.delayed(const Duration(milliseconds: 300));
+    // Retrieve from DishHandler to ensure consistency
+    return DishHandler.allDishes;
   }
 
   @override
   Future<List<DishItem>> searchDishes(String query) async {
-    return _dishHandler.searchDishes(query);
+    await Future.delayed(const Duration(milliseconds: 200));
+    final lowerQuery = query.toLowerCase();
+    return DishHandler.allDishes.where((dish) {
+      return dish.name.toLowerCase().contains(lowerQuery) ||
+          dish.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+    }).toList();
   }
 
   @override
