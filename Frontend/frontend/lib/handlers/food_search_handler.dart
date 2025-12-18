@@ -13,6 +13,7 @@ import 'restaurant_handler.dart';
 abstract class FoodSearchHandler {
   // --- Discovery Flow ---
   Future<List<DishItem>> getAllDishes();
+  Future<List<DishItem>> searchDishes(String query);
   Future<SearchResult> searchFoods(String query);
 
   // --- Restaurant Flow ---
@@ -35,6 +36,12 @@ class MockFoodSearchHandler implements FoodSearchHandler {
   Future<SearchResult> searchFoods(String query) async {
     // 1. Search in local mock data
     final lowerQuery = query.toLowerCase();
+
+    // If query is "all", return all restaurants
+    if (lowerQuery == 'all') {
+      return SearchResult(items: _mockFoods);
+    }
+
     final localResults = _mockFoods
         .where(
           (restaurant) =>
@@ -137,6 +144,16 @@ class MockFoodSearchHandler implements FoodSearchHandler {
     await Future.delayed(const Duration(milliseconds: 300));
     // Retrieve from DishHandler to ensure consistency
     return DishHandler.allDishes;
+  }
+
+  @override
+  Future<List<DishItem>> searchDishes(String query) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final lowerQuery = query.toLowerCase();
+    return DishHandler.allDishes.where((dish) {
+      return dish.name.toLowerCase().contains(lowerQuery) ||
+          dish.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+    }).toList();
   }
 
   @override

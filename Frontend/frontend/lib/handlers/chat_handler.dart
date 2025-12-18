@@ -4,35 +4,68 @@ import '../models/chat_message_model.dart';
 /// TODO: Backend sẽ thay thế bằng API thật
 class ChatHandler {
   // Mock responses
+  // Mock responses based on USER DEMO script
   static final List<Map<String, dynamic>> _mockResponses = [
     {
-      'keywords': ['xin chào', 'hello', 'hi', 'chào'],
+      'keywords': ['khẩu vị', 'gợi ý'],
       'response':
-          'Xin chào! Tôi là trợ lý ảo của Gợi ý Món Ngon. Tôi có thể giúp bạn tìm nhà hàng, gợi ý món ăn. Bạn cần gì nhỉ?',
-      'quickReplies': ['Tìm nhà hàng', 'Gợi ý món ăn', 'Món gì ngon?'],
+          'Dựa trên khẩu vị bạn hay thích món Việt và ăn cay, mình gợi ý: \n(1) Bún bò Huế (cay vừa–cay)\n(2) Bánh canh cua\n(3) Phở bò tái.\n\nBạn đang ở khu vực nào (quận/phường hoặc gửi tọa độ) để mình gợi ý quán gần nhất?',
+      'quickReplies': ['Quận 1', 'Quận 3', 'Gửi tọa độ'],
     },
     {
-      'keywords': ['tìm nhà hàng', 'nhà hàng', 'quán'],
+      'keywords': ['quận 1', 'nhà thờ đức bà'],
       'response':
-          'Bạn muốn tìm nhà hàng ở khu vực nào? Hoặc bạn có món ăn yêu thích nào không?',
-      'quickReplies': ['Phở', 'Bún bò', 'Cơm tấm', 'Cafe'],
+          'Ok! Gần Nhà thờ Đức Bà, bạn muốn ăn món nước hay món khô? Nếu bạn muốn món nước, mình ưu tiên bún bò Huế hoặc phở bò.',
+      'quickReplies': ['Món nước', 'Món khô'],
     },
     {
-      'keywords': ['phở', 'pho'],
+      'keywords': ['món nước', 'cay vừa'],
       'response':
-          'Phở là món ăn tuyệt vời! Tôi tìm thấy 12 nhà hàng phở gần bạn. Bạn thích phở bò hay phở gà?',
-      'quickReplies': ['Phở bò', 'Phở gà', 'Xem trên bản đồ'],
+          'Vậy mình gợi ý **bún bò Huế cay vừa** hoặc **phở bò tái** (có thể xin thêm tương ớt). Bạn muốn mình gợi ý theo tiêu chí gần nhất hay rating cao hơn?',
+      'quickReplies': ['Rating cao hơn', 'Gần nhất'],
     },
     {
-      'keywords': ['gợi ý', 'món gì', 'ăn gì'],
+      'keywords': ['rating cao hơn', 'rating'],
       'response':
-          'Hôm nay bạn có thể thử các món này: Phở bò, Bún chả, Cơm tấm, hoặc Bánh mì. Bạn thích món nào?',
-      'quickReplies': ['Phở bò', 'Bún chả', 'Cơm tấm', 'Bánh mì'],
+          'Ok, mình sẽ ưu tiên các quán bún bò/phở có rating cao quanh trung tâm Quận 1. Nếu bạn cho mình vị trí chính xác hơn (tọa độ/địa chỉ), mình sẽ sắp xếp theo khoảng cách và gợi ý 3 quán phù hợp nhất.',
+      'quickReplies': ['Gửi tọa độ', 'Nhập địa chỉ'],
     },
     {
-      'keywords': ['cảm ơn', 'thank', 'thanks'],
-      'response': 'Không có gì! Nếu cần gì thêm, cứ hỏi tôi nhé! 😊',
-      'quickReplies': ['Tìm món khác', 'Xem bản đồ'],
+      'keywords': ['10.7809, 106.6992', '10.78', 'tọa độ'],
+      'response':
+          'Ok, mình đã có vị trí của bạn. Bạn muốn bán kính tìm kiếm khoảng bao nhiêu (1–3km hay 5km) và mức giá bình dân hay tầm trung?',
+      'quickReplies': ['3km, tầm trung', '1km, bình dân'],
+    },
+    {
+      'keywords': ['3km', 'tầm trung'],
+      'response':
+          'Ok. Dựa trên khẩu vị ăn cay vừa và ưu tiên rating cao trong bán kính 3km, mình sẽ gợi ý 3 lựa chọn phù hợp nhất.',
+      'quickReplies': ['Tôi không ăn hành', 'Đợi chút'],
+    },
+    {
+      'keywords': ['không ăn hành', 'hành'],
+      'response':
+          'Mình đã ghi nhận bạn không ăn hành. Khi gọi món phở/bún bò, bạn nhớ dặn “không hành” là ổn. Giờ mình sẽ ưu tiên các quán dễ tuỳ chỉnh topping.',
+      'quickReplies': ['Cho tôi 3 quán cụ thể'],
+    },
+    {
+      'keywords': ['3 quán cụ thể', 'cụ thể'],
+      'response':
+          'Demo gợi ý (bán kính ~3km, tầm trung, rating cao):\n(1) Phở A – ~1.2km\n(2) Bún bò B – ~1.8km\n(3) Phở C – ~2.5km.\n\nBạn muốn ưu tiên phở hay bún bò để mình chốt 1 quán phù hợp nhất?',
+      'quickReplies': ['Ưu tiên bún bò', 'Ưu tiên phở'],
+    },
+    {
+      'keywords': ['ưu tiên bún bò', 'bún bò'],
+      'response':
+          'Vậy mình đề xuất **Bún bò B** (gần ~1.8km, hợp khẩu vị cay vừa). Bạn đi một mình hay đi nhóm để mình gợi ý thêm món gọi kèm (chả cua, giò heo, huyết)?',
+      'quickReplies': ['Đi một mình', 'Đi nhóm'],
+    },
+    // Keep some generic ones as fallback
+    {
+      'keywords': ['xin chào', 'hello', 'hi'],
+      'response':
+          'Xin chào! Tôi là trợ lý ảo. Bạn có thể hỏi "Theo khẩu vị của tôi, gợi ý món ăn gần đây" để bắt đầu.',
+      'quickReplies': ['Gợi ý món ăn gần đây'],
     },
   ];
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/food_model.dart';
+import 'map_routing_page.dart';
+import 'package:latlong2/latlong.dart';
 
 class RestaurantDetailPage extends StatelessWidget {
   final RestaurantItem restaurant;
@@ -120,9 +122,24 @@ class RestaurantDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Mock dishes
-                  _buildDishItem(context, "Món đặc trưng 1", "150.000đ", isDarkMode),
-                  _buildDishItem(context, "Món đặc trưng 2", "120.000đ", isDarkMode),
-                  _buildDishItem(context, "Món đặc trưng 3", "180.000đ", isDarkMode),
+                  _buildDishItem(
+                    context,
+                    "Món đặc trưng 1",
+                    "150.000đ",
+                    isDarkMode,
+                  ),
+                  _buildDishItem(
+                    context,
+                    "Món đặc trưng 2",
+                    "120.000đ",
+                    isDarkMode,
+                  ),
+                  _buildDishItem(
+                    context,
+                    "Món đặc trưng 3",
+                    "180.000đ",
+                    isDarkMode,
+                  ),
 
                   const SizedBox(height: 32),
 
@@ -134,7 +151,11 @@ class RestaurantDetailPage extends StatelessWidget {
                           onPressed: () {
                             // TODO: Implement call functionality
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Chức năng gọi điện đang được phát triển")),
+                              const SnackBar(
+                                content: Text(
+                                  "Chức năng gọi điện đang được phát triển",
+                                ),
+                              ),
                             );
                           },
                           icon: const Icon(Icons.phone),
@@ -153,16 +174,26 @@ class RestaurantDetailPage extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () {
-                            // TODO: Implement directions functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Chức năng chỉ đường đang được phát triển")),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MapRoutingPage(
+                                  restaurantName: restaurant.name,
+                                  restaurantLocation: LatLng(
+                                    restaurant.latitude,
+                                    restaurant.longitude,
+                                  ),
+                                ),
+                              ),
                             );
                           },
                           icon: const Icon(Icons.directions),
                           label: const Text("Chỉ đường"),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Theme.of(context).primaryColor,
-                            side: BorderSide(color: Theme.of(context).primaryColor),
+                            side: BorderSide(
+                              color: Theme.of(context).primaryColor,
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -182,7 +213,12 @@ class RestaurantDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDishItem(BuildContext context, String name, String price, bool isDarkMode) {
+  Widget _buildDishItem(
+    BuildContext context,
+    String name,
+    String price,
+    bool isDarkMode,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),

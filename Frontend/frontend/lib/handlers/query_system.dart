@@ -1,6 +1,7 @@
 import '../handlers/food_search_handler.dart';
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
+import '../models/chat_message_model.dart';
 import 'chat_handler.dart';
 
 /// Query System - Trung tâm điều phối (Facade Pattern)
@@ -63,16 +64,17 @@ class QuerySystem {
   // CHATBOT
   // =========================================================================
 
-  // Initialize ChatHandler
-  final ChatHandler _chatHandler = MockChatHandler();
+  // =========================================================================
+  // CHATBOT
+  // =========================================================================
 
   /// Gửi tin nhắn tới AI Chatbot
-  Stream<ChatMessage> sendChatMessage(String message) {
-    return _chatHandler.sendMessage(message);
+  Future<BotResponse> sendChatMessage(String message) {
+    return ChatHandler.sendMessage(message);
   }
 
-  /// Lấy lịch sử trò chuyện
-  Future<List<ChatMessage>> getChatHistory() {
-    return _chatHandler.getChatHistory();
+  /// Lấy tin nhắn chào mừng
+  BotResponse getWelcomeMessage() {
+    return ChatHandler.getWelcomeMessage();
   }
 }
