@@ -1,32 +1,123 @@
-Okay, bắt đầu thôi nhở, tới giai đoạn này thì cũng hay lắm rồi! Trước hết thì mình cũng phải công nhận, mọi người siêng thật ấy.
-Vơi lại, đây cũng là lần đầu mình đi làm Tech Lead thử, và cũng như là Architect/Design ở tầng bên trên.
-Mà nói thật nhá, mình mới năm 2, chưa học cơ sở dữ liệu hay công nghệ phần mềm, AI và cũng chưa quen dùng API. Vậy mà cái môn Tư duy tính toán nó bắt làm cái ứng dụng du lịch, nói thật chứ nhìn có khác gì "Đồ án tốt nghiệp" đâu.
-Hồi ở thư viện ấy, mình có thấy một ông làm game, kiểu game RPG 2D đánh quái lên level đơn giản bằng RPG Maker thôi, vậy mà nó lại là "Đồ án tốt nghiệp" nghe mới sợ chứ!
+# 🚀 FRONTEND DEVELOPMENT GUIDE
 
-Thôi thì, đến đây được cũng là hay rồi, bây giờ mình làm nhanh cái MVP nhá, mọi người cố lên :)
+### (The "How-to-not-block-each-other" Edition)
 
-Thì trước hết, trong cái Guideline chính (`Guideline.md`) của mình ấy, mình muốn xin lỗi cái vụ `Core Frontend` là optional.
-Kiểu theo mình nghĩ ấy, là nếu như Frontend không nặng quá thì khỏi cần Core can thiệp, nhưng mà bây giờ khác rồi.
-Phần Frontend không thể cứ giao cho một mình Frontend làm hết được, do còn nhiều phần như Supabase để lấy data, gọi Backend, dùng AI... vâng, không xuể thật.
-
-Vì thế, coi như mình xong phần Backend rồi đi, qua làm Frontend! Đừng lo, mình test hết rồi, backend API hoạt động ổn rồi đấy!
+> **Tâm sự mỏng:** Trước hết, mình xin lỗi vụ bảo `Core Frontend` là optional nhé. Sau khi xem xét lại, app mình giờ "căng" quá (Supabase, AI, Backend...), một mình Frontend gánh hết là không xuể. Vậy nên, chúng ta sẽ chơi hệ **Decoupled** toàn diện luôn cho nó "mượt"!
 
 ---
 
-Đầu tiên, nói về luồng làm việc, có thể nói là gần giống như của Backend luôn ấy. Chỉ đơn giản là thay vì Backend cung cấp cho Frontend qua API, thì ở đây Frontend cung cấp cho UI/UX những cái "data thật" để nó dùng thay vì Mock Handler, Placeholder như hiện tại.
+## 📌 Luồng công việc tổng quát
 
-Chắc nói về vai trò của các bên liên quan trước nhở.
+Để anh em làm việc không ai phải đợi ai, chúng ta sẽ chia dây chuyền theo sơ đồ:
+**`UI/UX ➔ Front-end ➔ Core Front-end`**
 
-1. UI/UX:
-- Tất nhiên là thiết kế giao diện, làm cái mặt tiền.
-- Cung cấp cho Frontend và Core biết cần những thông tin gì, các cái Mock Handlers / Placeholder hiện tại để ghép logic vào.
+* **UI/UX:** Làm mặt tiền, lo trải nghiệm người dùng.
+* **Front-end:** "Nhận việc" từ UI/UX, điều phối logic và gọi xuống Core.
+* **Core Front-end:** Xử lý các tính năng "thật", kết nối API, Database, AI...
 
-2. Front-end: Gần như Back-end
-- Cung cấp cho UI/UX những cái thông tin nó cần.
-- Và cung cấp bằng cách dùng Core.
+---
 
-3. Core Front-end:
-- Cung cấp cho Front-end những tính năng / thông tin cần.
+## 👥 Vai trò chi tiết (Ai làm việc nấy, đời sẽ tươi)
 
-Đơn giản và ngắn gọn thì là như thế, việc Integrate (Front-end với Back-end/Database) là của Core, Front-end chỉ việc dùng và trích xuất thông tin cho UI/UX nó xài.
+### 🎨 1. UI/UX: "Kỹ sư mặt tiền & Người định hướng tính năng"
 
+Anh em UI/UX là người hiểu người dùng nhất, nên cứ thoải mái sáng tạo nhé!
+
+* **Nhiệm vụ:** Thiết kế giao diện, đề xuất tính năng mới (Vibe AI thoải mái đi!).
+* **Nguyên tắc "Hộp đen":** Đừng quan tâm code bên trong chạy thế nào. Cứ đặt **Placeholder** và gọi **Mock Handlers** như đã thống nhất trong [Guideline.md].
+* **Tại sao phải dùng Handler?** Để lúc lắp logic thật, anh em chỉ cần thay đúng 1 chỗ, không phải đi "Ctrl+F" khắp cái codebase to tổ bố để sửa. Tin mình đi, làm vậy để tránh "lava code" (code rác) sau này đấy!
+
+### 💻 2. Front-end: "Người điều phối (Orchestrator)"
+
+Bạn chính là cầu nối, là người giữ cho code không bị rối như tơ vò.
+
+* **Luồng logic:** `UI/UX ➔ Query System ➔ Handlers ➔ Core Module`.
+* **Query System:** Đóng vai trò là "Lễ tân". UI/UX chỉ cần "yêu cầu công việc", Query System sẽ biết gọi Handler nào xử lý.
+* **Lưu ý tối thượng:** Không để UI/UX tự viết logic gọi API hay xử lý data phức tạp. Chặn ngay từ đầu để sau này dễ refactor!
+
+### ⚙️ 3. Core Front-end: "Cỗ máy vận hành"
+
+Nhiệm vụ của bạn là biến những cái "Giả" của FE thành "Thật".
+
+* **Nhiệm vụ:** Implement các module thực tế (Dart), gọi Backend API, kết nối Supabase.
+* **Tính độc lập:** Viết module sao cho "thô" nhưng "chất", expose interface rõ ràng cho Front-end xài.
+
+---
+
+## 🏗️ Kiến trúc Handlers & Query System (Dart Example)
+
+Vì app mình làm bằng Flutter nên mình làm demo bằng **Dart** luôn cho nó trực quan nhé:
+
+### 1. Handlers (Nơi chứa logic chuyên môn)
+
+```dart
+// Interface/Data Model
+class Restaurant {
+  final String name;
+  final String address;
+  Restaurant(this.name, this.address);
+}
+
+// Handler thực hiện công việc cụ thể
+class RestaurantHandler {
+  Future<List<Restaurant>> search(String query) async {
+    // FE có thể return Mock data ở đây trong khi đợi Core
+    // Core xong thì thay bằng logic gọi API thực
+    return [Restaurant("Cơm Tấm Sài Gòn", "123 Quận 1")];
+  }
+}
+
+```
+
+### 2. Query System (Trung tâm điều phối)
+
+```dart
+class QuerySystem {
+  final _resHandler = RestaurantHandler();
+
+  // UI/UX chỉ gọi hàm này, không cần biết bên trong có gì
+  Future<List<Restaurant>> getRestaurants(String query) {
+    return _resHandler.search(query);
+  }
+}
+
+```
+
+---
+
+## 🔌 3 Dạng Integrate Core Module (Quan trọng!)
+
+Khi anh em làm Core, sẽ gặp 3 kiểu "tình huống" sau:
+
+### Dạng 1: Service Độc lập (API/Service ngoài)
+
+* **Cách làm:** Cứ implement rồi expose interface ra là xong. Nhớ dùng Dart và không cần lo vụ lộ API Key (vì mình xử lý ở tầng khác rồi).
+
+### Dạng 2: Depend tầng dưới (Đợi Backend xong mới làm được)
+
+* **Giải pháp:** Cả hai bên (Core FE & Backend) thống nhất **Input/Output (Contract)**.
+* Core FE cứ viết **Mock Data** trước để Frontend dùng. Khi nào Backend xong thì chỉ việc "thay ruột" là máy chạy êm ru.
+
+### Dạng 3: Stateful (Cần lưu trạng thái - Ví dụ: Chatbot)
+
+Nếu UI/UX gọi một module mà cần nhớ "lịch sử", hãy chọn 1 trong 3 chiến lược:
+
+| Chiến lược | Đặc điểm | Khi nào dùng? |
+| --- | --- | --- |
+| **Bên trên giữ State** | Core chỉ nhận data và xử lý (Stateless). | Khi trạng thái đơn giản. |
+| **Bên dưới giữ State** | Core tự lưu trữ, FE chỉ cần gọi "làm tiếp đi". | Khi không có nhu cầu "đa luồng/đa trạng thái". |
+| **Hybrid (Khuyên dùng)** | FE giữ ID (SessionID), Core giữ data chi tiết theo ID đó. | Khi trạng thái phức tạp (như Chatbot nhiều cửa sổ). |
+
+---
+
+## 💡 Lời kết từ Tech Lead
+
+"Mình là sinh viên, không phải dev Google, nên đừng áp lực quá!" 😄
+
+Mục tiêu của cái Guideline này là để anh em **LÀM VIỆC SONG SONG**. Đừng ai đợi ai cả! FE cứ mock, UI cứ vẽ, Core cứ viết. Cuối cùng chúng ta chỉ cần ráp các "mối nối" lại là xong.
+
+**Cố lên anh em, làm nhanh cái MVP rồi còn đi chơi! 🚀✨**
+
+---
+
+*Bản hướng dẫn này dựa trên [Guideline.md] và sẽ được cập nhật liên tục.*
