@@ -270,11 +270,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 size: 22,
               ),
             ),
-            const SizedBox(width: 10),
-            const Text(
-              'Gợi Ý Món Ngon',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
+            if (MediaQuery.of(context).size.width > 600) ...[
+              const SizedBox(width: 10),
+              const Text(
+                'Gợi Ý Món Ngon',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            ],
           ],
         ),
         actions: [
