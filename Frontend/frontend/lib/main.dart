@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'pages/discover_page.dart';
-// import 'pages/auth_gate.dart';
+import 'pages/auth_gate.dart';
 import 'providers/theme_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'core/supabase_handler.dart';
@@ -40,7 +39,7 @@ class MyApp extends StatelessWidget {
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
       // Màn hình đầu tiên: Trang Khám phá (Tạm thời bypass Auth theo yêu cầu)
-      home: const DiscoverPage(), // BYPASS AUTH for now
+      home: const AuthGate(),
     );
   }
 }

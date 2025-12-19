@@ -13,12 +13,14 @@ class AuthGate extends StatelessWidget {
       stream: SupabaseHandler().authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          // You could show a loading screen here.
+          // For now, we can just show a circular indicator in a Scaffold.
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final session = snapshot.data?.session;
+        final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session != null) {
           return const DiscoverPage();
