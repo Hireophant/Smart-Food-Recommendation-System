@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'models/ai_models.dart';
+import 'ai_models.dart';
 
 class AIModule {
   /// URL Backend - Có thể configure khi khởi tạo app

@@ -16,3 +16,4 @@ slowapi
 motor
 pymongo
 openai
+aiohttp
