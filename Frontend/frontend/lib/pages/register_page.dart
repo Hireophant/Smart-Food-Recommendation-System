@@ -27,10 +27,15 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('Registration Attempt: ${_emailController.text.trim()}');
       final response = await SupabaseHandler().signUpWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
         fullName: _nameController.text.trim(),
+      );
+
+      debugPrint(
+        'Registration Response: User=${response.user?.id}, Session=${response.session != null ? "Valid" : "Null"}',
       );
 
       if (response.user != null) {

@@ -21,6 +21,9 @@ class AuthGate extends StatelessWidget {
         }
 
         final session = snapshot.hasData ? snapshot.data!.session : null;
+        debugPrint(
+          'Auth Session Check: ${session != null ? "Valid JWT found" : "No JWT found"}',
+        );
 
         if (session != null) {
           return const DiscoverPage();

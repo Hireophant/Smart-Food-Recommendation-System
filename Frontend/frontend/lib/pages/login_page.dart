@@ -25,14 +25,24 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('Login Attempt: ${_emailController.text.trim()}');
       final response = await SupabaseHandler().signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
+      debugPrint(
+        'Login Response: User=${response.user?.id}, Session=${response.session != null ? "Valid" : "Null"}',
+      );
+
       if (response.user != null) {
+        if (response.session == null) {
+          debugPrint(
+            'Login Warning: User found but Session is NULL (likely email not confirmed)',
+          );
+        }
         if (mounted) {
-          // AuthGate will handle navigation, but just in case we can pop if pushed
+          // AuthGate will handle navigation
         }
       }
     } on AuthException catch (e) {

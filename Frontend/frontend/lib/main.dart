@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
-      // Màn hình đầu tiên: Trang Khám phá (Tạm thời bypass Auth theo yêu cầu)
+      // Màn hình đầu tiên: Trang Khám phá (AuthGate sẽ kiểm tra JWT để điều hướng)
       home: const AuthGate(),
     );
   }
