@@ -1,0 +1,139 @@
+import 'dart:io';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'user_taste_profile.dart';
+
+enum DataClientErrorKind {
+  notLoggedIn,
+  notFound,
+  permissionDenied,
+  network,
+  invalidResponse,
+  unknown,
+}
+
+class DataClientException implements Exception {
+  const DataClientException(
+    this.kind, {
+    this.message,
+    this.cause,
+    this.stackTrace,
+  });
+
+  final DataClientErrorKind kind;
+  final String? message;
+  final Object? cause;
+  final StackTrace? stackTrace;
+
+  @override
+  String toString() {
+    final msg = message == null ? '' : ': $message';
+    return 'DataClientException($kind$msg)';
+  }
+}
+
+class DataClient {
+  DataClient._();
+
+  static SupabaseClient get _client => Supabase.instance.client;
+
+  static Future<UserTasteProfile> getTasteProfile(String userId) async {
+    try {
+      final sessionUserId = _client.auth.currentUser?.id;
+      if (sessionUserId == null) {
+        throw const DataClientException(
+          DataClientErrorKind.notLoggedIn,
+          message: 'No authenticated user in current session.',
+        );
+      }
+
+      final Map<String, dynamic>? row = await _client
+          .from('user_taste_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (row == null) {
+        // With RLS, querying someone else's user_id typically returns empty.
+        throw const DataClientException(
+          DataClientErrorKind.notFound,
+          message: 'Taste profile not found (or not accessible).',
+        );
+      }
+
+      return _mapTasteProfile(row);
+    } on PostgrestException catch (e, st) {
+      throw DataClientException(
+        _mapPostgrestExceptionKind(e),
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on AuthException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on SocketException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.network,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      if (e is DataClientException) rethrow;
+      throw DataClientException(
+        DataClientErrorKind.unknown,
+        message: 'Unexpected error while fetching taste profile.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  static Future<UserTasteProfile> getCurrentTasteProfile() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: 'No authenticated user in current session.',
+      );
+    }
+    return getTasteProfile(userId);
+  }
+
+  static UserTasteProfile _mapTasteProfile(Map<String, dynamic> row) {
+    try {
+      return UserTasteProfile.fromJson(row);
+    } catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.invalidResponse,
+        message: 'Failed to parse taste profile response.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  static DataClientErrorKind _mapPostgrestExceptionKind(PostgrestException e) {
+    // PostgREST codes vary by failure mode; keep mapping conservative.
+    final code = e.code;
+    final message = e.message.toLowerCase();
+
+    // Common Postgres codes
+    if (code == '42501' || message.contains('permission denied')) {
+      return DataClientErrorKind.permissionDenied;
+    }
+
+    // Not logged in / auth related (often 401 bubbles up via PostgREST).
+    if (message.contains('jwt') || message.contains('not authorized')) {
+      return DataClientErrorKind.notLoggedIn;
+    }
+
+    return DataClientErrorKind.unknown;
+  }
+}
