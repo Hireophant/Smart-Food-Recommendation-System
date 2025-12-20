@@ -4,6 +4,7 @@ import '../core/supabase_handler.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/custom_text_field.dart';
 import 'register_page.dart';
+import 'discover_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,7 +43,11 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
         if (mounted) {
-          // AuthGate will handle navigation
+          // Explicitly navigate to home to ensure UX progression
+          debugPrint('Login Success: Navigating to DiscoverPage...');
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DiscoverPage()),
+          );
         }
       }
     } on AuthException catch (e) {

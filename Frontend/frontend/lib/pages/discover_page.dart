@@ -15,6 +15,7 @@ import 'restaurant_list_page.dart';
 import 'restaurant_detail_page.dart';
 import 'favorites_page.dart';
 import 'chat_page.dart';
+import 'profile_page.dart';
 
 /// Tag mặc định cho filter
 final List<FilterTag> defaultTags = [
@@ -53,21 +54,38 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('DiscoverPage: initState called. Starting data load...');
     _loadData();
   }
 
   Future<void> _loadData() async {
-    // Fetch dishes via Query System
-    final dishes = await _querySystem.getAllDishes();
-    // Fetch restaurants for map
-    final restaurantsResult = await _querySystem.search('all');
+    try {
+      debugPrint('DiscoverPage: Fetching dishes...');
+      // Fetch dishes via Query System
+      final dishes = await _querySystem.getAllDishes();
+      debugPrint('DiscoverPage: Dishes fetched (${dishes.length} items)');
 
-    setState(() {
-      _dishes = dishes;
-      _allRestaurants = restaurantsResult.items;
-      _filteredRestaurants = restaurantsResult.items;
-      _isLoading = false;
-    });
+      // Fetch restaurants for map
+      final restaurantsResult = await _querySystem.search('all');
+      debugPrint(
+        'DiscoverPage: Restaurants fetched (${restaurantsResult.items.length} items)',
+      );
+
+      if (mounted) {
+        setState(() {
+          _dishes = dishes;
+          _allRestaurants = restaurantsResult.items;
+          _filteredRestaurants = restaurantsResult.items;
+          _isLoading = false;
+        });
+        debugPrint('DiscoverPage: Loading complete, UI updated.');
+      }
+    } catch (e, stack) {
+      debugPrint('DiscoverPage Error: $e\n$stack');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
 
     // Simulate map loading delay
     Future.delayed(const Duration(milliseconds: 800), () {
@@ -280,6 +298,33 @@ class _DiscoverPageState extends State<DiscoverPage> {
           ],
         ),
         actions: [
+          // Profile Avatar Button (New)
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).primaryColor,
+                  width: 2,
+                ),
+              ),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(
+                  'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
+                ),
+              ),
+            ),
+          ),
+
           TextButton.icon(
             onPressed: () {
               // Already on home page
