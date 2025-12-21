@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
 import '../models/food_model.dart';
 import '../providers/favorites_provider.dart';
+import '../widgets/dish_card.dart';
 import 'restaurant_detail_page.dart';
+import 'restaurant_list_page.dart';
 
 /// Trang Favorites - Hiển thị danh sách món ăn và nhà hàng yêu thích
 class FavoritesPage extends StatefulWidget {
@@ -176,8 +178,14 @@ class _FavoritesPageState extends State<FavoritesPage>
       );
     }
 
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.95,
+      ),
       itemCount: provider.favoriteDishes.length,
       itemBuilder: (context, index) {
         final dish = provider.favoriteDishes[index];
@@ -199,8 +207,14 @@ class _FavoritesPageState extends State<FavoritesPage>
       );
     }
 
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.95,
+      ),
       itemCount: provider.favoriteRestaurants.length,
       itemBuilder: (context, index) {
         final restaurant = provider.favoriteRestaurants[index];
@@ -214,99 +228,16 @@ class _FavoritesPageState extends State<FavoritesPage>
     DishItem dish,
     FavoritesProvider provider,
   ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          // Navigate to dish details or restaurant list
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Xem chi tiết cho ${dish.name}')),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  dish.imageUrl,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.restaurant_menu, size: 40),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      dish.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dish.description,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      children: dish.tags.take(3).map((tag) {
-                        return Chip(
-                          label: Text(
-                            tag,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              // Remove button
-              IconButton(
-                icon: const Icon(Icons.favorite, color: Colors.red),
-                onPressed: () {
-                  provider.removeDish(dish.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${dish.name} đã xóa khỏi yêu thích'),
-                      duration: const Duration(seconds: 2),
-                      action: SnackBarAction(
-                        label: 'Hoàn tác',
-                        onPressed: () => provider.addDish(dish),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+    return DishCard(
+      item: dish,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RestaurantListPage(dish: dish),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -315,128 +246,283 @@ class _FavoritesPageState extends State<FavoritesPage>
     RestaurantItem restaurant,
     FavoritesProvider provider,
   ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isFavorite = provider.isRestaurantFavorite(restaurant.id);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Image.network(
-                restaurant.imageUrl,
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 150,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.store, size: 60),
-                  );
-                },
-              ),
-            ),
-            // Info
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          restaurant.name,
+            // Image Section with Badges
+            Stack(
+              children: [
+                // Image
+                Container(
+                  height: 110,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.grey[200],
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: restaurant.imageUrl.startsWith('http')
+                        ? Image.network(
+                            restaurant.imageUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.grey[300],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                                child: Center(
+                                  child: Icon(
+                                    Icons.restaurant,
+                                    size: 40,
+                                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            restaurant.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                                child: Center(
+                                  child: Icon(
+                                    Icons.restaurant,
+                                    size: 40,
+                                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                // Status Badge
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: restaurant.isOpen
+                          ? Colors.green.withValues(alpha: 0.9)
+                          : Colors.red.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      restaurant.isOpen ? 'Mở cửa' : 'Đóng cửa',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                // Distance Badge
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.white, size: 12),
+                        const SizedBox(width: 4),
+                        Text(
+                          restaurant.distance,
                           style: const TextStyle(
-                            fontSize: 16,
+                            color: Colors.white,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.favorite, color: Colors.red),
-                        onPressed: () {
-                          provider.removeRestaurant(restaurant.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${restaurant.name} đã xóa khỏi yêu thích',
-                              ),
-                              duration: const Duration(seconds: 2),
-                              action: SnackBarAction(
-                                label: 'Hoàn tác',
-                                onPressed: () =>
-                                    provider.addRestaurant(restaurant),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                ),
+                // Favorite Button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red[400] : Colors.grey[600],
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      onPressed: () {
+                        if (isFavorite) {
+                          provider.removeRestaurant(restaurant.id);
+                        } else {
+                          provider.addRestaurant(restaurant);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Info Section
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    restaurant.name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
                   Text(
                     restaurant.category,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.star, color: Colors.amber, size: 12),
+                      const SizedBox(width: 2),
                       Text(
-                        '${restaurant.rating}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        restaurant.rating.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                        ),
                       ),
+                      const SizedBox(width: 2),
                       Text(
-                        ' (${restaurant.ratingCount})',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        '(${restaurant.ratingCount})',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
                       ),
-                      const SizedBox(width: 16),
+                      if (restaurant.priceLevel != null) ...[
+                        const Spacer(),
+                        Text(
+                          restaurant.priceLevel!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.green[300] : Colors.green[700],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.grey[600],
+                        Icons.place,
+                        size: 10,
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        restaurant.distance,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          restaurant.address,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
-                  if (restaurant.tags.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      children: restaurant.tags.take(3).map((tag) {
-                        return Chip(
-                          label: Text(
-                            tag,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 10,
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '7:00 - 22:00',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

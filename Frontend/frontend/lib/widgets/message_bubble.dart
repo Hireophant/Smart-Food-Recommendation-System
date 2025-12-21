@@ -87,6 +87,7 @@ class QuickReplyChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Wrap(
@@ -96,15 +97,15 @@ class QuickReplyChips extends StatelessWidget {
           return ActionChip(
             label: Text(reply),
             onPressed: () => onTap(reply),
-            backgroundColor: Theme.of(
-              context,
-            ).primaryColor.withValues(alpha: 0.1),
+            backgroundColor: isDarkMode 
+                ? Theme.of(context).primaryColor.withValues(alpha: 0.3)
+                : Theme.of(context).primaryColor.withValues(alpha: 0.1),
             labelStyle: TextStyle(
-              color: Theme.of(context).primaryColor,
+              color: isDarkMode ? Colors.white : Theme.of(context).primaryColor,
               fontWeight: FontWeight.w500,
             ),
             side: BorderSide(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+              color: Theme.of(context).primaryColor.withValues(alpha: isDarkMode ? 0.6 : 0.3),
             ),
           );
         }).toList(),

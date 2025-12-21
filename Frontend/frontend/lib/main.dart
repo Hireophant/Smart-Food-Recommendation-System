@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'pages/auth_gate.dart';
 import 'providers/theme_provider.dart';
@@ -10,6 +11,9 @@ import 'core/supabase_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseHandler.initialize();
+
+  // Configure timeago for Vietnamese
+  timeago.setLocaleMessages('vi', timeago.ViMessages());
 
   runApp(
     MultiProvider(

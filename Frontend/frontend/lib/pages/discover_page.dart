@@ -173,17 +173,39 @@ class _DiscoverPageState extends State<DiscoverPage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              restaurant.imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 120,
-                color: Colors.grey[300],
-                child: const Icon(Icons.restaurant, size: 50),
-              ),
-            ),
+            child: restaurant.imageUrl.startsWith('http')
+                ? Image.network(
+                    restaurant.imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 120,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.restaurant, size: 50),
+                    ),
+                  )
+                : Image.asset(
+                    restaurant.imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.restaurant, size: 50),
+                    ),
+                  ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -325,54 +347,94 @@ class _DiscoverPageState extends State<DiscoverPage> {
             ),
           ),
 
-          TextButton.icon(
-            onPressed: () {
-              // Already on home page
-            },
-            icon: Icon(
-              Icons.home,
-              size: 18,
-              color: isDarkMode
-                  ? Colors.white70
-                  : Theme.of(context).primaryColor,
+          // Home Button với background
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: isDarkMode 
+                  ? Colors.grey[800]!.withValues(alpha: 0.6) 
+                  : Colors.white.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            label: Text(
-              "Trang chủ",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
-                fontWeight: FontWeight.w500,
+            child: IconButton(
+              icon: Icon(
+                Icons.home,
+                color: Color(0xFFFF6B35),
+                size: 24,
               ),
+              tooltip: 'Trang chủ',
+              onPressed: () {
+                // Already on home page
+              },
             ),
           ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FavoritesPage()),
-              );
-            },
-            icon: Icon(
-              Icons.favorite,
-              size: 18,
-              color: isDarkMode ? Colors.white70 : Colors.black54,
+          const SizedBox(width: 8),
+          // Favorites Button với background
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: isDarkMode 
+                  ? Colors.grey[800]!.withValues(alpha: 0.6) 
+                  : Colors.white.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            label: Text(
-              "Yêu thích",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+            child: IconButton(
+              icon: Icon(
+                Icons.favorite,
+                color: Colors.red[400],
+                size: 24,
               ),
+              tooltip: 'Yêu thích',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FavoritesPage()),
+                );
+              },
             ),
           ),
-          // Theme Toggle Button (Sun/Moon)
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-              color: Theme.of(context).primaryColor,
+          const SizedBox(width: 8),
+          // Theme Toggle Button (Sun/Moon) với background rõ ràng
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: isDarkMode 
+                  ? Colors.grey[800]!.withValues(alpha: 0.6) 
+                  : Colors.white.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            tooltip: themeProvider.isDarkMode ? 'Chế độ sáng' : 'Chế độ tối',
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
+            child: IconButton(
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: themeProvider.isDarkMode ? Colors.amber[400] : Colors.grey[800],
+                size: 24,
+              ),
+              tooltip: themeProvider.isDarkMode ? 'Chế độ sáng' : 'Chế độ tối',
+              onPressed: () {
+                themeProvider.toggleTheme();
+              },
+            ),
           ),
           // Chatbot Button với icon đẹp hơn
           IconButton(
@@ -561,11 +623,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.95),
+                              color: isDarkMode
+                                  ? Colors.grey[850]!.withValues(alpha: 0.95)
+                                  : Colors.white.withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -574,7 +638,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             child: Text(
                               "${_filteredRestaurants.length} nhà hàng",
                               style: TextStyle(
-                                color: Theme.of(context).primaryColor,
+                                color: isDarkMode ? Colors.white : Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),

@@ -22,6 +22,7 @@ class MapRoutingPage extends StatefulWidget {
 class _MapRoutingPageState extends State<MapRoutingPage> {
   // HCMUS Location: 227 Nguyen Van Cu
   final LatLng _startLocation = const LatLng(10.762622, 106.681816);
+  final MapController _mapController = MapController();
   List<LatLng> _routePoints = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -30,6 +31,38 @@ class _MapRoutingPageState extends State<MapRoutingPage> {
   void initState() {
     super.initState();
     _fetchRoute();
+  }
+
+  /// Tự động zoom map để hiển thị cả điểm bắt đầu và điểm đến
+  void _fitBounds() {
+    if (_routePoints.isNotEmpty) {
+      // Tính bounds từ route points
+      double minLat = _routePoints.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
+      double maxLat = _routePoints.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
+      double minLon = _routePoints.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
+      double maxLon = _routePoints.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
+
+      final bounds = LatLngBounds(
+        LatLng(minLat, minLon),
+        LatLng(maxLat, maxLon),
+      );
+
+      _mapController.fitCamera(CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(50),
+      ));
+    } else {
+      // Nếu không có route, tính bounds từ 2 điểm
+      final bounds = LatLngBounds.fromPoints([
+        _startLocation,
+        widget.restaurantLocation,
+      ]);
+
+      _mapController.fitCamera(CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(50),
+      ));
+    }
   }
 
   /// Gọi API OSRM để lấy đường đi
@@ -62,10 +95,20 @@ class _MapRoutingPageState extends State<MapRoutingPage> {
             }).toList();
             _isLoading = false;
           });
+
+          // Tự động zoom để hiển thị toàn bộ route
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _fitBounds();
+          });
         } else {
           setState(() {
             _errorMessage = 'Không tìm thấy đường đi';
             _isLoading = false;
+          });
+
+          // Vẫn zoom để thấy 2 điểm dù không có route
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _fitBounds();
           });
         }
       } else {
@@ -73,11 +116,21 @@ class _MapRoutingPageState extends State<MapRoutingPage> {
           _errorMessage = 'Lỗi kết nối server bản đồ';
           _isLoading = false;
         });
+
+        // Vẫn zoom để thấy 2 điểm dù có lỗi
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _fitBounds();
+        });
       }
     } catch (e) {
       setState(() {
         _errorMessage = 'Đã có lỗi xảy ra: $e';
         _isLoading = false;
+      });
+
+      // Vẫn zoom để thấy 2 điểm dù có lỗi
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _fitBounds();
       });
     }
   }
@@ -94,6 +147,7 @@ class _MapRoutingPageState extends State<MapRoutingPage> {
       body: Stack(
         children: [
           FlutterMap(
+            mapController: _mapController,
             options: MapOptions(
               initialCenter: _startLocation, // Center map roughly at start
               initialZoom: 14.0,
