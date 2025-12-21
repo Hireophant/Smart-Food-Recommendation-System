@@ -16,10 +16,14 @@ class ReviewCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      color: isDarkMode ? Colors.grey[850] : Colors.white,
+      elevation: 0,
+      color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDarkMode ? Colors.white10 : Colors.black.withOpacity(0.05),
+          width: 0.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -52,7 +56,7 @@ class ReviewCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Name & Rating - Clickable
                 Expanded(
                   child: GestureDetector(
@@ -127,9 +131,9 @@ class ReviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Comment Text
             Text(
               review.comment,
@@ -139,7 +143,7 @@ class ReviewCard extends StatelessWidget {
                 color: isDarkMode ? Colors.white70 : Colors.black87,
               ),
             ),
-            
+
             // Review Images (if any)
             if (review.images.isNotEmpty) ...[
               const SizedBox(height: 12),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/supabase_handler.dart';
 import 'login_page.dart';
-import 'discover_page.dart';
+import 'main_scaffold.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -15,7 +15,7 @@ class AuthGate extends StatelessWidget {
     // Authentication is now active. Users will be redirected to
     // LoginPage if no valid JWT is found.
     // ============================================================
-    
+
     return StreamBuilder<AuthState>(
       stream: SupabaseHandler().authStateChanges,
       builder: (context, snapshot) {
@@ -33,7 +33,7 @@ class AuthGate extends StatelessWidget {
         );
 
         if (session != null) {
-          return const DiscoverPage();
+          return const MainScaffold();
         } else {
           return const LoginPage();
         }

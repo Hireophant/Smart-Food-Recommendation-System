@@ -18,10 +18,14 @@ class RatingSummaryWidget extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
-      elevation: 2,
-      color: isDarkMode ? Colors.grey[850] : Colors.white,
+      elevation: 0,
+      color: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDarkMode ? Colors.white10 : Colors.black.withOpacity(0.05),
+          width: 0.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -60,8 +64,9 @@ class RatingSummaryWidget extends StatelessWidget {
                         '$totalReviews đánh giá',
                         style: TextStyle(
                           fontSize: 14,
-                          color:
-                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          color: isDarkMode
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -122,7 +127,9 @@ class RatingSummaryWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: percentage,
-                backgroundColor: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                backgroundColor: isDarkMode
+                    ? Colors.grey[700]
+                    : Colors.grey[300],
                 valueColor: AlwaysStoppedAnimation<Color>(
                   Theme.of(context).primaryColor,
                 ),

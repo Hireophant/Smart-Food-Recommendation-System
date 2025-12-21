@@ -26,32 +26,73 @@ class ThemeProvider with ChangeNotifier {
   // Light Theme
   ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
+    fontFamily: 'SF Pro Display', // Fallback to system font if not available
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.deepOrange, // Changed to Orange
-      primary: Colors.deepOrange,
+      seedColor: const Color(0xFFFF9500), // Apple Orange
+      primary: const Color(0xFFFF9500),
+      secondary: const Color(0xFF34C759), // Apple Green for success/accents
+      surface: const Color(0xFFF2F2F7), // Apple Light Gray Background
+      background: const Color(0xFFF2F2F7),
       brightness: Brightness.light,
     ),
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: const Color(0xFFF2F2F7),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
+      backgroundColor:
+          Colors.white, // Transparent/Glass effect handled in UI usually
       elevation: 0,
       centerTitle: true,
+      titleTextStyle: TextStyle(
+        color: Colors.black,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+      ),
+      iconTheme: IconThemeData(color: Colors.black),
+    ),
+
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: Color(0xFFFF9500),
+      unselectedItemColor: Color(0xFF8E8E93), // Apple Gray
+      type: BottomNavigationBarType.fixed,
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+      elevation: 0,
     ),
   );
 
   // Dark Theme
   ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
+    fontFamily: 'SF Pro Display',
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.deepOrange, // Changed to Orange
-      primary: Colors.deepOrange,
+      seedColor: const Color(0xFFFF9500),
+      primary: const Color(0xFFFF9500),
+      secondary: const Color(0xFF30D158),
+      surface: const Color(0xFF1C1C1E), // Apple Dark Gray
+      background: const Color(0xFF000000),
       brightness: Brightness.dark,
     ),
-    scaffoldBackgroundColor: const Color(0xFF1E1E1E),
+    scaffoldBackgroundColor: const Color(0xFF000000),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF1E1E1E),
+      backgroundColor: Color(0xFF1C1C1E),
       elevation: 0,
       centerTitle: true,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+      ),
+      iconTheme: IconThemeData(color: Colors.white),
+    ),
+
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF1C1C1E),
+      selectedItemColor: Color(0xFFFF9500),
+      unselectedItemColor: Color(0xFF8E8E93),
+      type: BottomNavigationBarType.fixed,
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+      elevation: 0,
     ),
   );
 }

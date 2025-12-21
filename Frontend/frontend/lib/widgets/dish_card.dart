@@ -43,12 +43,15 @@ class DishCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
-                          final progress = loadingProgress.expectedTotalBytes != null
+                          final progress =
+                              loadingProgress.expectedTotalBytes != null
                               ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                    loadingProgress.expectedTotalBytes!
                               : null;
                           return Container(
-                            color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+                            color: isDarkMode
+                                ? Colors.grey[850]
+                                : Colors.grey[100],
                             child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -65,7 +68,9 @@ class DishCard extends StatelessWidget {
                                     Text(
                                       '${(progress * 100).toInt()}%',
                                       style: TextStyle(
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                         fontSize: 12,
                                       ),
                                     ),
@@ -84,14 +89,18 @@ class DishCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.restaurant,
-                                color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                                color: isDarkMode
+                                    ? Colors.grey[600]
+                                    : Colors.grey,
                                 size: 32,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Không thể tải ảnh',
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                  color: isDarkMode
+                                      ? Colors.grey[500]
+                                      : Colors.grey[600],
                                   fontSize: 11,
                                 ),
                               ),
@@ -235,9 +244,7 @@ class DishCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            4,
-                          ), // Slightly sharper corners
+                          borderRadius: BorderRadius.circular(20), // Pill shape
                         ),
                         padding: EdgeInsets.zero,
                         minimumSize:

@@ -33,7 +33,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       _totalReviews = 0;
       return;
     }
-    
+
     double sum = 0;
     for (var review in _reviews) {
       sum += review.rating;
@@ -74,7 +74,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             leading: Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDarkMode 
+                color: isDarkMode
                     ? Colors.black.withValues(alpha: 0.5)
                     : Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
@@ -98,12 +98,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Container(
-                              color: isDarkMode ? Colors.grey[850] : Colors.grey[300],
+                              color: isDarkMode
+                                  ? Colors.grey[850]
+                                  : Colors.grey[300],
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
                                       ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
+                                            loadingProgress.expectedTotalBytes!
                                       : null,
                                 ),
                               ),
@@ -112,7 +115,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           errorBuilder: (context, error, stackTrace) {
                             debugPrint('Image load error: $error');
                             return Container(
-                              color: isDarkMode ? Colors.grey[850] : Colors.grey[300],
+                              color: isDarkMode
+                                  ? Colors.grey[850]
+                                  : Colors.grey[300],
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -120,13 +125,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                                     Icon(
                                       Icons.restaurant,
                                       size: 80,
-                                      color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                                      color: isDarkMode
+                                          ? Colors.grey[600]
+                                          : Colors.grey,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Không thể tải ảnh',
                                       style: TextStyle(
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -140,7 +149,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: isDarkMode ? Colors.grey[850] : Colors.grey[300],
+                              color: isDarkMode
+                                  ? Colors.grey[850]
+                                  : Colors.grey[300],
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -148,13 +159,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                                     Icon(
                                       Icons.restaurant,
                                       size: 80,
-                                      color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                                      color: isDarkMode
+                                          ? Colors.grey[600]
+                                          : Colors.grey,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Không thể tải ảnh',
                                       style: TextStyle(
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -273,10 +288,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepOrange,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(30), // Pill shape
                         ),
+                        elevation: 0,
                       ),
                     ),
                   ),
@@ -301,9 +317,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     totalReviews: _totalReviews,
                     ratingDistribution: {
                       5: _reviews.where((r) => r.rating == 5).length,
-                      4: _reviews.where((r) => r.rating >= 4 && r.rating < 5).length,
-                      3: _reviews.where((r) => r.rating >= 3 && r.rating < 4).length,
-                      2: _reviews.where((r) => r.rating >= 2 && r.rating < 3).length,
+                      4: _reviews
+                          .where((r) => r.rating >= 4 && r.rating < 5)
+                          .length,
+                      3: _reviews
+                          .where((r) => r.rating >= 3 && r.rating < 4)
+                          .length,
+                      2: _reviews
+                          .where((r) => r.rating >= 2 && r.rating < 3)
+                          .length,
                       1: _reviews.where((r) => r.rating < 2).length,
                     },
                   ),
@@ -321,17 +343,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepOrange,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(30),
                         ),
+                        elevation: 0,
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Reviews List
-                  ..._reviews.map((review) => ReviewCard(review: review)).toList(),
+                  ..._reviews
+                      .map((review) => ReviewCard(review: review))
+                      .toList(),
 
                   const SizedBox(height: 24),
                 ],
@@ -354,9 +379,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           backgroundColor: isDarkMode ? Colors.grey[850] : Colors.white,
           title: Text(
             'Viết đánh giá',
-            style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black87,
-            ),
+            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -406,13 +429,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
                         color: Theme.of(context).primaryColor,
+                        width: 2,
                       ),
                     ),
                   ),
@@ -424,7 +450,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     // TODO: Implement image picker functionality
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Tính năng upload ảnh đang được phát triển'),
+                        content: Text(
+                          'Tính năng upload ảnh đang được phát triển',
+                        ),
                         duration: Duration(seconds: 2),
                       ),
                     );
@@ -469,7 +497,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   );
                   return;
                 }
-                
+
                 _addReview(rating, commentController.text.trim());
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
