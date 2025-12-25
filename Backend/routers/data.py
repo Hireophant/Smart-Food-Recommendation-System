@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Query
 from middleware.auth import VerifyAccessToken
 from middleware.rate_limit import limiter
 from query import QuerySystem
@@ -6,7 +6,7 @@ from schemas import CollectionsResponseSchema
 from schemas.errors import ErrorResponseSchema
 from schemas.data import DataRestaurantResponseModel
 from pydantic import Field, StringConstraints, PositiveFloat, PositiveInt
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 
 router = APIRouter(prefix="/data", tags=["Data Informations"])
 
@@ -28,8 +28,8 @@ LimitConstraint = Annotated[int, Field(ge=1, le=100)]
 )
 @limiter.limit("20/minute")
 async def restaurant_search(request: Request,
-                            focus_lat: Annotated[LatitudeConstraint, Field(description="The focus point latitude to search")],
-                            focus_lon: Annotated[LongitudeConstraint, Field(description="The focus point longitude to search")],
+                            focus_lat: Annotated[Optional[LatitudeConstraint], Field(description="The focus point latitude to search (optional, for distance calculation)")] = None,
+                            focus_lon: Annotated[Optional[LongitudeConstraint], Field(description="The focus point longitude to search (optional, for distance calculation)")] = None,
                             query: Annotated[Optional[QueryTextConstraint], Field(description="The text query to filter")] = None,
                             radius: Annotated[PositiveFloat, Field(description="The search radius from the focus point, in meters")] = 5000,
                             min_rating: Annotated[RatingConstraint, Field(description="The minimum rating score to filter")] = 0,
@@ -49,4 +49,28 @@ async def restaurant_search(request: Request,
         district=district,
         limit=limit
     )
-    return CollectionsResponseSchema(data=result)
+    return CollectionsResponseSchema[DataRestaurantResponseModel](data=result)
+
+
+@router.get(
+    "/restaurant/byids",
+    name="Restaurant By Ids",
+    status_code=status.HTTP_200_OK,
+    response_model=CollectionsResponseSchema[DataRestaurantResponseModel],
+    description="Fetch a list of restaurants by their database IDs",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponseSchema},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponseSchema},
+    },
+)
+@limiter.limit("60/minute")
+async def restaurant_by_ids(request: Request,
+                            ids: Annotated[List[str],
+                                           Query(min_length=1,
+                                                 max_length=200,
+                                                 description="Repeatable restaurant ids (e.g. ?ids=a&ids=b)")],
+                            limit: Annotated[int, Query(ge=1, le=200, description="Maximum number of results")] = 100,
+                            _ = Depends(VerifyAccessToken)):
+    result = await QuerySystem.DataRestaurantsByIds(ids=ids, limit=limit)
+    return CollectionsResponseSchema[DataRestaurantResponseModel](data=result)

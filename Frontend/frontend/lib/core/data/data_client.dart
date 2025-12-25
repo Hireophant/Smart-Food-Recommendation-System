@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'user_profile.dart';
 import 'user_taste_profile.dart';
 
 enum DataClientErrorKind {
@@ -56,10 +57,16 @@ class DataClient {
 
       if (row == null) {
         // With RLS, querying someone else's user_id typically returns empty.
-        throw const DataClientException(
-          DataClientErrorKind.notFound,
-          message: 'Taste profile not found (or not accessible).',
-        );
+        // Only auto-create when requesting the current user's profile.
+        if (userId != sessionUserId) {
+          throw const DataClientException(
+            DataClientErrorKind.notFound,
+            message: 'Taste profile not found (or not accessible).',
+          );
+        }
+
+        final createdRow = await _createDefaultTasteProfile(sessionUserId);
+        return _mapTasteProfile(createdRow);
       }
 
       return _mapTasteProfile(row);
@@ -95,6 +102,79 @@ class DataClient {
     }
   }
 
+  static Future<UserProfile> getUserProfile(String userId) async {
+    try {
+      final sessionUserId = _client.auth.currentUser?.id;
+      if (sessionUserId == null) {
+        throw const DataClientException(
+          DataClientErrorKind.notLoggedIn,
+          message: 'No authenticated user in current session.',
+        );
+      }
+
+      final Map<String, dynamic>? row = await _client
+          .from('user_profile')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (row == null) {
+        // Only auto-create when requesting the current user's profile.
+        if (userId != sessionUserId) {
+          throw const DataClientException(
+            DataClientErrorKind.notFound,
+            message: 'User profile not found (or not accessible).',
+          );
+        }
+
+        final createdRow = await _createDefaultUserProfile(sessionUserId);
+        return _mapUserProfile(createdRow);
+      }
+
+      return _mapUserProfile(row);
+    } on PostgrestException catch (e, st) {
+      throw DataClientException(
+        _mapPostgrestExceptionKind(e),
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on AuthException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on SocketException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.network,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      if (e is DataClientException) rethrow;
+      throw DataClientException(
+        DataClientErrorKind.unknown,
+        message: 'Unexpected error while fetching user profile.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  static Future<UserProfile> getCurrentUserProfile() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: 'No authenticated user in current session.',
+      );
+    }
+    return getUserProfile(userId);
+  }
+
   static Future<UserTasteProfile> getCurrentTasteProfile() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -117,6 +197,50 @@ class DataClient {
         stackTrace: st,
       );
     }
+  }
+
+  static UserProfile _mapUserProfile(Map<String, dynamic> row) {
+    try {
+      return UserProfile.fromJson(row);
+    } catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.invalidResponse,
+        message: 'Failed to parse user profile response.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  static Future<Map<String, dynamic>> _createDefaultTasteProfile(
+    String userId,
+  ) async {
+    // Create a minimal row; other columns remain NULL and timestamps use defaults.
+    // Use upsert to avoid race conditions if multiple calls try to create.
+    final Map<String, dynamic> created = await _client
+        .from('user_taste_profiles')
+        .upsert({'user_id': userId}, onConflict: 'user_id')
+        .select('*')
+        .single();
+
+    return created;
+  }
+
+  static Future<Map<String, dynamic>> _createDefaultUserProfile(
+    String userId,
+  ) async {
+    // favorites_* arrays are NOT NULL in this table, so provide empty lists.
+    final Map<String, dynamic> created = await _client
+        .from('user_profile')
+        .upsert({
+          'user_id': userId,
+          'favorites_food_ids': <String>[],
+          'favorites_restaurants_ids': <String>[],
+        }, onConflict: 'user_id')
+        .select('*')
+        .single();
+
+    return created;
   }
 
   static DataClientErrorKind _mapPostgrestExceptionKind(PostgrestException e) {

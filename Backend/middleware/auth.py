@@ -6,13 +6,7 @@ from typing import Dict
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt, ExpiredSignatureError
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import JSONResponse
-from utils import Logger
-
-# for Vietmap
-from fastapi import Request, HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import HTTPException
 
 # HTTP Bearer token extractor
 __http_bearer = HTTPBearer()

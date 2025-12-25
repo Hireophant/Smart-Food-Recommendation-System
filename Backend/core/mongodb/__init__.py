@@ -4,6 +4,7 @@ from .connection import MongoDB, MongoConfig
 from .handlers import (
     MongoDBHandlers,
     MongoDBSearchInputSchema,
+    MongoDBGetByIdsInputSchema,
     MongoDBRestaurantResponse,
     MongoDBSearchResponse
 )
@@ -13,6 +14,7 @@ __all__ = [
     "MongoConfig",
     "MongoDBHandlers",
     "MongoDBSearchInputSchema", 
+    "MongoDBGetByIdsInputSchema",
     "MongoDBRestaurantResponse",
     "MongoDBSearchResponse"
 ]

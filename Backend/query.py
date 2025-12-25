@@ -156,8 +156,8 @@ class QuerySystem:
         return await QuerySystem.MapsRoute(points=points, options=options)
     
     @staticmethod
-    async def DataRestaurantSearch(focus_latitude: float,
-                                   focus_longitude: float,
+    async def DataRestaurantSearch(focus_latitude: Optional[float] = None,
+                                   focus_longitude: Optional[float] = None,
                                    query: Optional[str] = None,
                                    radius: Optional[PositiveFloat] = None,
                                    min_rating: Optional[float] = None,
@@ -179,6 +179,11 @@ class QuerySystem:
             ),
             limit=limit
         )
+
+    @staticmethod
+    async def DataRestaurantsByIds(ids: List[str], limit: Optional[int] = None) -> DataRestaurantSearchResult:
+        handler = DataHandlers()
+        return await handler.RestaurantsByIds(ids=ids, limit=limit)
         
     @staticmethod
     async def AIGenerate(model_name: str, payload: AIGenerateRequestSchema) -> AIMessageSchema:

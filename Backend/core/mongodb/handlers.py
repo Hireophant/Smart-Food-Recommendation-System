@@ -6,6 +6,8 @@ Follows the same pattern as VietMap handlers for consistent frontend integration
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from bson import ObjectId
+from bson.errors import InvalidId
 
 
 class MongoDBSearchInputSchema(BaseModel):
@@ -13,8 +15,8 @@ class MongoDBSearchInputSchema(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     Text: Optional[str] = Field(default=None, description="Search text for name, category, address, tags")
-    Latitude: float = Field(description="User's latitude")
-    Longitude: float = Field(description="User's longitude")
+    Latitude: Optional[float] = Field(default=None, description="User's latitude (optional, for distance calculation)")
+    Longitude: Optional[float] = Field(default=None, description="User's longitude (optional, for distance calculation)")
     Radius: PositiveFloat = Field(default=5000.0, description="Search radius in meters (default 5km)")
     MinRating: Optional[float] = Field(default=None, ge=0.0, le=5.0, description="Minimum rating filter")
     Category: Optional[str] = Field(default=None, description="Filter by category")
@@ -54,6 +56,14 @@ class MongoDBSearchResponse(BaseModel):
     error: Optional[str] = Field(default=None, description="Error message if failed")
 
 
+class MongoDBGetByIdsInputSchema(BaseModel):
+    """Input schema for fetching restaurants by a list of IDs."""
+    model_config = ConfigDict(extra="ignore")
+
+    Ids: List[str] = Field(min_length=1, max_length=200, description="List of restaurant IDs")
+    Limit: int = Field(default=100, ge=1, le=200, description="Maximum number of results")
+
+
 class MongoDBHandlers:
     """
     MongoDB handlers for restaurant search operations.
@@ -81,6 +91,7 @@ class MongoDBHandlers:
         - Sort by relevance/distance
         """
         pipeline = []
+        has_coords = inputs.Latitude is not None and inputs.Longitude is not None
         
         if inputs.Text:
             # STRATEGY A: Text search with distance calculation
@@ -98,57 +109,57 @@ class MongoDBHandlers:
                 }
             })
             
-            # Stage 3: Calculate distance using $geoNear alternative
-            # Use $geoWithin for filtering, then calculate distance with $function or expression
-            pipeline.append({
-                "$addFields": {
-                    "distance": {
-                        "$let": {
-                            "vars": {
-                                "lon1": {"$arrayElemAt": ["$location.coordinates", 0]},
-                                "lat1": {"$arrayElemAt": ["$location.coordinates", 1]},
-                                "lon2": inputs.Longitude,
-                                "lat2": inputs.Latitude
-                            },
-                            "in": {
-                                "$multiply": [
-                                    6371000,  # Earth radius in meters
-                                    {
-                                        "$acos": {
-                                            "$add": [
-                                                {
-                                                    "$multiply": [
-                                                        {"$sin": {"$degreesToRadians": "$$lat1"}},
-                                                        {"$sin": {"$degreesToRadians": "$$lat2"}}
-                                                    ]
-                                                },
-                                                {
-                                                    "$multiply": [
-                                                        {"$cos": {"$degreesToRadians": "$$lat1"}},
-                                                        {"$cos": {"$degreesToRadians": "$$lat2"}},
-                                                        {"$cos": {
-                                                            "$degreesToRadians": {
-                                                                "$subtract": ["$$lon2", "$$lon1"]
-                                                            }
-                                                        }}
-                                                    ]
-                                                }
-                                            ]
+            if has_coords:
+                # Stage 3: Calculate distance using $geoNear alternative
+                pipeline.append({
+                    "$addFields": {
+                        "distance": {
+                            "$let": {
+                                "vars": {
+                                    "lon1": {"$arrayElemAt": ["$location.coordinates", 0]},
+                                    "lat1": {"$arrayElemAt": ["$location.coordinates", 1]},
+                                    "lon2": inputs.Longitude,
+                                    "lat2": inputs.Latitude
+                                },
+                                "in": {
+                                    "$multiply": [
+                                        6371000,  # Earth radius in meters
+                                        {
+                                            "$acos": {
+                                                "$add": [
+                                                    {
+                                                        "$multiply": [
+                                                            {"$sin": {"$degreesToRadians": "$$lat1"}},
+                                                            {"$sin": {"$degreesToRadians": "$$lat2"}}
+                                                        ]
+                                                    },
+                                                    {
+                                                        "$multiply": [
+                                                            {"$cos": {"$degreesToRadians": "$$lat1"}},
+                                                            {"$cos": {"$degreesToRadians": "$$lat2"}},
+                                                            {"$cos": {
+                                                                "$degreesToRadians": {
+                                                                    "$subtract": ["$$lon2", "$$lon1"]
+                                                                }
+                                                            }}
+                                                        ]
+                                                    }
+                                                ]
+                                            }
                                         }
-                                    }
-                                ]
+                                    ]
+                                }
                             }
                         }
                     }
-                }
-            })
-            
-            # Stage 4: Filter by distance radius
-            pipeline.append({
-                "$match": {
-                    "distance": {"$lte": inputs.Radius}
-                }
-            })
+                })
+
+                # Stage 4: Filter by distance radius
+                pipeline.append({
+                    "$match": {
+                        "distance": {"$lte": inputs.Radius}
+                    }
+                })
             
             # Stage 5: Apply other filters
             match_conditions = []
@@ -167,61 +178,98 @@ class MongoDBHandlers:
                 })
             
         else:
-            # STRATEGY B: No text search, use $geoNear (faster)
-            geo_query = {}
-            
-            # Add filters to $geoNear query
-            if inputs.MinRating is not None:
-                geo_query["rating"] = {"$gte": inputs.MinRating}
-            if inputs.Category:
-                geo_query["category"] = inputs.Category
-            if inputs.Province:
-                geo_query["province"] = inputs.Province
-            if inputs.District:
-                geo_query["district"] = inputs.District
-            
-            geo_near_stage = {
-                "$geoNear": {
-                    "near": {
-                        "type": "Point",
-                        "coordinates": [inputs.Longitude, inputs.Latitude]
-                    },
-                    "distanceField": "distance",
-                    "maxDistance": inputs.Radius,
-                    "spherical": True,
-                    "key": "location"
+            # STRATEGY B: No text search
+            if has_coords:
+                # Use $geoNear when coordinates are available (faster)
+                geo_query = {}
+
+                # Add filters to $geoNear query
+                if inputs.MinRating is not None:
+                    geo_query["rating"] = {"$gte": inputs.MinRating}
+                if inputs.Category:
+                    geo_query["category"] = inputs.Category
+                if inputs.Province:
+                    geo_query["province"] = inputs.Province
+                if inputs.District:
+                    geo_query["district"] = inputs.District
+
+                geo_near_stage = {
+                    "$geoNear": {
+                        "near": {
+                            "type": "Point",
+                            "coordinates": [inputs.Longitude, inputs.Latitude]
+                        },
+                        "distanceField": "distance",
+                        "maxDistance": inputs.Radius,
+                        "spherical": True,
+                        "key": "location"
+                    }
                 }
-            }
-            
-            if geo_query:
-                geo_near_stage["$geoNear"]["query"] = geo_query
-            
-            pipeline.append(geo_near_stage)
+
+                if geo_query:
+                    geo_near_stage["$geoNear"]["query"] = geo_query
+
+                pipeline.append(geo_near_stage)
+            else:
+                # Without coordinates, fall back to plain filtering.
+                match_conditions = []
+                if inputs.MinRating is not None:
+                    match_conditions.append({"rating": {"$gte": inputs.MinRating}})
+                if inputs.Category:
+                    match_conditions.append({"category": inputs.Category})
+                if inputs.Province:
+                    match_conditions.append({"province": inputs.Province})
+                if inputs.District:
+                    match_conditions.append({"district": inputs.District})
+
+                if match_conditions:
+                    pipeline.append({"$match": {"$and": match_conditions}})
         
-        # Stage 3: Add distance in kilometers
-        pipeline.append({
-            "$addFields": {
-                "distance_km": {"$divide": ["$distance", 1000]}
-            }
-        })
-        
-        # Stage 4: Sort by relevance
-        if inputs.Text:
-            # If text search: sort by text score first, then distance
+        # Stage 3: Add distance in kilometers (or set to null if no coords)
+        if has_coords:
             pipeline.append({
-                "$sort": {
-                    "textScore": -1,
-                    "distance": 1
+                "$addFields": {
+                    "distance_km": {"$divide": ["$distance", 1000]}
                 }
             })
         else:
-            # No text search: sort by distance and rating
             pipeline.append({
-                "$sort": {
-                    "distance": 1,
-                    "rating": -1
+                "$addFields": {
+                    "distance": None,
+                    "distance_km": None
                 }
             })
+        
+        # Stage 4: Sort by relevance
+        if inputs.Text:
+            if has_coords:
+                pipeline.append({
+                    "$sort": {
+                        "textScore": -1,
+                        "distance": 1
+                    }
+                })
+            else:
+                pipeline.append({
+                    "$sort": {
+                        "textScore": -1,
+                        "rating": -1
+                    }
+                })
+        else:
+            if has_coords:
+                pipeline.append({
+                    "$sort": {
+                        "distance": 1,
+                        "rating": -1
+                    }
+                })
+            else:
+                pipeline.append({
+                    "$sort": {
+                        "rating": -1
+                    }
+                })
         
         # Stage 5: Limit results
         pipeline.append({"$limit": inputs.Limit})
@@ -306,7 +354,7 @@ class MongoDBHandlers:
                     "location": {
                         "latitude": inputs.Latitude,
                         "longitude": inputs.Longitude
-                    },
+                    } if (inputs.Latitude is not None and inputs.Longitude is not None) else None,
                     "radius_meters": inputs.Radius,
                     "radius_km": inputs.Radius / 1000,
                     "min_rating": inputs.MinRating,
@@ -423,3 +471,91 @@ class MongoDBHandlers:
             Limit=limit
         )
         return await self.Search(inputs)
+
+    async def GetByIds(self, inputs: MongoDBGetByIdsInputSchema) -> MongoDBSearchResponse:
+        """Fetch restaurants by a list of MongoDB document IDs.
+
+        Notes:
+        - Preserves the input order when possible.
+        - Validates that all provided IDs are valid ObjectId strings.
+        """
+        try:
+            ids_raw = [str(x).strip() for x in (inputs.Ids or []) if str(x).strip()]
+            if not ids_raw:
+                raise ValueError("Ids must be a non-empty list")
+
+            try:
+                object_ids = [ObjectId(x) for x in ids_raw]
+            except InvalidId as exc:
+                raise ValueError(f"Invalid restaurant id in list: {exc}")
+
+            pipeline: List[Dict[str, Any]] = [
+                {"$match": {"_id": {"$in": object_ids}}},
+                {
+                    "$addFields": {
+                        "__order": {
+                            "$indexOfArray": [ids_raw, {"$toString": "$_id"}]
+                        }
+                    }
+                },
+                {"$sort": {"__order": 1}},
+                {"$limit": int(inputs.Limit)},
+                {
+                    "$project": {
+                        "id": {"$toString": "$_id"},
+                        "name": 1,
+                        "category": 1,
+                        "rating": 1,
+                        "address": 1,
+                        "province": 1,
+                        "district": 1,
+                        "ward": 1,
+                        "tags": 1,
+                        "location": 1,
+                        "distance": 1,
+                        "distance_km": 1,
+                        "link": 1,
+                        "textScore": 1,
+                        "_id": 0,
+                    }
+                },
+            ]
+
+            cursor = self.__collection.aggregate(pipeline)
+            results = await cursor.to_list(length=int(inputs.Limit))
+
+            restaurants: List[MongoDBRestaurantResponse] = []
+            for doc in results:
+                restaurants.append(
+                    MongoDBRestaurantResponse(
+                        id=doc.get("id", ""),
+                        name=doc.get("name", ""),
+                        category=doc.get("category", "Unknown"),
+                        rating=doc.get("rating", 0.0),
+                        address=doc.get("address", ""),
+                        province=doc.get("province", ""),
+                        district=doc.get("district", ""),
+                        ward=doc.get("ward"),
+                        tags=doc.get("tags", []),
+                        location=doc.get("location", {}),
+                        distance=doc.get("distance"),
+                        distance_km=doc.get("distance_km"),
+                        link=doc.get("link"),
+                        score=doc.get("textScore"),
+                    )
+                )
+
+            return MongoDBSearchResponse(
+                success=True,
+                count=len(restaurants),
+                query_info={"ids": ids_raw, "limit": int(inputs.Limit)},
+                restaurants=restaurants,
+            )
+        except Exception as e:
+            return MongoDBSearchResponse(
+                success=False,
+                count=0,
+                query_info={},
+                restaurants=[],
+                error=str(e),
+            )

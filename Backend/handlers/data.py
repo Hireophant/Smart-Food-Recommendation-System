@@ -1,4 +1,4 @@
-from core.mongodb import MongoDB, MongoDBHandlers, MongoDBSearchInputSchema
+from core.mongodb import MongoDB, MongoDBHandlers, MongoDBSearchInputSchema, MongoDBGetByIdsInputSchema
 from schemas.data import DataRestaurantResponseModel
 from typing import Optional, List
 from pydantic import PositiveFloat, BaseModel
@@ -22,8 +22,8 @@ class DataHandlers:
     def __init__(self) -> None:
         self.__mongo_handler = MongoDBHandlers(MongoDB.get_database())
     
-    async def RestaurantSearch(self, focus_latitude: float,
-                               focus_longitude: float,
+    async def RestaurantSearch(self, focus_latitude: Optional[float],
+                               focus_longitude: Optional[float],
                                filters: Optional[DataRestaurantFilter] = None,
                                limit: Optional[int] = None) -> DataRestaurantSearchResult:
         _filters = filters or DataRestaurantFilter()
@@ -43,4 +43,17 @@ class DataHandlers:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Failed to perform search from MongoDB Handler! The handler responses: {resp.error}")
         
+        return [DataRestaurantResponseModel.FromMongoDB(m) for m in resp.restaurants]
+
+    async def RestaurantsByIds(self, ids: List[str], limit: Optional[int] = None) -> DataRestaurantSearchResult:
+        inputs = MongoDBGetByIdsInputSchema(
+            Ids=ids,
+            Limit=limit or 100,
+        )
+        resp = await self.__mongo_handler.GetByIds(inputs)
+        if not resp.success:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Failed to query restaurants by ids! The handler responses: {resp.error}",
+            )
         return [DataRestaurantResponseModel.FromMongoDB(m) for m in resp.restaurants]
