@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
-      title: 'Smart Food Recommendation',
+      title: 'MasterFood',
       debugShowCheckedModeBanner: false,
       // Sử dụng ThemeProvider để quản lý theme
       themeMode: themeProvider.themeMode,
