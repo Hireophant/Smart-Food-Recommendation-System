@@ -39,7 +39,7 @@ async def search_object(
         Optional[int],
         Field(description="Max organic results to include (0..5, default capped at 5)", ge=0),
     ] = None,
-    
+    _=Depends(VerifyAccessToken),
 ):
     result = await QuerySystem.SearchObject(
         query=query,
@@ -80,7 +80,7 @@ async def search_formatted(
         Optional[int],
         Field(description="Max organic results to include (0..5, default capped at 5)", ge=0),
     ] = None,
-    
+    _=Depends(VerifyAccessToken),
 ):
     result = await QuerySystem.SearchFormatted(
         query=query,

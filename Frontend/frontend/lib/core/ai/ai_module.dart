@@ -109,33 +109,6 @@ class AIModule {
         },
       ),
 
-      AIToolDefinition(
-        name: 'get_restaurant_details',
-        description:
-            'Lấy thông tin chi tiết về một nhà hàng cụ thể (menu, giờ mở cửa, reviews, ảnh).',
-        parameters: {
-          'restaurant_id': {
-            'type': 'string',
-            'description': 'ID của nhà hàng cần xem chi tiết',
-          },
-        },
-      ),
-
-      AIToolDefinition(
-        name: 'get_restaurants_by_dish',
-        description: 'Tìm các nhà hàng phục vụ một món ăn cụ thể.',
-        parameters: {
-          'dish_name': {
-            'type': 'string',
-            'description': 'Tên món ăn cần tìm (vd: "phở bò", "bún bò Huế")',
-          },
-          'max_distance_km': {
-            'type': 'number',
-            'description': 'Bán kính tìm kiếm (km)',
-          },
-        },
-      ),
-
       // === User Location & Navigation ===
       AIToolDefinition(
         name: 'get_user_location',
