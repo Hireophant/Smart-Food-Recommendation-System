@@ -11,6 +11,7 @@ This folder keeps the *new* backend API layer.
 - `backend_api.dart`: shared HTTP transport + error mapping + Supabase session check.
 - `maps_models.dart`, `maps_client.dart`: Maps models + client.
 - `restaurants_models.dart`, `restaurants_client.dart`: Restaurant models + client.
+- `foods_models.dart`, `foods_client.dart`: Foods models + client.
 - `search_models.dart`, `search_client.dart`: Search models + client.
 
 ## Quick usage
@@ -19,6 +20,8 @@ This folder keeps the *new* backend API layer.
 import 'package:frontend/core/backend/backend_api.dart';
 import 'package:frontend/core/backend/maps_client.dart';
 import 'package:frontend/core/backend/maps_models.dart';
+import 'package:frontend/core/backend/foods_client.dart';
+import 'package:frontend/core/backend/foods_models.dart';
 import 'package:frontend/core/backend/restaurants_client.dart';
 import 'package:frontend/core/backend/restaurants_models.dart';
 import 'package:frontend/core/backend/search_client.dart';
@@ -26,6 +29,7 @@ import 'package:frontend/core/backend/search_models.dart';
 
 final api = BackendAPI(); // defaults to http://localhost:8000
 final maps = MapsClient(api);
+final foods = FoodsClient(api);
 final restaurants = RestaurantsClient(api);
 final search = SearchClient(api);
 
@@ -72,6 +76,24 @@ final results = await restaurants.search(
 // Restaurants: By IDs
 final byIds = await restaurants.byIds(
   RestaurantsByIdsParams(ids: results.take(3).map((e) => e.id).toList()),
+);
+
+// Foods: Search
+final foodsResult = await foods.search(
+  FoodSearchParams(
+    query: 'bún',
+    // Optional filters
+    // category: 'Phở & Bún',
+    // loai: 'món nước',
+    // kieuTenMon: '...',
+    // tags: 'cay',
+    limit: 20,
+  ),
+);
+
+// Foods: By IDs
+final foodsByIds = await foods.byIds(
+  FoodsByIdsParams(ids: foodsResult.take(3).map((e) => e.id).toList()),
 );
 
 // Search: Structured result (locations + organic results)

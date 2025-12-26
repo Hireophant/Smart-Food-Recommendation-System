@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat
 from typing import Optional, List, Dict, Any
-from core.mongodb import MongoDBRestaurantResponse
+from core.mongodb import MongoDBRestaurantResponse, MongoDBFoodResponse
 
 class DataLocationDetailsModel(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -62,4 +62,30 @@ class DataRestaurantResponseModel(BaseModel):
                 Distance=inputs.distance,
                 DistanceKm=inputs.distance_km
             )
+        )
+
+
+class DataFoodResponseModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    Id: str = Field(serialization_alias="id", description="The ObjectId of the food document")
+    DishName: str = Field(serialization_alias="dish_name", description="Food name")
+    Category: str = Field(serialization_alias="category", description="Dish category")
+    KieuTenMon: str = Field(serialization_alias="kieu_ten_mon", description="How the dish is named")
+    Loai: str = Field(serialization_alias="loai", description="Type of dish")
+    Tags: List[str] = Field(
+        default_factory=list,
+        serialization_alias="tags",
+        description="Dish tags (split from '|' delimited string)",
+    )
+
+    @staticmethod
+    def FromMongoDB(inputs: MongoDBFoodResponse) -> "DataFoodResponseModel":
+        return DataFoodResponseModel(
+            Id=inputs.id,
+            DishName=inputs.dish_name,
+            Category=inputs.category,
+            KieuTenMon=inputs.kieu_ten_mon,
+            Loai=inputs.loai,
+            Tags=inputs.tags,
         )

@@ -16,6 +16,7 @@ from handlers.data import (
     DataRestaurantSearchResult,
     DataRestaurantFilter
 )
+from handlers.food import FoodHandlers, FoodFilter, FoodSearchResult
 from handlers.ai import AIHandler
 from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableModelInfoSchema
 from typing import List
@@ -188,6 +189,32 @@ class QuerySystem:
     async def DataRestaurantsByIds(ids: List[str], limit: Optional[int] = None) -> DataRestaurantSearchResult:
         handler = DataHandlers()
         return await handler.RestaurantsByIds(ids=ids, limit=limit)
+
+    @staticmethod
+    async def FoodSearch(
+        text: Optional[str] = None,
+        category: Optional[str] = None,
+        loai: Optional[str] = None,
+        kieu_ten_mon: Optional[str] = None,
+        tags: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> FoodSearchResult:
+        handler = FoodHandlers()
+        return await handler.FoodSearch(
+            filters=FoodFilter(
+                Text=text,
+                Category=category,
+                Loai=loai,
+                KieuTenMon=kieu_ten_mon,
+                Tags=tags,
+            ),
+            limit=limit,
+        )
+
+    @staticmethod
+    async def FoodsByIds(ids: List[str], limit: Optional[int] = None) -> FoodSearchResult:
+        handler = FoodHandlers()
+        return await handler.FoodsByIds(ids=ids, limit=limit)
         
     @staticmethod
     async def AIGenerate(model_name: str, payload: AIGenerateRequestSchema) -> AIMessageSchema:

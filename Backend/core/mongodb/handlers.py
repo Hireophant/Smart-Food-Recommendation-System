@@ -66,6 +66,59 @@ class MongoDBGetByIdsInputSchema(BaseModel):
     Limit: int = Field(default=100, ge=1, le=200, description="Maximum number of results")
 
 
+class MongoDBFoodSearchInputSchema(BaseModel):
+    """Input schema for MongoDB food search."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    Text: Optional[str] = Field(
+        default=None,
+        description="Search text for dish_name, category, kieu_ten_mon, loai, tags",
+    )
+    Category: Optional[str] = Field(default=None, description="Filter by food category")
+    Loai: Optional[str] = Field(default=None, description="Filter by dish type (loai)")
+    KieuTenMon: Optional[str] = Field(default=None, description="Filter by kieu_ten_mon")
+    Tags: Optional[str] = Field(
+        default=None,
+        description="Filter by tags (stored as '|' separated string in DB)",
+    )
+    Limit: int = Field(default=20, ge=1, le=200, description="Maximum number of results")
+
+
+class MongoDBFoodResponse(BaseModel):
+    """Response model for a single food document."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(description="Food document ObjectId")
+    dish_name: str = Field(description="Food name")
+    category: str = Field(description="Dish category")
+    kieu_ten_mon: str = Field(description="How the dish is named")
+    loai: str = Field(description="Type of dish")
+    tags: List[str] = Field(default_factory=list, description="Dish tags")
+
+
+class MongoDBFoodSearchResponse(BaseModel):
+    """Response model for food search results."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    success: bool = Field(description="Whether the search was successful")
+    count: int = Field(description="Number of results returned")
+    query_info: Dict[str, Any] = Field(description="Information about the query")
+    foods: List[MongoDBFoodResponse] = Field(description="List of foods")
+    error: Optional[str] = Field(default=None, description="Error message if failed")
+
+
+class MongoDBFoodGetByIdsInputSchema(BaseModel):
+    """Input schema for fetching foods by a list of ObjectId strings."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    Ids: List[str] = Field(min_length=1, max_length=200, description="List of food ObjectIds")
+    Limit: int = Field(default=100, ge=1, le=200, description="Maximum number of results")
+
+
 class MongoDBHandlers:
     """
     MongoDB handlers for restaurant search operations.
@@ -613,5 +666,199 @@ class MongoDBHandlers:
                 count=0,
                 query_info={},
                 restaurants=[],
+                error=str(e),
+            )
+
+
+class MongoDBFoodHandlers:
+    """MongoDB handlers for food search operations."""
+
+    def __init__(self, database: AsyncIOMotorDatabase) -> None:
+        self.__db = database
+        self.__collection = database.food
+
+    @staticmethod
+    def __contains_ci(value: Optional[str]) -> Optional[Dict[str, str]]:
+        if value is None:
+            return None
+        value = str(value).strip()
+        if not value:
+            return None
+        return {"$regex": re.escape(value), "$options": "i"}
+
+    @staticmethod
+    def __split_tags(tags_value: Any) -> List[str]:
+        if tags_value is None:
+            return []
+        if isinstance(tags_value, list):
+            return [str(x).strip() for x in tags_value if str(x).strip()]
+        tags_str = str(tags_value).strip()
+        if not tags_str:
+            return []
+        return [part.strip() for part in tags_str.split("|") if part.strip()]
+
+    async def __build_pipeline(self, inputs: MongoDBFoodSearchInputSchema) -> List[Dict[str, Any]]:
+        pipeline: List[Dict[str, Any]] = []
+
+        match_conditions: List[Dict[str, Any]] = []
+
+        if inputs.Text:
+            text_regex = self.__contains_ci(inputs.Text)
+            if text_regex is not None:
+                match_conditions.append(
+                    {
+                        "$or": [
+                            {"dish_name": text_regex},
+                            {"category": text_regex},
+                            {"kieu_ten_mon": text_regex},
+                            {"loai": text_regex},
+                            {"tags": text_regex},
+                        ]
+                    }
+                )
+
+        if inputs.Category:
+            category_regex = self.__contains_ci(inputs.Category)
+            if category_regex is not None:
+                match_conditions.append({"category": category_regex})
+
+        if inputs.Loai:
+            loai_regex = self.__contains_ci(inputs.Loai)
+            if loai_regex is not None:
+                match_conditions.append({"loai": loai_regex})
+
+        if inputs.KieuTenMon:
+            kieu_regex = self.__contains_ci(inputs.KieuTenMon)
+            if kieu_regex is not None:
+                match_conditions.append({"kieu_ten_mon": kieu_regex})
+
+        if inputs.Tags:
+            tags_regex = self.__contains_ci(inputs.Tags)
+            if tags_regex is not None:
+                match_conditions.append({"tags": tags_regex})
+
+        if match_conditions:
+            pipeline.append({"$match": {"$and": match_conditions}})
+
+        pipeline.append({"$sort": {"dish_name": 1}})
+        pipeline.append({"$limit": int(inputs.Limit)})
+        pipeline.append(
+            {
+                "$project": {
+                    "id": {"$toString": "$_id"},
+                    "dish_name": 1,
+                    "category": 1,
+                    "kieu_ten_mon": 1,
+                    "loai": 1,
+                    "tags": 1,
+                    "_id": 0,
+                }
+            }
+        )
+
+        return pipeline
+
+    async def Search(self, inputs: MongoDBFoodSearchInputSchema) -> MongoDBFoodSearchResponse:
+        try:
+            pipeline = await self.__build_pipeline(inputs)
+            cursor = self.__collection.aggregate(pipeline)
+            results = await cursor.to_list(length=int(inputs.Limit))
+
+            foods: List[MongoDBFoodResponse] = []
+            for doc in results:
+                foods.append(
+                    MongoDBFoodResponse(
+                        id=doc.get("id", ""),
+                        dish_name=doc.get("dish_name", ""),
+                        category=doc.get("category", ""),
+                        kieu_ten_mon=doc.get("kieu_ten_mon", ""),
+                        loai=doc.get("loai", ""),
+                        tags=self.__split_tags(doc.get("tags")),
+                    )
+                )
+
+            return MongoDBFoodSearchResponse(
+                success=True,
+                count=len(foods),
+                query_info={
+                    "text": inputs.Text,
+                    "category": inputs.Category,
+                    "loai": inputs.Loai,
+                    "kieu_ten_mon": inputs.KieuTenMon,
+                    "tags": inputs.Tags,
+                    "limit": int(inputs.Limit),
+                },
+                foods=foods,
+            )
+        except Exception as e:
+            return MongoDBFoodSearchResponse(
+                success=False,
+                count=0,
+                query_info={},
+                foods=[],
+                error=str(e),
+            )
+
+    async def GetByIds(self, inputs: MongoDBFoodGetByIdsInputSchema) -> MongoDBFoodSearchResponse:
+        try:
+            ids_raw = [str(x).strip() for x in (inputs.Ids or []) if str(x).strip()]
+            if not ids_raw:
+                raise ValueError("Ids must be a non-empty list")
+
+            try:
+                object_ids = [ObjectId(x) for x in ids_raw]
+            except InvalidId as exc:
+                raise ValueError(f"Invalid food id in list: {exc}")
+
+            pipeline: List[Dict[str, Any]] = [
+                {"$match": {"_id": {"$in": object_ids}}},
+                {
+                    "$addFields": {
+                        "__order": {"$indexOfArray": [ids_raw, {"$toString": "$_id"}]}
+                    }
+                },
+                {"$sort": {"__order": 1}},
+                {"$limit": int(inputs.Limit)},
+                {
+                    "$project": {
+                        "id": {"$toString": "$_id"},
+                        "dish_name": 1,
+                        "category": 1,
+                        "kieu_ten_mon": 1,
+                        "loai": 1,
+                        "tags": 1,
+                        "_id": 0,
+                    }
+                },
+            ]
+
+            cursor = self.__collection.aggregate(pipeline)
+            results = await cursor.to_list(length=int(inputs.Limit))
+
+            foods: List[MongoDBFoodResponse] = []
+            for doc in results:
+                foods.append(
+                    MongoDBFoodResponse(
+                        id=doc.get("id", ""),
+                        dish_name=doc.get("dish_name", ""),
+                        category=doc.get("category", ""),
+                        kieu_ten_mon=doc.get("kieu_ten_mon", ""),
+                        loai=doc.get("loai", ""),
+                        tags=self.__split_tags(doc.get("tags")),
+                    )
+                )
+
+            return MongoDBFoodSearchResponse(
+                success=True,
+                count=len(foods),
+                query_info={"ids": ids_raw, "limit": int(inputs.Limit)},
+                foods=foods,
+            )
+        except Exception as e:
+            return MongoDBFoodSearchResponse(
+                success=False,
+                count=0,
+                query_info={},
+                foods=[],
                 error=str(e),
             )

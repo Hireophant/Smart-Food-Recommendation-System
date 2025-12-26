@@ -4,7 +4,7 @@ from middleware.rate_limit import limiter
 from query import QuerySystem
 from schemas import CollectionsResponseSchema
 from schemas.errors import ErrorResponseSchema
-from schemas.data import DataRestaurantResponseModel
+from schemas.data import DataRestaurantResponseModel, DataFoodResponseModel
 from pydantic import Field, StringConstraints, PositiveFloat, PositiveInt
 from typing import Annotated, Optional, List
 
@@ -38,7 +38,7 @@ async def restaurant_search(request: Request,
                             province: Annotated[Optional[QueryTextConstraint], Field(description="The province text query to filter")] = None,
                             district: Annotated[Optional[QueryTextConstraint], Field(description="The district text query to filter")] = None,
                             limit: Annotated[LimitConstraint, Field(description="The maximum number of result to return")] = 10,
-                            ):
+                            _=Depends(VerifyAccessToken)):
     result = await QuerySystem.DataRestaurantSearch(
         focus_latitude=focus_lat,
         focus_longitude=focus_lon,
@@ -76,3 +76,62 @@ async def restaurant_by_ids(request: Request,
                             _ = Depends(VerifyAccessToken)):
     result = await QuerySystem.DataRestaurantsByIds(ids=ids, limit=limit)
     return CollectionsResponseSchema[DataRestaurantResponseModel](data=result)
+
+
+@router.get(
+    "/food/search",
+    name="Food Search",
+    status_code=status.HTTP_200_OK,
+    response_model=CollectionsResponseSchema[DataFoodResponseModel],
+    description="Search foods in the database with optional filters",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponseSchema},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponseSchema},
+    },
+)
+@limiter.limit("30/minute")
+async def food_search(
+    request: Request,
+    query: Annotated[Optional[QueryTextConstraint], Field(description="The text query to filter")] = None,
+    category: Annotated[Optional[QueryTextConstraint], Field(description="The food category text query to filter")] = None,
+    loai: Annotated[Optional[QueryTextConstraint], Field(description="The food type (loai) text query to filter")] = None,
+    kieu_ten_mon: Annotated[Optional[QueryTextConstraint], Field(description="The kieu_ten_mon text query to filter")] = None,
+    tags: Annotated[Optional[QueryTextConstraint], Field(description="The tags text query to filter")] = None,
+    limit: Annotated[LimitConstraint, Field(description="The maximum number of result to return")] = 20,
+    _=Depends(VerifyAccessToken)):
+    result = await QuerySystem.FoodSearch(
+        text=query,
+        category=category,
+        loai=loai,
+        kieu_ten_mon=kieu_ten_mon,
+        tags=tags,
+        limit=limit,
+    )
+    return CollectionsResponseSchema[DataFoodResponseModel](data=result)
+
+
+@router.get(
+    "/food/byids",
+    name="Food By Ids",
+    status_code=status.HTTP_200_OK,
+    response_model=CollectionsResponseSchema[DataFoodResponseModel],
+    description="Fetch a list of foods by their database ObjectIds",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponseSchema},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponseSchema},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponseSchema},
+    },
+)
+@limiter.limit("60/minute")
+async def food_by_ids(
+    request: Request,
+    ids: Annotated[
+        List[str],
+        Query(min_length=1, max_length=200, description="Repeatable food ids (e.g. ?ids=a&ids=b)"),
+    ],
+    limit: Annotated[int, Query(ge=1, le=200, description="Maximum number of results")] = 100,
+    _=Depends(VerifyAccessToken),
+):
+    result = await QuerySystem.FoodsByIds(ids=ids, limit=limit)
+    return CollectionsResponseSchema[DataFoodResponseModel](data=result)

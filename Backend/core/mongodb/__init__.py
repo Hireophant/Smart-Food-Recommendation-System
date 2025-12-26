@@ -6,7 +6,12 @@ from .handlers import (
     MongoDBSearchInputSchema,
     MongoDBGetByIdsInputSchema,
     MongoDBRestaurantResponse,
-    MongoDBSearchResponse
+    MongoDBSearchResponse,
+    MongoDBFoodHandlers,
+    MongoDBFoodSearchInputSchema,
+    MongoDBFoodGetByIdsInputSchema,
+    MongoDBFoodResponse,
+    MongoDBFoodSearchResponse,
 )
 
 __all__ = [
@@ -16,5 +21,10 @@ __all__ = [
     "MongoDBSearchInputSchema", 
     "MongoDBGetByIdsInputSchema",
     "MongoDBRestaurantResponse",
-    "MongoDBSearchResponse"
+    "MongoDBSearchResponse",
+    "MongoDBFoodHandlers",
+    "MongoDBFoodSearchInputSchema",
+    "MongoDBFoodGetByIdsInputSchema",
+    "MongoDBFoodResponse",
+    "MongoDBFoodSearchResponse",
 ]
