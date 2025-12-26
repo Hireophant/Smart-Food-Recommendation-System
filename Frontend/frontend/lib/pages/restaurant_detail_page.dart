@@ -5,6 +5,7 @@ import '../widgets/review_card.dart';
 import '../widgets/rating_summary_widget.dart';
 import 'map_routing_page.dart';
 import 'package:latlong2/latlong.dart';
+import '../handlers/navigation_history_handler.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   final RestaurantItem restaurant;
@@ -270,6 +271,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
+                        // Log history
+                        MockNavigationHistoryHandler().addToHistory(
+                          widget.restaurant,
+                        );
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
