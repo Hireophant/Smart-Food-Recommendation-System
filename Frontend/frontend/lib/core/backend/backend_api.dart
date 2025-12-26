@@ -64,9 +64,14 @@ class BackendApiErrorDetail {
 /// - Base URL is provided by the app at construction time.
 /// - Authentication uses Supabase session JWT (no manual JWT parsing/expiry).
 /// - Throws [BackendApiException] for errors.
+///
+/// Endpoint clients built on top of this transport:
+/// - Maps: `/maps/*`
+/// - Restaurants: `/data/*`
+/// - Search: `/search`, `/search/formatted`
 class BackendAPI {
   BackendAPI({
-    required String baseUrl,
+    String baseUrl = 'http://localhost:8000',
     SupabaseClient? supabase,
     http.Client? httpClient,
     Duration timeout = const Duration(seconds: 30),

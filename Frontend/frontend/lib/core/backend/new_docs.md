@@ -11,6 +11,7 @@ This folder keeps the *new* backend API layer.
 - `backend_api.dart`: shared HTTP transport + error mapping + Supabase session check.
 - `maps_models.dart`, `maps_client.dart`: Maps models + client.
 - `restaurants_models.dart`, `restaurants_client.dart`: Restaurant models + client.
+- `search_models.dart`, `search_client.dart`: Search models + client.
 
 ## Quick usage
 
@@ -20,10 +21,13 @@ import 'package:frontend/core/backend/maps_client.dart';
 import 'package:frontend/core/backend/maps_models.dart';
 import 'package:frontend/core/backend/restaurants_client.dart';
 import 'package:frontend/core/backend/restaurants_models.dart';
+import 'package:frontend/core/backend/search_client.dart';
+import 'package:frontend/core/backend/search_models.dart';
 
-final api = BackendAPI(baseUrl: 'http://localhost:8000');
+final api = BackendAPI(); // defaults to http://localhost:8000
 final maps = MapsClient(api);
 final restaurants = RestaurantsClient(api);
+final search = SearchClient(api);
 
 // Maps: Autocomplete
 final suggestions = await maps.autocomplete(
@@ -69,6 +73,22 @@ final results = await restaurants.search(
 final byIds = await restaurants.byIds(
   RestaurantsByIdsParams(ids: results.take(3).map((e) => e.id).toList()),
 );
+
+// Search: Structured result (locations + organic results)
+final searchResult = await search.search(
+  SearchParams(
+    query: 'Bánh mì',
+    location: 'Vietnam',
+    maxLocations: 5,
+    maxResults: 5,
+  ),
+);
+
+// Search: Formatted Vietnamese text
+final formatted = await search.formatted(
+  SearchParams(query: 'Bánh mì', maxLocations: 5, maxResults: 5),
+);
+print(formatted.result);
 
 api.dispose();
 ```

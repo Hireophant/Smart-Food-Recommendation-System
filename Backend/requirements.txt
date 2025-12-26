@@ -17,3 +17,5 @@ motor
 pymongo
 openai
 aiohttp
+google-search-results
+serpapi

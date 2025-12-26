@@ -19,6 +19,8 @@ from handlers.data import (
 from handlers.ai import AIHandler
 from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableModelInfoSchema
 from typing import List
+from handlers.search import SearchHandler
+from schemas.search import SearchResponseModel, SearchResultFormattedModel
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -194,3 +196,31 @@ class QuerySystem:
     @staticmethod
     async def AIGetAvailableModels() -> List[AIAvailableModelInfoSchema]:
         return await AIHandler.GetAvailableModels()
+
+    @staticmethod
+    async def SearchObject(
+        query: str,
+        location: str = "Vietnam",
+        max_locations: Optional[int] = None,
+        max_results: Optional[int] = None,
+    ) -> SearchResponseModel:
+        return await SearchHandler.Search(
+            query=query,
+            location=location,
+            max_locations=max_locations,
+            max_results=max_results,
+        )
+
+    @staticmethod
+    async def SearchFormatted(
+        query: str,
+        location: str = "Vietnam",
+        max_locations: Optional[int] = None,
+        max_results: Optional[int] = None,
+    ) -> SearchResultFormattedModel:
+        return await SearchHandler.SearchFormatted(
+            query=query,
+            location=location,
+            max_locations=max_locations,
+            max_results=max_results,
+        )
