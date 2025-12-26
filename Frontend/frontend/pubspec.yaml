@@ -40,6 +40,8 @@ dependencies:
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   google_fonts: ^6.3.3
+  image_picker: ^1.2.1
+  timeago: ^3.7.0
 
 dev_dependencies:
   flutter_test:

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/supabase_handler.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/custom_text_field.dart';
 import 'register_page.dart';
+import 'discover_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,25 +16,48 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  // removed unused isLoading
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  Future<void> _signIn() async {
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
     try {
-      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter email and password')),
-        );
-        return;
-      }
-
-      await SupabaseHandler().signInWithEmail(
+      debugPrint('Login Attempt: ${_emailController.text.trim()}');
+      final response = await SupabaseHandler().signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+
+      debugPrint(
+        'Login Response: User=${response.user?.id}, Session=${response.session != null ? "Valid" : "Null"}',
+      );
+
+      if (response.user != null) {
+        if (response.session == null) {
+          debugPrint(
+            'Login Warning: User found but Session is NULL (likely email not confirmed)',
+          );
+        }
+        if (mounted) {
+          // Explicitly navigate to home to ensure UX progression
+          debugPrint('Login Success: Navigating to DiscoverPage...');
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const DiscoverPage()),
+          );
+        }
+      }
     } on AuthException catch (e) {
       if (mounted) {
+        String message = e.message;
+        if (message.contains('Email not confirmed')) {
+          message = 'Please check your email to confirm your account.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
         );
       }
     } catch (e) {
@@ -40,243 +65,282 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('An unexpected error occurred'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.redAccent,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> _googleSignIn() async {
-    // This requires additional setup on Supabase and App-side (URL Schemes)
-    // which might not be fully configured in this environment.
-    bool success = await SupabaseHandler().signInWithGoogle();
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google Sign-In failed or cancelled'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine screen size for responsiveness
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      backgroundColor: Colors.white, // Match design
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Top Section with Image
-            SizedBox(
-              height: size.height * 0.45,
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Background Circle (Green in design, requesting Orange)
-                  Positioned(
-                    top: -60,
-                    child: Container(
-                      width: size.width * 1.2,
-                      height: size.width * 1.2,
-                      decoration: const BoxDecoration(
-                        // User asked for "Orange theme". Let's try to adapt logic.
-                        // The user said "lamf cac trang nay theo tong mau cam" (make these pages in orange tones).
-                        // Let's use a deep orange/teal combo or just orange.
-                        // However, the uploaded images have specific colors.
-                        // I will switch primary background elements to Orange as requested.
-                        color: Colors.deepOrange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  // Image
-                  Positioned(
-                    bottom: 20,
-                    child: Image.asset(
-                      'assets/images/hamburger_3d.png',
-                      height: 250,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.fastfood,
-                        size: 100,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop', // Elegant food Application background
+              fit: BoxFit.cover,
             ),
+          ),
+          // Dark Overlay
+          Positioned.fill(
+            child: Container(color: Colors.black.withOpacity(0.3)),
+          ),
 
-            // Text Section
-            Text(
-              'Tìm Kiếm Nhà Hàng',
-              style: GoogleFonts.poppins(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange, // Orange theme
-              ),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              '', // Removed "App" as generic text is redundant
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                letterSpacing: 2,
-                color: Colors.grey[600],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Inputs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildTextField(
-                    controller: _emailController,
-                    hint: 'Email',
-                    icon: Icons.email_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _passwordController,
-                    hint: 'Mật khẩu',
-                    icon: Icons.lock_outline,
-                    obscureText: true,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {}, // TODO: Implement reset password
-                      child: Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+                  // Logo
+                  Container(
+                    width: 150,
+                    height: 150,
+                    padding: const EdgeInsets.all(12),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 16),
-
-                  // Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _signIn,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        'Đăng nhập',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+                  // App Name
+                  const Text(
+                    'MasterFood',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
                     ),
                   ),
+                  const Text(
+                    'Taste the Excellence',
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 40),
 
-                  const SizedBox(height: 16),
-
-                  const Text('hoặc'),
-
-                  const SizedBox(height: 16),
-
-                  // Register / Create Account
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPage(),
+                  // Login Form
+                  GlassContainer(
+                    blur: 15,
+                    opacity: 0.1,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.orange[50], // Light orange
-                        side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        'Tạo tài khoản',
-                        style: TextStyle(fontSize: 16, color: Colors.black87),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Google Sign In
-                  GestureDetector(
-                    onTap: _googleSignIn,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.g_mobiledata, size: 30, color: Colors.blue),
-                        Text(
-                          "Đăng nhập bằng Google",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 30),
+                          CustomTextField(
+                            controller: _emailController,
+                            hintText: 'Email',
+                            prefixIcon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 20),
+                          CustomTextField(
+                            controller: _passwordController,
+                            hintText: 'Password',
+                            prefixIcon: Icons.lock_outline,
+                            obscureText: _obscurePassword,
+                            suffixIcon: _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            onSuffixTap: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                // Forgot Password Logic
+                              },
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Login Button
+                          SizedBox(
+                            height: 55,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                              ),
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      'Log In',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          const SizedBox(height: 20),
+
+                          // Divider
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.white.withOpacity(0.5),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(
+                                  "OR",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.white.withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Google Sign In Button
+                          SizedBox(
+                            height: 55,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                setState(() => _isLoading = true);
+                                try {
+                                  await SupabaseHandler().signInWithGoogle();
+                                  // Depending on platform (web vs mobile) deep link handling might differ
+                                  // For now, we assume standard OAuth flow initiating external browser
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Google Sign-In Failed'),
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted)
+                                    setState(() => _isLoading = false);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.network(
+                                    'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA',
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Sign in with Google',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+
+                          // Sign Up Link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account? ",
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const RegisterPage(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Sign Up',
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: Icon(icon, color: Colors.grey),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
-        ),
+          ),
+        ],
       ),
     );
   }

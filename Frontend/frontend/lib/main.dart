@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-import 'pages/discover_page.dart';
-// import 'pages/auth_gate.dart';
+import 'pages/auth_gate.dart';
 import 'providers/theme_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'core/supabase_handler.dart';
@@ -11,6 +11,9 @@ import 'core/supabase_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseHandler.initialize();
+
+  // Configure timeago for Vietnamese
+  timeago.setLocaleMessages('vi', timeago.ViMessages());
 
   runApp(
     MultiProvider(
@@ -39,8 +42,8 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
-      // Màn hình đầu tiên: Trang Khám phá (Tạm thời bypass Auth theo yêu cầu)
-      home: const DiscoverPage(), // BYPASS AUTH for now
+      // Màn hình đầu tiên: Trang Khám phá (AuthGate sẽ kiểm tra JWT để điều hướng)
+      home: const AuthGate(),
     );
   }
 }

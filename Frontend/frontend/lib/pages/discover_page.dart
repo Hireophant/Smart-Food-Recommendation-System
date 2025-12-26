@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/dish_model.dart';
@@ -10,11 +10,9 @@ import '../widgets/dish_card.dart';
 import '../widgets/restaurant_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/advanced_filter_sheet.dart';
-import '../providers/theme_provider.dart';
+
 import 'restaurant_list_page.dart';
 import 'restaurant_detail_page.dart';
-import 'favorites_page.dart';
-import 'chat_page.dart';
 
 /// Tag mặc định cho filter
 final List<FilterTag> defaultTags = [
@@ -53,21 +51,38 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('DiscoverPage: initState called. Starting data load...');
     _loadData();
   }
 
   Future<void> _loadData() async {
-    // Fetch dishes via Query System
-    final dishes = await _querySystem.getAllDishes();
-    // Fetch restaurants for map
-    final restaurantsResult = await _querySystem.search('all');
+    try {
+      debugPrint('DiscoverPage: Fetching dishes...');
+      // Fetch dishes via Query System
+      final dishes = await _querySystem.getAllDishes();
+      debugPrint('DiscoverPage: Dishes fetched (${dishes.length} items)');
 
-    setState(() {
-      _dishes = dishes;
-      _allRestaurants = restaurantsResult.items;
-      _filteredRestaurants = restaurantsResult.items;
-      _isLoading = false;
-    });
+      // Fetch restaurants for map
+      final restaurantsResult = await _querySystem.search('all');
+      debugPrint(
+        'DiscoverPage: Restaurants fetched (${restaurantsResult.items.length} items)',
+      );
+
+      if (mounted) {
+        setState(() {
+          _dishes = dishes;
+          _allRestaurants = restaurantsResult.items;
+          _filteredRestaurants = restaurantsResult.items;
+          _isLoading = false;
+        });
+        debugPrint('DiscoverPage: Loading complete, UI updated.');
+      }
+    } catch (e, stack) {
+      debugPrint('DiscoverPage Error: $e\n$stack');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
 
     // Simulate map loading delay
     Future.delayed(const Duration(milliseconds: 800), () {
@@ -155,17 +170,39 @@ class _DiscoverPageState extends State<DiscoverPage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              restaurant.imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 120,
-                color: Colors.grey[300],
-                child: const Icon(Icons.restaurant, size: 50),
-              ),
-            ),
+            child: restaurant.imageUrl.startsWith('http')
+                ? Image.network(
+                    restaurant.imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 120,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.restaurant, size: 50),
+                    ),
+                  )
+                : Image.asset(
+                    restaurant.imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.restaurant, size: 50),
+                    ),
+                  ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -248,408 +285,277 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // No redundant ThemeProvider check if not used for toggling anymore here,
+    // but useful for checking isDarkMode for UI colors.
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1ABC9C), Color(0xFF16A085)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.restaurant,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            if (MediaQuery.of(context).size.width > 600) ...[
-              const SizedBox(width: 10),
-              const Text(
-                'Gợi Ý Món Ngon',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              // Already on home page
-            },
-            icon: Icon(
-              Icons.home,
-              size: 18,
-              color: isDarkMode
-                  ? Colors.white70
-                  : Theme.of(context).primaryColor,
-            ),
-            label: Text(
-              "Trang chủ",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FavoritesPage()),
-              );
-            },
-            icon: Icon(
-              Icons.favorite,
-              size: 18,
-              color: isDarkMode ? Colors.white70 : Colors.black54,
-            ),
-            label: Text(
-              "Yêu thích",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black87,
-              ),
-            ),
-          ),
-          // Theme Toggle Button (Sun/Moon)
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-              color: Theme.of(context).primaryColor,
-            ),
-            tooltip: themeProvider.isDarkMode ? 'Chế độ sáng' : 'Chế độ tối',
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-          ),
-          // Chatbot Button với icon đẹp hơn
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            tooltip: 'Trợ lý ảo',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChatPage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Map Section with Search & Filter
-                  SizedBox(
-                    height: 400,
-                    child: Stack(
+      // No AppBar - Full screen experience
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // Map Section - Taller for better view
+              SizedBox(
+                height:
+                    MediaQuery.of(context).size.height * 0.45, // 45% of screen
+                child: Stack(
+                  children: [
+                    FlutterMap(
+                      mapController: _mapController,
+                      options: const MapOptions(
+                        initialCenter: LatLng(10.762622, 106.660172),
+                        initialZoom: 13.0,
+                        minZoom: 5.0,
+                        maxZoom: 18.0,
+                      ),
                       children: [
-                        // Map
-                        FlutterMap(
-                          mapController: _mapController,
-                          options: const MapOptions(
-                            initialCenter: LatLng(
-                              10.762622,
-                              106.660172,
-                            ), // Ho Chi Minh City
-                            initialZoom: 12.0,
-                            minZoom: 5.0,
-                            maxZoom: 18.0,
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-                                  : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-                              subdomains: const ['a', 'b', 'c', 'd'],
-                              userAgentPackageName: 'com.foodfinder.app',
-                            ),
-                            MarkerLayer(
-                              markers: _filteredRestaurants.map((restaurant) {
-                                return Marker(
-                                  point: LatLng(
-                                    restaurant.latitude,
-                                    restaurant.longitude,
-                                  ),
-                                  width: 40,
-                                  height: 40,
-                                  child: GestureDetector(
-                                    onTap: () => _onMarkerTap(restaurant),
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: Theme.of(context).primaryColor,
-                                      size: 40,
-                                      shadows: const [
-                                        Shadow(
-                                          blurRadius: 3,
-                                          color: Colors.black54,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
+                        TileLayer(
+                          urlTemplate: isDarkMode
+                              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                          subdomains: const ['a', 'b', 'c', 'd'],
+                          userAgentPackageName: 'com.foodfinder.app',
                         ),
-
-                        // Map Loading Indicator
-                        if (_isMapLoading)
-                          Container(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? Colors.black.withValues(alpha: 0.7)
-                                : Colors.white.withValues(alpha: 0.7),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'Đang tải bản đồ...',
-                                    style: TextStyle(
-                                      color:
-                                          Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.white
-                                          : Colors.black87,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
+                        MarkerLayer(
+                          markers: _filteredRestaurants.map((restaurant) {
+                            return Marker(
+                              point: LatLng(
+                                restaurant.latitude,
+                                restaurant.longitude,
                               ),
-                            ),
-                          ),
-
-                        // Search Bar & Filter Overlay
-                        Positioned(
-                          top: 16,
-                          left: 16,
-                          right: 16,
-                          child: Column(
-                            children: [
-                              SearchBarWidget(
-                                onSearch: _onSearch,
-                                onFilterTap: _showFilterSheet,
-                              ),
-                              if (_selectedTags.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
+                              width: 48, // Larger markers
+                              height: 48,
+                              child: GestureDetector(
+                                onTap: () => _onMarkerTap(restaurant),
+                                child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
                                       ),
                                     ],
                                   ),
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _selectedTags.map((tag) {
-                                      return Chip(
-                                        label: Text(
-                                          tag,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                        deleteIcon: const Icon(
-                                          Icons.close,
-                                          size: 16,
-                                        ),
-                                        onDeleted: () {
-                                          setState(() {
-                                            _selectedTags.remove(tag);
-                                            _applyFilters();
-                                          });
-                                        },
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).primaryColor.withValues(alpha: 0.1),
-                                      );
-                                    }).toList(),
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(
+                                    Icons
+                                        .restaurant, // Or custom icon based on category
+                                    color: Theme.of(context).primaryColor,
+                                    size: 24,
                                   ),
                                 ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        // Results Count at Bottom
-                        Positioned(
-                          bottom: 16,
-                          left: 16,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.95),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              "${_filteredRestaurants.length} nhà hàng",
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
                               ),
-                            ),
-                          ),
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
-                  ),
 
-                  // Conditional Body: Search Results (Restaurants) OR Dish Grid
-                  if (_searchQuery.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Tìm thấy ${_filteredRestaurants.length} nhà hàng phù hợp",
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _filteredRestaurants.length,
-                            itemBuilder: (context, index) {
-                              final restaurant = _filteredRestaurants[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
-                                child: SizedBox(
-                                  height: 240,
-                                  child: RestaurantCard(
-                                    item: restaurant,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => RestaurantDetailPage(
-                                            restaurant: restaurant,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 40),
-                        ],
+                    // Loading Indicator
+                    if (_isMapLoading)
+                      Container(
+                        color: isDarkMode
+                            ? Colors.black.withOpacity(0.5)
+                            : Colors.white.withOpacity(0.5),
+                        child: const Center(child: CircularProgressIndicator()),
                       ),
-                    )
-                  else
-                    // Default Dish Grid
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Hiển thị ${_dishes.length} món ăn",
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Responsive Grid
-                              int crossAxisCount = 2;
-                              if (constraints.maxWidth > 1000) {
-                                crossAxisCount = 4;
-                              } else if (constraints.maxWidth > 600) {
-                                crossAxisCount = 3;
-                              }
-
-                              return GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _dishes.length,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 20,
-                                      mainAxisSpacing: 20,
-                                      childAspectRatio:
-                                          0.75, // Taller cards for image + content
-                                    ),
-                                itemBuilder: (context, index) {
-                                  final item = _dishes[index];
-                                  return DishCard(
-                                    item: item,
-                                    onTap: () => _onDishSelected(item),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
+
+              // Spacing matching the overlap
+              SizedBox(height: 0),
+            ],
+          ),
+
+          // Draggable/Scrollable Content Sheet
+          // Using a simple DraggableScrollableSheet for the "Apple Maps" feel
+          DraggableScrollableSheet(
+            initialChildSize: 0.55,
+            minChildSize: 0.55,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handle bar for visual cue
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+
+                      // Title Section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _searchQuery.isNotEmpty
+                                ? 'Kết quả tìm kiếm'
+                                : 'Gợi ý cho bạn',
+                            style: TextStyle(
+                              fontSize: 22, // Apple Large Title
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          Text(
+                            '${_searchQuery.isNotEmpty ? _filteredRestaurants.length : _dishes.length} ${_searchQuery.isNotEmpty ? "nhà hàng" : "món ăn"}',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      if (_isLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_searchQuery.isNotEmpty)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _filteredRestaurants.length,
+                          itemBuilder: (context, index) {
+                            final restaurant = _filteredRestaurants[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: SizedBox(
+                                height: 260, // Taller for better visual
+                                child: RestaurantCard(
+                                  item: restaurant,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => RestaurantDetailPage(
+                                          restaurant: restaurant,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        // Dish Grid
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            int crossAxisCount = 2;
+                            if (constraints.maxWidth > 600) crossAxisCount = 3;
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _dishes.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 0.72,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final item = _dishes[index];
+                                return DishCard(
+                                  item: item,
+                                  onTap: () => _onDishSelected(item),
+                                );
+                              },
+                            );
+                          },
+                        ),
+
+                      // Bottom padding for navigation bar
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Floating Header (Search & Filter)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SearchBarWidget(
+                  onSearch: _onSearch,
+                  onFilterTap: _showFilterSheet,
+                ),
+                if (_selectedTags.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _selectedTags.map((tag) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Chip(
+                            label: Text(
+                              tag,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () {
+                              setState(() {
+                                _selectedTags.remove(tag);
+                                _applyFilters();
+                              });
+                            },
+                            backgroundColor: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            side: BorderSide.none,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ],
             ),
+          ),
+        ],
+      ),
     );
   }
 }

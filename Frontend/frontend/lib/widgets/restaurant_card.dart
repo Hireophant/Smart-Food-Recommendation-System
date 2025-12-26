@@ -25,9 +25,11 @@ class RestaurantCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(
+                isDarkMode ? 0.3 : 0.05,
+              ), // Softer shadow
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -59,12 +61,57 @@ class RestaurantCard extends StatelessWidget {
                           ? Image.network(
                               item.imageUrl,
                               fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
                               errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    color: Colors.white24,
-                                    size: 40,
+                                debugPrint('Image error: $error');
+                                return Container(
+                                  color: isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[300],
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.restaurant,
+                                          color: isDarkMode
+                                              ? Colors.grey[600]
+                                              : Colors.grey[400],
+                                          size: 40,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Không thể tải ảnh',
+                                          style: TextStyle(
+                                            color: isDarkMode
+                                                ? Colors.grey[600]
+                                                : Colors.grey[400],
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
@@ -73,11 +120,18 @@ class RestaurantCard extends StatelessWidget {
                               item.imageUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.white24,
-                                    size: 40,
+                                return Container(
+                                  color: isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[300],
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.restaurant,
+                                      color: isDarkMode
+                                          ? Colors.grey[600]
+                                          : Colors.grey[400],
+                                      size: 40,
+                                    ),
                                   ),
                                 );
                               },

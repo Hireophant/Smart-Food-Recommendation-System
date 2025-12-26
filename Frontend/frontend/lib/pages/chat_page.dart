@@ -116,38 +116,19 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        centerTitle: true,
+        title: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: Colors.white,
-                size: 20,
-              ),
+            const Text(
+              'Trợ lý ảo',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Trợ lý ảo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Luôn sẵn sàng hỗ trợ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-              ],
+            Text(
+              'FoodFinder Assistant',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+              ),
             ),
           ],
         ),

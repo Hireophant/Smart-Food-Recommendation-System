@@ -41,13 +41,70 @@ class DishCard extends StatelessWidget {
                     ? Image.network(
                         item.imageUrl,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          final progress =
+                              loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                              : null;
+                          return Container(
+                            color: isDarkMode
+                                ? Colors.grey[850]
+                                : Colors.grey[100],
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                    value: progress,
+                                    strokeWidth: 3,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                  if (progress != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${(progress * 100).toInt()}%',
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: isDarkMode
                               ? Colors.grey[800]
                               : Colors.grey[200],
-                          child: Icon(
-                            Icons.broken_image,
-                            color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.restaurant,
+                                color: isDarkMode
+                                    ? Colors.grey[600]
+                                    : Colors.grey,
+                                size: 32,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Không thể tải ảnh',
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[500]
+                                      : Colors.grey[600],
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       )
@@ -187,9 +244,7 @@ class DishCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            4,
-                          ), // Slightly sharper corners
+                          borderRadius: BorderRadius.circular(20), // Pill shape
                         ),
                         padding: EdgeInsets.zero,
                         minimumSize:

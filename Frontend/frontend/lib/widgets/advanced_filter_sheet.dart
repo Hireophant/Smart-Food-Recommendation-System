@@ -134,8 +134,10 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
                 child: OutlinedButton(
                   onPressed: _clearAll,
                   style: OutlinedButton.styleFrom(
+                    foregroundColor: isDarkMode ? Colors.white : Colors.black87,
                     side: BorderSide(
-                      color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                      color: isDarkMode ? Colors.grey[600]! : Colors.grey[400]!,
+                      width: 1.5,
                     ),
                   ),
                   child: const Text('Xóa tất cả'),
