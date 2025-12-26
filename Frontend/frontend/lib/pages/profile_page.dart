@@ -1,10 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart'; // Import Provider
 
 import '../core/supabase_handler.dart';
 import '../widgets/glass_container.dart';
-import '../pages/login_page.dart'; // For navigation after logout
+import '../pages/login_page.dart';
+import '../handlers/restaurant_handler.dart'; // Import Handler
+import '../models/food_model.dart'; // Import Model
+import '../widgets/restaurant_card.dart';
+import '../pages/restaurant_detail_page.dart';
+import '../pages/edit_profile_page.dart'; // Import Edit Page
+import '../providers/theme_provider.dart'; // Import ThemeProvider
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,11 +24,13 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _avatarUrl;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
+  List<RestaurantItem> _navigationHistory = [];
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadHistory();
   }
 
   void _loadUserProfile() {
@@ -36,9 +45,23 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void _loadHistory() {
+    // Mocking navigation history by taking a subset of mock restaurants
+    // In a real app, this would come from a local storage or backend service tracking clicks
+    final allRestaurants = MockRestaurantHandler.mockRestaurants;
+    if (allRestaurants.length >= 5) {
+      setState(() {
+        _navigationHistory = allRestaurants.sublist(0, 5); // Take first 5
+      });
+    } else {
+      setState(() {
+        _navigationHistory = allRestaurants;
+      });
+    }
+  }
+
   Future<void> _pickAndUploadAvatar(BuildContext context) async {
     try {
-      // Pick and scale image (limit to ~500px and 70% quality to ensure < 1MB)
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
@@ -53,17 +76,13 @@ class _ProfilePageState extends State<ProfilePage> {
         _isUploading = true;
       });
 
-      // 1. Upload
       await SupabaseHandler().uploadAvatar(file);
 
-      // 2. Construct URL manually to ensure we use the 'avatar.jpg' source
       final user = SupabaseHandler().currentUser;
       if (user != null) {
         final publicUrl = SupabaseHandler().getPublicAvatarUrl(user.id);
-        // Append timestamp to bust cache
         final newUrl = '$publicUrl?v=${DateTime.now().millisecondsSinceEpoch}';
 
-        // 3. Evict previous image from cache
         if (_avatarUrl != null) {
           await NetworkImage(_avatarUrl!).evict();
         }
@@ -74,7 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _avatarUrl = newUrl;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Avatar updated successfully!')),
+            const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
           );
         }
       }
@@ -82,7 +101,6 @@ class _ProfilePageState extends State<ProfilePage> {
       debugPrint('Avatar Error: $e');
       if (mounted) {
         setState(() => _isUploading = false);
-        // Show detailed error to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
@@ -97,7 +115,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _signOut(BuildContext context) async {
     await SupabaseHandler().signOut();
     if (context.mounted) {
-      // Pop all routes and go to Login
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),
         (route) => false,
@@ -108,10 +125,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = SupabaseHandler().currentUser;
-    final email = user?.email ?? 'MasterChef';
-    final name = user?.userMetadata?['full_name'] ?? 'Guest Player';
+    final email = user?.email ?? 'foodie@example.com';
+    final name = user?.userMetadata?['full_name'] ?? 'Yêu Ẩm Thực';
 
-    // Background Image URL (Dark/Premium Food Theme)
+    // Check global theme state
+    final isDarkTheme = context.watch<ThemeProvider>().isDarkMode;
+
     const bgImage =
         'https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop';
 
@@ -124,20 +143,21 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              context.read<ThemeProvider>().toggleTheme();
+            },
           ),
         ],
       ),
       body: Stack(
         children: [
-          // 1. Background
           Positioned.fill(child: Image.network(bgImage, fit: BoxFit.cover)),
-          // 2. Overlay
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.6)),
+            child: Container(
+              color: Colors.black.withOpacity(0.7),
+            ), // Darker overlay
           ),
 
-          // 3. Content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -150,9 +170,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     alignment: Alignment.bottomCenter,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 24,
-                        ), // Space for "Change Avatar" text
+                        padding: const EdgeInsets.only(bottom: 24),
                         child: GestureDetector(
                           onTap: () => _pickAndUploadAvatar(context),
                           child: Column(
@@ -162,12 +180,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.amber,
+                                    color: Theme.of(context).primaryColor,
                                     width: 3,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.amber.withOpacity(0.5),
+                                      color: Theme.of(
+                                        context,
+                                      ).primaryColor.withOpacity(0.5),
                                       blurRadius: 20,
                                     ),
                                   ],
@@ -196,12 +216,13 @@ class _ProfilePageState extends State<ProfilePage> {
                               const SizedBox(height: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white24),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -209,14 +230,15 @@ class _ProfilePageState extends State<ProfilePage> {
                                     Icon(
                                       Icons.camera_alt,
                                       color: Colors.white70,
-                                      size: 12,
+                                      size: 14,
                                     ),
-                                    SizedBox(width: 4),
+                                    SizedBox(width: 6),
                                     Text(
-                                      "Đổi ảnh đại diện",
+                                      "Đổi ảnh",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 10,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
@@ -229,17 +251,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
-
                   // --- Name ---
                   Text(
                     name,
                     style: const TextStyle(
-                      fontFamily: 'Roboto', // Or user preferred font
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      letterSpacing: 1.5,
                     ),
                   ),
                   Text(
@@ -252,50 +270,124 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 30),
 
-                  // --- Stats Row (Game Style) ---
+                  // --- Stats Row ---
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatItem("LEVEL", "15", Icons.military_tech),
-                      _buildStatItem("LIKES", "380", Icons.favorite),
-                      _buildStatItem("DISHES", "42", Icons.restaurant_menu),
+                      _buildStatItem("ĐÃ ĐÁNH GIÁ", "15", Icons.rate_review),
+                      Container(width: 1, height: 40, color: Colors.white24),
+                      _buildStatItem("YÊU THÍCH", "38", Icons.favorite),
+                      Container(width: 1, height: 40, color: Colors.white24),
+                      _buildStatItem("CHECK-IN", "42", Icons.place),
                     ],
                   ),
 
                   const SizedBox(height: 40),
 
-                  // --- Main Actions ---
+                  // --- Navigation History Section ---
+                  // "lịch sử tui clidk vào nhà hàng chọn để coi đường đi"
+                  if (_navigationHistory.isNotEmpty) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Lịch sử xem đường đi",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 220,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _navigationHistory.length,
+                        itemBuilder: (context, index) {
+                          final restaurant = _navigationHistory[index];
+                          return Container(
+                            width: 280,
+                            margin: const EdgeInsets.only(right: 16),
+                            child: RestaurantCard(
+                              item: restaurant,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RestaurantDetailPage(
+                                      restaurant: restaurant,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+
+                  // --- Menu Items ---
                   GlassContainer(
                     blur: 10,
                     opacity: 0.1,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            "QUESTS",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              letterSpacing: 2,
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        _buildGameButton(
+                        _buildMenuItem(
                           context,
-                          label: "MY FAVORITES",
-                          icon: Icons.star,
-                          color: Colors.orangeAccent,
-                          onTap: () {},
+                          icon: Icons.person_outline,
+                          label: "Hồ sơ của tôi",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EditProfilePage(),
+                              ),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 16),
-                        _buildGameButton(
+                        Divider(
+                          color: Colors.white.withOpacity(0.1),
+                          height: 1,
+                        ),
+                        _buildMenuItem(
                           context,
-                          label: "FOOD HISTORY",
-                          icon: Icons.history,
-                          color: Colors.blueAccent,
+                          icon: Icons.location_on_outlined,
+                          label: "Địa chỉ của tôi",
+                          onTap: () {
+                            // Placeholder: Select address for recommendations
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Chức năng chọn địa điểm đang phát triển',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(
+                          color: Colors.white.withOpacity(0.1),
+                          height: 1,
+                        ),
+                        _buildMenuItem(
+                          context,
+                          icon: isDarkTheme
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                          label: "Giao diện: ${isDarkTheme ? 'Tối' : 'Sáng'}",
+                          onTap: () =>
+                              context.read<ThemeProvider>().toggleTheme(),
+                        ),
+                        Divider(
+                          color: Colors.white.withOpacity(0.1),
+                          height: 1,
+                        ),
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.help_outline,
+                          label: "Trợ giúp & Hỗ trợ",
                           onTap: () {},
                         ),
                       ],
@@ -307,30 +399,30 @@ class _ProfilePageState extends State<ProfilePage> {
                   // --- Logout Button ---
                   SizedBox(
                     width: double.infinity,
-                    height: 55,
+                    height: 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: Colors.redAccent.withOpacity(0.2),
                         foregroundColor: Colors.redAccent,
-                        side: const BorderSide(
-                          color: Colors.redAccent,
-                          width: 1,
-                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Colors.redAccent.withOpacity(0.5),
+                          ),
                         ),
+                        elevation: 0,
                       ),
                       onPressed: () => _signOut(context),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout),
-                          SizedBox(width: 10),
+                          Icon(Icons.logout, size: 20),
+                          SizedBox(width: 8),
                           Text(
-                            "LOG OUT",
+                            "Đăng xuất",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -350,75 +442,51 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.amber, size: 28),
-        const SizedBox(height: 8),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.6),
-            fontSize: 10,
-            letterSpacing: 1,
+            fontSize: 11,
+            letterSpacing: 0.5,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGameButton(
+  Widget _buildMenuItem(
     BuildContext context, {
-    required String label,
     required IconData icon,
-    required Color color,
+    required String label,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.3),
-              size: 16,
-            ),
-          ],
+    return ListTile(
+      leading: Icon(icon, color: Colors.white70, size: 22),
+      title: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
         ),
       ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        color: Colors.white.withOpacity(0.3),
+        size: 14,
+      ),
+      onTap: onTap,
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 }
