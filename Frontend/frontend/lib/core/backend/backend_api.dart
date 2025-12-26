@@ -360,12 +360,8 @@ class BackendAPI {
 
       final parsed = data
           .whereType<Object>()
-          .where((e) => e is Map)
-          .map(
-            (e) => BackendApiErrorDetail.fromJson(
-              (e as Map).cast<String, dynamic>(),
-            ),
-          )
+          .whereType<Map>()
+          .map((e) => BackendApiErrorDetail.fromJson(e.cast<String, dynamic>()))
           .toList(growable: false);
 
       return parsed.isEmpty ? null : parsed;

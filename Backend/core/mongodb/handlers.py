@@ -3,6 +3,7 @@ MongoDB handlers for restaurant search operations.
 Follows the same pattern as VietMap handlers for consistent frontend integration.
 """
 
+import re
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -20,6 +21,7 @@ class MongoDBSearchInputSchema(BaseModel):
     Radius: PositiveFloat = Field(default=5000.0, description="Search radius in meters (default 5km)")
     MinRating: Optional[float] = Field(default=None, ge=0.0, le=5.0, description="Minimum rating filter")
     Category: Optional[str] = Field(default=None, description="Filter by category")
+    Tags: Optional[str] = Field(default=None, description="Filter by tags (substring match against restaurant tags)")
     Province: Optional[str] = Field(default=None, description="Filter by province")
     District: Optional[str] = Field(default=None, description="Filter by district")
     Limit: int = Field(default=20, ge=1, le=100, description="Maximum number of results")
@@ -79,6 +81,17 @@ class MongoDBHandlers:
         """
         self.__db = database
         self.__collection = database.restaurants
+
+    @staticmethod
+    def __contains_ci(value: Optional[str]) -> Optional[Dict[str, str]]:
+        """Build a safe case-insensitive MongoDB regex that matches substrings."""
+        if value is None:
+            return None
+        value = str(value).strip()
+        if not value:
+            return None
+        # Escape to avoid treating user input as regex syntax.
+        return {"$regex": re.escape(value), "$options": "i"}
     
     async def __build_pipeline(self, inputs: MongoDBSearchInputSchema) -> List[Dict[str, Any]]:
         """
@@ -166,11 +179,23 @@ class MongoDBHandlers:
             if inputs.MinRating is not None:
                 match_conditions.append({"rating": {"$gte": inputs.MinRating}})
             if inputs.Category:
-                match_conditions.append({"category": inputs.Category})
+                category_regex = self.__contains_ci(inputs.Category)
+                if category_regex is not None:
+                    # Your dataset uses broad categories (e.g. "Quán ăn"), while dish types
+                    # are stored in tags; treat Category as (category OR tags) to match user expectation.
+                    match_conditions.append({"$or": [{"category": category_regex}, {"tags": category_regex}]})
+            if inputs.Tags:
+                tags_regex = self.__contains_ci(inputs.Tags)
+                if tags_regex is not None:
+                    match_conditions.append({"tags": tags_regex})
             if inputs.Province:
-                match_conditions.append({"province": inputs.Province})
+                province_regex = self.__contains_ci(inputs.Province)
+                if province_regex is not None:
+                    match_conditions.append({"province": province_regex})
             if inputs.District:
-                match_conditions.append({"district": inputs.District})
+                district_regex = self.__contains_ci(inputs.District)
+                if district_regex is not None:
+                    match_conditions.append({"district": district_regex})
             
             if match_conditions:
                 pipeline.append({
@@ -181,17 +206,37 @@ class MongoDBHandlers:
             # STRATEGY B: No text search
             if has_coords:
                 # Use $geoNear when coordinates are available (faster)
-                geo_query = {}
+                geo_conditions: List[Dict[str, Any]] = []
 
                 # Add filters to $geoNear query
                 if inputs.MinRating is not None:
-                    geo_query["rating"] = {"$gte": inputs.MinRating}
+                    geo_conditions.append({"rating": {"$gte": inputs.MinRating}})
+
                 if inputs.Category:
-                    geo_query["category"] = inputs.Category
+                    category_regex = self.__contains_ci(inputs.Category)
+                    if category_regex is not None:
+                        geo_conditions.append({"$or": [{"category": category_regex}, {"tags": category_regex}]})
+
+                if inputs.Tags:
+                    tags_regex = self.__contains_ci(inputs.Tags)
+                    if tags_regex is not None:
+                        geo_conditions.append({"tags": tags_regex})
+
                 if inputs.Province:
-                    geo_query["province"] = inputs.Province
+                    province_regex = self.__contains_ci(inputs.Province)
+                    if province_regex is not None:
+                        geo_conditions.append({"province": province_regex})
+
                 if inputs.District:
-                    geo_query["district"] = inputs.District
+                    district_regex = self.__contains_ci(inputs.District)
+                    if district_regex is not None:
+                        geo_conditions.append({"district": district_regex})
+
+                geo_query: Optional[Dict[str, Any]] = None
+                if len(geo_conditions) == 1:
+                    geo_query = geo_conditions[0]
+                elif len(geo_conditions) > 1:
+                    geo_query = {"$and": geo_conditions}
 
                 geo_near_stage = {
                     "$geoNear": {
@@ -216,11 +261,21 @@ class MongoDBHandlers:
                 if inputs.MinRating is not None:
                     match_conditions.append({"rating": {"$gte": inputs.MinRating}})
                 if inputs.Category:
-                    match_conditions.append({"category": inputs.Category})
+                    category_regex = self.__contains_ci(inputs.Category)
+                    if category_regex is not None:
+                        match_conditions.append({"$or": [{"category": category_regex}, {"tags": category_regex}]})
+                if inputs.Tags:
+                    tags_regex = self.__contains_ci(inputs.Tags)
+                    if tags_regex is not None:
+                        match_conditions.append({"tags": tags_regex})
                 if inputs.Province:
-                    match_conditions.append({"province": inputs.Province})
+                    province_regex = self.__contains_ci(inputs.Province)
+                    if province_regex is not None:
+                        match_conditions.append({"province": province_regex})
                 if inputs.District:
-                    match_conditions.append({"district": inputs.District})
+                    district_regex = self.__contains_ci(inputs.District)
+                    if district_regex is not None:
+                        match_conditions.append({"district": district_regex})
 
                 if match_conditions:
                     pipeline.append({"$match": {"$and": match_conditions}})
@@ -359,6 +414,7 @@ class MongoDBHandlers:
                     "radius_km": inputs.Radius / 1000,
                     "min_rating": inputs.MinRating,
                     "category": inputs.Category,
+                    "tags": inputs.Tags,
                     "province": inputs.Province,
                     "district": inputs.District,
                     "limit": inputs.Limit

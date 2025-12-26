@@ -15,6 +15,7 @@ class DataRestaurantFilter(BaseModel):
     Radius: Optional[PositiveFloat] = None
     MinRating: Optional[float] = None
     Category: Optional[str] = None
+    Tags: Optional[str] = None
     Province: Optional[str] = None
     District: Optional[str] = None
 
@@ -34,6 +35,7 @@ class DataHandlers:
             Radius=_filters.Radius or DATA_DEFAULT_SEARCH_RADIUS,
             MinRating=_filters.MinRating,
             Category=_filters.Category,
+            Tags=_filters.Tags,
             Province=_filters.Province,
             District=_filters.District,
             Limit=limit or DATA_DEFAULT_SEARCH_LIMIT

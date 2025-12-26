@@ -162,6 +162,7 @@ class QuerySystem:
                                    radius: Optional[PositiveFloat] = None,
                                    min_rating: Optional[float] = None,
                                    category: Optional[str] = None,
+                                   tags: Optional[str] = None,
                                    province: Optional[str] = None,
                                    district: Optional[str] = None,
                                    limit: Optional[int] = None) -> DataRestaurantSearchResult:
@@ -174,6 +175,7 @@ class QuerySystem:
                 Radius=radius,
                 MinRating=min_rating,
                 Category=category,
+                Tags=tags,
                 Province=province,
                 District=district
             ),

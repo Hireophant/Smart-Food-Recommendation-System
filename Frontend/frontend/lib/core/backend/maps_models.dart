@@ -77,21 +77,15 @@ class MapGeocoding {
       boundaries:
           (json['boundaries'] as List?)
               ?.whereType<Object>()
-              .where((e) => e is Map)
-              .map(
-                (e) =>
-                    MapBoundaries.fromJson((e as Map).cast<String, dynamic>()),
-              )
+              .whereType<Map>()
+              .map((e) => MapBoundaries.fromJson((e).cast<String, dynamic>()))
               .toList(growable: false) ??
           const [],
       entryPoints:
           (json['entry_points'] as List?)
               ?.whereType<Object>()
-              .where((e) => e is Map)
-              .map(
-                (e) =>
-                    MapEntryPoint.fromJson((e as Map).cast<String, dynamic>()),
-              )
+              .whereType<Map>()
+              .map((e) => MapEntryPoint.fromJson((e).cast<String, dynamic>()))
               .toList(growable: false) ??
           const [],
     );
@@ -305,11 +299,10 @@ class MapRoutePath {
       instructions:
           (json['instructions'] as List?)
               ?.whereType<Object>()
-              .where((e) => e is Map)
+              .whereType<Map>()
               .map(
-                (e) => MapRouteInstruction.fromJson(
-                  (e as Map).cast<String, dynamic>(),
-                ),
+                (e) =>
+                    MapRouteInstruction.fromJson((e).cast<String, dynamic>()),
               )
               .toList(growable: false) ??
           const [],
@@ -338,11 +331,8 @@ class MapRoute {
       paths:
           (json['paths'] as List?)
               ?.whereType<Object>()
-              .where((e) => e is Map)
-              .map(
-                (e) =>
-                    MapRoutePath.fromJson((e as Map).cast<String, dynamic>()),
-              )
+              .whereType<Map>()
+              .map((e) => MapRoutePath.fromJson((e).cast<String, dynamic>()))
               .toList(growable: false) ??
           const [],
     );

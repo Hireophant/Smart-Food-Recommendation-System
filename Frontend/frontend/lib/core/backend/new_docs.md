@@ -57,6 +57,8 @@ final results = await restaurants.search(
     focusLat: 10.8231,
     focusLon: 106.6297,
     query: 'phở',
+    // Optional: filter by tags (dish types, vibes, etc.)
+    // tags: 'bún',
     radius: 5000,
     minRating: 3.5,
     limit: 20,

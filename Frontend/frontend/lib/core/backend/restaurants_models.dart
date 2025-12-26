@@ -82,6 +82,7 @@ class RestaurantSearchParams {
     this.radius = 5000,
     this.minRating = 0,
     this.category,
+    this.tags,
     this.province,
     this.district,
     this.limit = 10,
@@ -93,6 +94,7 @@ class RestaurantSearchParams {
   final double radius;
   final double minRating;
   final String? category;
+  final String? tags;
   final String? province;
   final String? district;
   final int limit;
@@ -131,6 +133,7 @@ class RestaurantSearchParams {
       'radius': radius,
       'min_rating': minRating,
       'category': category,
+      'tags': tags,
       'province': province,
       'district': district,
       'limit': limit,

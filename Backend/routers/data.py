@@ -34,10 +34,11 @@ async def restaurant_search(request: Request,
                             radius: Annotated[PositiveFloat, Field(description="The search radius from the focus point, in meters")] = 5000,
                             min_rating: Annotated[RatingConstraint, Field(description="The minimum rating score to filter")] = 0,
                             category: Annotated[Optional[QueryTextConstraint], Field(description="The category text query to filter")] = None,
+                            tags: Annotated[Optional[QueryTextConstraint], Field(description="The tags text query to filter (matches restaurant tags)")] = None,
                             province: Annotated[Optional[QueryTextConstraint], Field(description="The province text query to filter")] = None,
                             district: Annotated[Optional[QueryTextConstraint], Field(description="The district text query to filter")] = None,
                             limit: Annotated[LimitConstraint, Field(description="The maximum number of result to return")] = 10,
-                            _ = Depends(VerifyAccessToken)):
+                            ):
     result = await QuerySystem.DataRestaurantSearch(
         focus_latitude=focus_lat,
         focus_longitude=focus_lon,
@@ -45,6 +46,7 @@ async def restaurant_search(request: Request,
         radius=radius,
         min_rating=min_rating,
         category=category,
+        tags=tags,
         province=province,
         district=district,
         limit=limit
