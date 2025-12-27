@@ -12,7 +12,7 @@ from typing import Optional, Dict, Annotated, List, Any, cast, Tuple, Union
 from pydantic import PositiveFloat, BaseModel, ConfigDict, Field, PlainSerializer
 from fastapi import status, HTTPException
 from utils import Logger
-from enum import StrEnum
+from enum import Enum
 from dataclasses import dataclass, field
 
 VIETMAP_API_KEY_ENVIRONMENT_NAME = "VIETMAP_API_KEY"
@@ -66,12 +66,12 @@ class VietmapSearchInputSchema(BaseModel):
     
 VietmapAutocompleteInputSchema = VietmapSearchInputSchema
 
-class VietmapRouteVehicleType(StrEnum):
+class VietmapRouteVehicleType(str, Enum):
     Car = "car"
     Motorcycle = "motorcycle"
     Truck = "truck"
 
-class VietmapRouteAvoidType(StrEnum):
+class VietmapRouteAvoidType(str, Enum):
     Toll = "toll"
     Ferry = "ferry"
     

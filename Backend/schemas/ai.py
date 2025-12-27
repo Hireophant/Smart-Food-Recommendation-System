@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum
+from enum import Enum
 from typing import Any, Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,12 +22,12 @@ AIFunctionParamsSchema = Union[
     "AIFunctionParamsArraySchema"
 ]
 
-class AIMessageRole(StrEnum):
+class AIMessageRole(str, Enum):
     User = "user"
     Assistant = "assistant"
     System = "system"
     
-class AIFunctionParamsType(StrEnum):
+class AIFunctionParamsType(str, Enum):
     Object = "object"
     String = "string"
     Integer = "integer"
