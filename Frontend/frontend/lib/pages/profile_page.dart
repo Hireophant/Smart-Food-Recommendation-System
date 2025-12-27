@@ -34,14 +34,26 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadHistory();
   }
 
-  void _loadUserProfile() {
+  Future<void> _loadUserProfile() async {
     final user = SupabaseHandler().currentUser;
     if (user != null) {
-      final metaAvatar = user.userMetadata?['avatar_url'];
-      if (metaAvatar != null) {
-        setState(() {
-          _avatarUrl = metaAvatar;
-        });
+      // Try to get fresh Signed URL first
+      final signedUrl = await SupabaseHandler().getAvatarUrl(user.id);
+
+      if (signedUrl != null) {
+        if (mounted) {
+          setState(() {
+            _avatarUrl = signedUrl;
+          });
+        }
+      } else {
+        // Fallback to metadata if no fresh signed URL (though likely expired)
+        final metaAvatar = user.userMetadata?['avatar_url'];
+        if (metaAvatar != null && mounted) {
+          setState(() {
+            _avatarUrl = metaAvatar;
+          });
+        }
       }
     }
   }
@@ -96,26 +108,22 @@ class _ProfilePageState extends State<ProfilePage> {
         _isUploading = true;
       });
 
-      await SupabaseHandler().uploadAvatar(file);
+      // Upload and get the new Signed URL directly
+      final newUrl = await SupabaseHandler().uploadAvatar(file);
 
-      final user = SupabaseHandler().currentUser;
-      if (user != null) {
-        final publicUrl = SupabaseHandler().getPublicAvatarUrl(user.id);
-        final newUrl = '$publicUrl?v=${DateTime.now().millisecondsSinceEpoch}';
+      // Evict the old image from cache if it exists
+      if (_avatarUrl != null) {
+        await NetworkImage(_avatarUrl!).evict();
+      }
 
-        if (_avatarUrl != null) {
-          await NetworkImage(_avatarUrl!).evict();
-        }
-
-        if (mounted) {
-          setState(() {
-            _isUploading = false;
-            _avatarUrl = newUrl;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
-          );
-        }
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _avatarUrl = newUrl;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
+        );
       }
     } catch (e) {
       debugPrint('Avatar Error: $e');
