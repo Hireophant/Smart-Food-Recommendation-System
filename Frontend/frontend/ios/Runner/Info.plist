@@ -51,6 +51,15 @@
 	<string>Ứng dụng cần truy cập camera để chụp ảnh avatar.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Ứng dụng cần truy cập micro để quay video.</string>
+
+	<!-- Location permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần vị trí để gợi ý quán ăn gần bạn.</string>
+	<!-- Optional: always usage description if background location required -->
+	<!--
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần truy cập vị trí nền để cập nhật gần bạn liên tục.</string>
+	-->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

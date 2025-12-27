@@ -30,6 +30,10 @@
 	<string>NSApplication</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Ứng dụng cần truy cập thư viện ảnh để đổi avatar.</string>
+
+	<!-- Location permissions for macOS -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần vị trí để gợi ý quán ăn gần bạn trên máy tính.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
