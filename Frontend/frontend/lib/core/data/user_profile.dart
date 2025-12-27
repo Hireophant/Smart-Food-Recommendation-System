@@ -27,6 +27,29 @@ class UserProfile {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// A human-readable Vietnamese summary suitable for sending to an AI.
+  ///
+  /// Notes:
+  /// - Does NOT include any IDs (including userId, food IDs, restaurant IDs).
+  /// - If a field is null/empty, returns `unknown` for that field.
+  /// - Includes both timestamps as `Created` and `Last Modified`.
+  String toVietnameseReadableText() {
+    final buffer = StringBuffer();
+
+    buffer.writeln('Hồ sơ người dùng');
+    buffer.writeln('Cấp độ: $level');
+    buffer.writeln('Số món đã ăn: $dishEaten');
+    buffer.writeln('Số nhà hàng đã ghé: $restaurantVisited');
+    buffer.writeln('Số điện thoại: ${_stringOrUnknown(phoneNumber)}');
+    buffer.writeln('Nghề nghiệp: ${_stringOrUnknown(occupations)}');
+    buffer.writeln('Địa chỉ: ${_stringOrUnknown(address)}');
+    buffer.writeln('Biệt danh: ${_stringOrUnknown(nickname)}');
+    buffer.writeln('Created: ${_dateTimeToReadableOrUnknown(createdAt)}');
+    buffer.writeln('Last Modified: ${_dateTimeToReadableOrUnknown(updatedAt)}');
+
+    return buffer.toString().trim();
+  }
+
   static UserProfile fromJson(Map<String, dynamic> json) {
     return UserProfile(
       userId: (json['user_id'] as String).toString(),
@@ -84,5 +107,22 @@ class UserProfile {
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
     return null;
+  }
+
+  static String _stringOrUnknown(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return 'unknown';
+    return trimmed;
+  }
+
+  static String _dateTimeToReadableOrUnknown(DateTime? value) {
+    if (value == null) return 'unknown';
+    final local = value.toLocal();
+    final y = local.year.toString().padLeft(4, '0');
+    final m = local.month.toString().padLeft(2, '0');
+    final d = local.day.toString().padLeft(2, '0');
+    final hh = local.hour.toString().padLeft(2, '0');
+    final mm = local.minute.toString().padLeft(2, '0');
+    return '$d/$m/$y $hh:$mm';
   }
 }

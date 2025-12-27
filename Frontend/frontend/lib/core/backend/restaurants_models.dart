@@ -91,8 +91,8 @@ class RestaurantSearchParams {
   final double? focusLat;
   final double? focusLon;
   final String? query;
-  final double radius;
-  final double minRating;
+  final double? radius;
+  final double? minRating;
   final String? category;
   final String? tags;
   final String? province;
@@ -114,10 +114,10 @@ class RestaurantSearchParams {
       throw ArgumentError('focusLon must be between -180 and 180.');
     }
 
-    if (radius <= 0) {
+    if (radius != null && radius! <= 0) {
       throw ArgumentError('radius must be > 0.');
     }
-    if (minRating < 0 || minRating > 5) {
+    if (minRating != null && (minRating! < 0 || minRating! > 5)) {
       throw ArgumentError('minRating must be between 0 and 5.');
     }
     if (limit < 1 || limit > 100) {

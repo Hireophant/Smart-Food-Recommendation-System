@@ -1,11 +1,7 @@
 import 'dart:convert';
 
 /// Role của tin nhắn trong hội thoại
-enum AIRole {
-  user,
-  assistant,
-  system,
-}
+enum AIRole { user, assistant, system, noRole }
 
 extension AIRoleExtension on AIRole {
   String toShortString() {
@@ -15,13 +11,13 @@ extension AIRoleExtension on AIRole {
 
 /// Model cho một tin nhắn AI (tương thích với Backend AIMessageSchema)
 class AIMessage {
-  final AIRole role;
+  final AIRole? role;
   final String? message;
   final List<AIToolCall> toolCalls;
   final List<AIToolResult> toolResults;
 
   AIMessage({
-    required this.role,
+    this.role,
     this.message,
     this.toolCalls = const [],
     this.toolResults = const [],
@@ -29,7 +25,7 @@ class AIMessage {
 
   Map<String, dynamic> toJson() {
     return {
-      'role': role.toShortString(),
+      'role': role?.toShortString(),
       'message': message,
       'tool_calls': toolCalls.map((e) => e.toJson()).toList(),
       'tool_result': toolResults.map((e) => e.toJson()).toList(),
@@ -39,14 +35,17 @@ class AIMessage {
   factory AIMessage.fromJson(Map<String, dynamic> json) {
     return AIMessage(
       role: AIRole.values.firstWhere(
-          (e) => e.toShortString() == json['role'],
-          orElse: () => AIRole.user),
+        (e) => e.toShortString() == json['role'],
+        orElse: () => AIRole.user,
+      ),
       message: json['message'],
-      toolCalls: (json['tool_calls'] as List?)
+      toolCalls:
+          (json['tool_calls'] as List?)
               ?.map((e) => AIToolCall.fromJson(e))
               .toList() ??
           [],
-      toolResults: (json['tool_result'] as List?)
+      toolResults:
+          (json['tool_result'] as List?)
               ?.map((e) => AIToolResult.fromJson(e))
               .toList() ??
           [],
@@ -59,11 +58,13 @@ class AIToolDefinition {
   final String name;
   final String description;
   final Map<String, dynamic> parameters;
+  final List<String> requires;
 
   AIToolDefinition({
     required this.name,
     required this.description,
     required this.parameters,
+    required this.requires,
   });
 
   Map<String, dynamic> toJson() {
@@ -75,9 +76,9 @@ class AIToolDefinition {
         'parameters': {
           'type': 'object',
           'properties': parameters,
-          // Mặc định là required hết cho đơn giản, hoặc tùy chỉnh sau
-        }
-      }
+          'required': requires,
+        },
+      },
     };
   }
 }
@@ -88,11 +89,7 @@ class AIToolCall {
   final String name;
   final Map<String, dynamic> arguments;
 
-  AIToolCall({
-    required this.id,
-    required this.name,
-    required this.arguments,
-  });
+  AIToolCall({required this.id, required this.name, required this.arguments});
 
   Map<String, dynamic> toJson() {
     return {
@@ -126,23 +123,14 @@ class AIToolResult {
   final String callId;
   final dynamic result;
 
-  AIToolResult({
-    required this.callId,
-    required this.result,
-  });
+  AIToolResult({required this.callId, required this.result});
 
   Map<String, dynamic> toJson() {
-    return {
-      'call_id': callId,
-      'result': result,
-    };
+    return {'call_id': callId, 'result': result};
   }
 
   factory AIToolResult.fromJson(Map<String, dynamic> json) {
-    return AIToolResult(
-      callId: json['call_id'],
-      result: json['result'],
-    );
+    return AIToolResult(callId: json['call_id'], result: json['result']);
   }
 }
 

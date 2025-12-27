@@ -1,4 +1,5 @@
 import uuid, openai
+import enum
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionToolParam,
@@ -86,11 +87,16 @@ class LLMMessage:
                 "content" : str(self.Message)
             }
         elif self.Role == LLMMessageRole.Assistant:
-            return {
-                "role" : "assistant",
-                "content" : str(self.Message),
-                "tool_calls" : [tool.ToOpenAI() for tool in self.ToolCalls]
+            result: ChatCompletionMessageParam = {
+                "role": "assistant",
+                "content": str(self.Message),
             }
+
+            # Important: if there are no tool calls, do not send an empty array.
+            if self.ToolCalls:
+                result["tool_calls"] = [tool.ToOpenAI() for tool in self.ToolCalls]
+
+            return result
         else:
             return None
         
@@ -112,11 +118,47 @@ class LLMMessage:
 
 class LLM:
     @staticmethod
+    def __to_jsonable(value: Any) -> Any:
+        """Best-effort conversion to a JSON-serializable structure.
+
+        The OpenAI client ultimately sends payloads through HTTPX which
+        requires the request body to be JSON-serializable. Our tool schemas
+        may contain Pydantic models (e.g. AIFunctionParamsStringSchema).
+        """
+
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+
+        if isinstance(value, enum.Enum):
+            return value.value
+
+        if isinstance(value, dict):
+            return {str(k): LLM.__to_jsonable(v) for k, v in value.items()}
+
+        if isinstance(value, (list, tuple, set)):
+            return [LLM.__to_jsonable(v) for v in value]
+
+        # Pydantic BaseModel (or compatible) support without importing pydantic here.
+        model_dump = getattr(value, "model_dump", None)
+        if callable(model_dump):
+            dumped = model_dump(by_alias=True, exclude_none=True)
+            return LLM.__to_jsonable(dumped)
+
+        # Dataclasses or other objects that provide a dict-like representation.
+        to_dict = getattr(value, "dict", None)
+        if callable(to_dict):
+            dumped = to_dict()
+            return LLM.__to_jsonable(dumped)
+
+        # Last resort: stringify (better than crashing the whole request).
+        return str(value)
+
+    @staticmethod
     def __convert_tool_params_to_openai(param: FunctionParams) -> FunctionParameters:
         return {
             "type" : param.Type,
-            "properties" : param.Properties,
-            "required" : param.Required,
+            "properties" : LLM.__to_jsonable(param.Properties),
+            "required" : LLM.__to_jsonable(param.Required),
             "description" : str(param.Description)
         }
     
@@ -154,12 +196,17 @@ class LLM:
         for i in inputs:
             converted_inputs.extend(i.ToOpenAI())
         
-        response = await client.chat.completions.create(
-            messages=converted_inputs,
-            model=model_info.ModelName,
-            temperature=model_info.Creativity,
-            tools=[LLM.__convert_tool_to_openai(t) for t in tools]
-        )
+        request_kwargs: dict[str, Any] = {
+            "messages": converted_inputs,
+            "model": model_info.ModelName,
+            "temperature": model_info.Creativity,
+        }
+
+        # Important: if there are no tools, do not send an empty array.
+        if tools:
+            request_kwargs["tools"] = [LLM.__convert_tool_to_openai(t) for t in tools]
+
+        response = await client.chat.completions.create(**request_kwargs)
         
         output = response.choices[0].message
         return LLMMessage(

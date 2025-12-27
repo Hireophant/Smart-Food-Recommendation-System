@@ -92,7 +92,7 @@ class AIHandler:
     @staticmethod
     def __message_to_llm(msg: AIMessageSchema) -> LLMMessage:
         return LLMMessage(
-            Role=AIHandler.__role_to_llm(msg.Role),
+            Role=AIHandler.__role_to_llm(msg.Role) if msg.Role else LLMMessageRole.NoRole,
             Message=msg.Message,
             ToolCalls=[AIHandler.__tool_call_req_to_llm(c) for c in msg.ToolCalls],
             ToolResult=[AIHandler.__tool_call_res_to_llm(r) for r in msg.ToolResult],

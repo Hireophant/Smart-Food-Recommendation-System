@@ -151,7 +151,7 @@ class AIMessageSchema(BaseModel):
 
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
-    Role: AIMessageRole = Field(alias="role")
+    Role: Optional[AIMessageRole] = Field(default=None, alias="role")
     Message: Optional[str] = Field(default=None, alias="message")
     ToolCalls: List[AIFunctionCallRequestSchema] = Field(default_factory=list, alias="tool_calls")
     ToolResult: List[AIFunctionCallResultSchema] = Field(default_factory=list, alias="tool_result")

@@ -175,6 +175,148 @@ class DataClient {
     return getUserProfile(userId);
   }
 
+  /// Convenience wrapper for [setUserProfile] using the current session user.
+  static Future<UserProfile> setCurrentUserProfile({
+    List<String>? favoritesFoodIds,
+    List<String>? favoritesRestaurantsIds,
+    int? level,
+    int? dishEaten,
+    int? restaurantVisited,
+    String? phoneNumber,
+    String? occupations,
+    String? address,
+    String? nickname,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: 'No authenticated user in current session.',
+      );
+    }
+    return setUserProfile(
+      userId,
+      favoritesFoodIds: favoritesFoodIds,
+      favoritesRestaurantsIds: favoritesRestaurantsIds,
+      level: level,
+      dishEaten: dishEaten,
+      restaurantVisited: restaurantVisited,
+      phoneNumber: phoneNumber,
+      occupations: occupations,
+      address: address,
+      nickname: nickname,
+    );
+  }
+
+  /// Partially updates a user's `user_profile` row.
+  ///
+  /// - Only allows updating the current authenticated user's row.
+  /// - Does not send null fields (so it won't overwrite existing values with NULL).
+  /// - If the row doesn't exist yet, it will be created with defaults, then updated.
+  static Future<UserProfile> setUserProfile(
+    String userId, {
+    List<String>? favoritesFoodIds,
+    List<String>? favoritesRestaurantsIds,
+    int? level,
+    int? dishEaten,
+    int? restaurantVisited,
+    String? phoneNumber,
+    String? occupations,
+    String? address,
+    String? nickname,
+  }) async {
+    try {
+      final sessionUserId = _client.auth.currentUser?.id;
+      if (sessionUserId == null) {
+        throw const DataClientException(
+          DataClientErrorKind.notLoggedIn,
+          message: 'No authenticated user in current session.',
+        );
+      }
+
+      if (userId != sessionUserId) {
+        throw const DataClientException(
+          DataClientErrorKind.permissionDenied,
+          message: 'Cannot update another user\'s profile.',
+        );
+      }
+
+      final patch = _withoutNulls({
+        'favorites_food_ids': favoritesFoodIds,
+        'favorites_restaurants_ids': favoritesRestaurantsIds,
+        'level': level,
+        'dish_eaten': dishEaten,
+        'restaurant_visited': restaurantVisited,
+        'phone_number': phoneNumber,
+        'occupations': occupations,
+        'address': address,
+        'nickname': nickname,
+      });
+
+      if (patch.isEmpty) {
+        return getUserProfile(sessionUserId);
+      }
+
+      final Map<String, dynamic>? updated = await _client
+          .from('user_profile')
+          .update(patch)
+          .eq('user_id', sessionUserId)
+          .select('*')
+          .maybeSingle();
+
+      if (updated != null) {
+        return _mapUserProfile(updated);
+      }
+
+      await _createDefaultUserProfile(sessionUserId);
+
+      final Map<String, dynamic>? updatedAfterCreate = await _client
+          .from('user_profile')
+          .update(patch)
+          .eq('user_id', sessionUserId)
+          .select('*')
+          .maybeSingle();
+
+      if (updatedAfterCreate == null) {
+        throw const DataClientException(
+          DataClientErrorKind.invalidResponse,
+          message: 'Profile update returned empty response.',
+        );
+      }
+
+      return _mapUserProfile(updatedAfterCreate);
+    } on PostgrestException catch (e, st) {
+      throw DataClientException(
+        _mapPostgrestExceptionKind(e),
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on AuthException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on SocketException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.network,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      if (e is DataClientException) rethrow;
+      throw DataClientException(
+        DataClientErrorKind.unknown,
+        message: 'Unexpected error while updating user profile.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
   static Future<UserTasteProfile> getCurrentTasteProfile() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -184,6 +326,140 @@ class DataClient {
       );
     }
     return getTasteProfile(userId);
+  }
+
+  /// Convenience wrapper for [setTasteProfile] using the current session user.
+  static Future<UserTasteProfile> setCurrentTasteProfile({
+    List<String>? cuisines,
+    String? spiceLevel,
+    List<String>? dietaryRestrictions,
+    List<String>? allergies,
+    String? pricePreference,
+    List<String>? favoriteDishes,
+    List<String>? dislikes,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: 'No authenticated user in current session.',
+      );
+    }
+    return setTasteProfile(
+      userId,
+      cuisines: cuisines,
+      spiceLevel: spiceLevel,
+      dietaryRestrictions: dietaryRestrictions,
+      allergies: allergies,
+      pricePreference: pricePreference,
+      favoriteDishes: favoriteDishes,
+      dislikes: dislikes,
+    );
+  }
+
+  /// Partially updates a user's `user_taste_profiles` row.
+  ///
+  /// - Only allows updating the current authenticated user's row.
+  /// - Does not send null fields (so it won't overwrite existing values with NULL).
+  /// - If the row doesn't exist yet, it will be created with defaults, then updated.
+  static Future<UserTasteProfile> setTasteProfile(
+    String userId, {
+    List<String>? cuisines,
+    String? spiceLevel,
+    List<String>? dietaryRestrictions,
+    List<String>? allergies,
+    String? pricePreference,
+    List<String>? favoriteDishes,
+    List<String>? dislikes,
+  }) async {
+    try {
+      final sessionUserId = _client.auth.currentUser?.id;
+      if (sessionUserId == null) {
+        throw const DataClientException(
+          DataClientErrorKind.notLoggedIn,
+          message: 'No authenticated user in current session.',
+        );
+      }
+
+      if (userId != sessionUserId) {
+        throw const DataClientException(
+          DataClientErrorKind.permissionDenied,
+          message: 'Cannot update another user\'s taste profile.',
+        );
+      }
+
+      final patch = _withoutNulls({
+        'cuisines': cuisines,
+        'spice_level': spiceLevel,
+        'dietary_restrictions': dietaryRestrictions,
+        'allergies': allergies,
+        'price_preference': pricePreference,
+        'favorite_dishes': favoriteDishes,
+        'dislikes': dislikes,
+      });
+
+      if (patch.isEmpty) {
+        return getTasteProfile(sessionUserId);
+      }
+
+      final Map<String, dynamic>? updated = await _client
+          .from('user_taste_profiles')
+          .update(patch)
+          .eq('user_id', sessionUserId)
+          .select('*')
+          .maybeSingle();
+
+      if (updated != null) {
+        return _mapTasteProfile(updated);
+      }
+
+      await _createDefaultTasteProfile(sessionUserId);
+
+      final Map<String, dynamic>? updatedAfterCreate = await _client
+          .from('user_taste_profiles')
+          .update(patch)
+          .eq('user_id', sessionUserId)
+          .select('*')
+          .maybeSingle();
+
+      if (updatedAfterCreate == null) {
+        throw const DataClientException(
+          DataClientErrorKind.invalidResponse,
+          message: 'Taste profile update returned empty response.',
+        );
+      }
+
+      return _mapTasteProfile(updatedAfterCreate);
+    } on PostgrestException catch (e, st) {
+      throw DataClientException(
+        _mapPostgrestExceptionKind(e),
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on AuthException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } on SocketException catch (e, st) {
+      throw DataClientException(
+        DataClientErrorKind.network,
+        message: e.message,
+        cause: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      if (e is DataClientException) rethrow;
+      throw DataClientException(
+        DataClientErrorKind.unknown,
+        message: 'Unexpected error while updating taste profile.',
+        cause: e,
+        stackTrace: st,
+      );
+    }
   }
 
   static UserTasteProfile _mapTasteProfile(Map<String, dynamic> row) {
@@ -259,5 +535,13 @@ class DataClient {
     }
 
     return DataClientErrorKind.unknown;
+  }
+
+  static Map<String, dynamic> _withoutNulls(Map<String, dynamic> input) {
+    final result = <String, dynamic>{};
+    input.forEach((key, value) {
+      if (value != null) result[key] = value;
+    });
+    return result;
   }
 }
