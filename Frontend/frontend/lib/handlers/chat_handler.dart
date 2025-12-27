@@ -530,7 +530,10 @@ class ChatHandler {
     return BotResponse(message: message.message ?? "", quickReplies: null);
   }
 
-  static Future<AIMessage?> generateNextTurn(AIMessage inputMessage) async {
+  static Future<AIMessage?> generateNextTurn(
+    AIMessage inputMessage, {
+    String? modelName,
+  }) async {
     var supabaseClient = Supabase.instance.client;
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) {
@@ -544,7 +547,7 @@ class ChatHandler {
     debugPrint(userId);
     try {
       var result = await AIModule.generate(
-        modelName: "OpenAI-Low",
+        modelName: modelName ?? "OpenAI-Low", // Use passed model or default
         history: inputs,
         tools: ChatToolExecutor.chatTools,
       );
@@ -580,9 +583,12 @@ class ChatHandler {
     return res;
   }
 
-  static Future<BotResponse> sendMessage(String userMessage) async {
+  static Future<BotResponse> sendMessage(
+    String userMessage, {
+    String? modelName,
+  }) async {
     AIMessage input = AIMessage(role: AIRole.user, message: userMessage);
-    AIMessage? output = await generateNextTurn(input);
+    AIMessage? output = await generateNextTurn(input, modelName: modelName);
     debugPrint("AI Output: ${output?.message}");
     while (output != null && output.toolCalls.isNotEmpty) {
       debugPrint("AI Outputs: ${output.message}");
@@ -595,7 +601,7 @@ class ChatHandler {
         toolResults: await executeTools(output.toolCalls),
       );
 
-      output = await generateNextTurn(nextInput);
+      output = await generateNextTurn(nextInput, modelName: modelName);
     }
 
     return BotResponse(

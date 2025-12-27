@@ -14,6 +14,76 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final List<ChatMessage> _messages = [];
+  // Danh sách Models từ JSON config
+  final List<Map<String, dynamic>> _availableModels = [
+    {
+      "name": "OpenAI-High",
+      "model_name": "gpt-5",
+      "client_name": "OpenAI",
+      "description":
+          "From OpenAI API, the highest intellegents GPT model, which is slowest and most expensive. Great for complex, deep logic task like planning, writing, creativity, solving problem...",
+    },
+    {
+      "name": "OpenAI-Medium",
+      "model_name": "gpt-5-mini",
+      "client_name": "OpenAI",
+      "description":
+          "From OpenAI API, balance between intellegents and speed + cost. Great for most task like thinking, seperating,...",
+    },
+    {
+      "name": "OpenAI-Medium-Structured",
+      "model_name": "gpt-5-mini",
+      "client_name": "OpenAI",
+      "creativity": 0.05,
+      "description":
+          "From OpenAI API, same as OpenAI-Medium, but more structured and predictable.",
+    },
+    {
+      "name": "OpenAI-High-Structured",
+      "model_name": "gpt-5",
+      "client_name": "OpenAI",
+      "creativity": 0.05,
+      "description":
+          "From OpenAI API, same as OpenAI-High, but more structured and predictable.",
+    },
+    {
+      "name": "OpenAI-Low",
+      "model_name": "gpt-5-nano",
+      "client_name": "OpenAI",
+      "description":
+          "From OpenAI API, the fastest, cheapest and lowest intellegents. Great for basic, repetitive task.",
+    },
+    {
+      "name": "Gemini-Low",
+      "model_name": "gemini-2.5-flash-lite",
+      "client_name": "Gemini",
+      "description":
+          "From Gemini, the quickest, cheapest, fastest and lowest intellegents model.",
+    },
+    {
+      "name": "Gemini-Medium",
+      "model_name": "gemini-2.5-flash",
+      "client_name": "Gemini",
+      "description":
+          "From Gemini, the balance between intellegent and speed + cost.",
+    },
+    {
+      "name": "Gemini-High",
+      "model_name": "gemini-3-pro-preview",
+      "client_name": "Gemini",
+      "description":
+          "From Gemimi, the newest and highest intellegent and slowest model.",
+    },
+    {
+      "name": "Default",
+      "model_name": "gemini-2.5-flash",
+      "client_name": "Gemini",
+      "description":
+          "From Gemini, the quickest, cheapest, fastest and lowest intellegents model.",
+    },
+  ];
+
+  late Map<String, dynamic> _selectedModel;
   final ScrollController _scrollController = ScrollController();
   List<String>? _currentQuickReplies;
   bool _isLoading = false;
@@ -21,6 +91,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    _selectedModel = _availableModels.last; // Default
     _initChat();
   }
 
@@ -68,7 +139,10 @@ class _ChatPageState extends State<ChatPage> {
 
     // Gọi handler để lấy phản hồi (Mock)
     try {
-      final response = await ChatHandler.sendMessage(text);
+      final response = await ChatHandler.sendMessage(
+        text,
+        modelName: _selectedModel['name'],
+      );
 
       // Thêm tin nhắn phản hồi từ bot
       final botMessage = ChatMessage(
@@ -110,6 +184,102 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  void _showModelSelectionSheet(bool isDarkMode) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Text(
+                      'Chọn Model AI',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _selectedModel['name'],
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _availableModels.length,
+                  itemBuilder: (context, index) {
+                    final model = _availableModels[index];
+                    final isSelected = model['name'] == _selectedModel['name'];
+                    return ListTile(
+                      leading: Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected ? Colors.blue : Colors.grey,
+                      ),
+                      title: Text(
+                        model['name'],
+                        style: TextStyle(
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      subtitle: Text(
+                        model['description'],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey,
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedModel = model;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -124,7 +294,7 @@ class _ChatPageState extends State<ChatPage> {
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
             Text(
-              'FoodFinder Assistant',
+              'Model: ${_selectedModel['name']}',
               style: TextStyle(
                 fontSize: 11,
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
@@ -132,6 +302,13 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            onPressed: () => _showModelSelectionSheet(isDarkMode),
+            tooltip: 'Chọn Model',
+          ),
+        ],
       ),
       body: Column(
         children: [
