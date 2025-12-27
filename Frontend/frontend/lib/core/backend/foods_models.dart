@@ -5,6 +5,7 @@ class Food {
     required this.category,
     required this.kieuTenMon,
     required this.loai,
+    required this.description,
     required this.tags,
   });
 
@@ -13,15 +14,24 @@ class Food {
   final String category;
   final String kieuTenMon;
   final String loai;
+  final String description;
   final List<String> tags;
 
   factory Food.fromJson(Map<String, dynamic> json) {
+    final rawDescription = json['description'];
+    final normalizedDescription = (rawDescription == null)
+        ? 'No description'
+        : rawDescription.toString().trim().isEmpty
+        ? 'No description'
+        : rawDescription.toString();
+
     return Food(
       id: json['id']?.toString() ?? '',
       dishName: json['dish_name']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
       kieuTenMon: json['kieu_ten_mon']?.toString() ?? '',
       loai: json['loai']?.toString() ?? '',
+      description: normalizedDescription,
       tags:
           (json['tags'] as List?)
               ?.map((e) => e.toString())
@@ -96,5 +106,15 @@ class FoodsByIdsParams {
       'ids': ids.map((e) => e.trim()).toList(growable: false),
       'limit': limit,
     };
+  }
+}
+
+class FoodsResultFormatted {
+  const FoodsResultFormatted({required this.result});
+
+  final String result;
+
+  factory FoodsResultFormatted.fromJson(Map<String, dynamic> json) {
+    return FoodsResultFormatted(result: json['result']?.toString() ?? '');
   }
 }

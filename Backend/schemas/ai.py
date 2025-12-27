@@ -18,7 +18,8 @@ AIFunctionParamsNativeEnumSchema = Union[
 AIFunctionParamsSchema = Union[
     "AIFunctionParamsObjectSchema",
     "AIFunctionParamsNativeSchema",
-    "AIFunctionParamsNativeEnumSchema"
+    "AIFunctionParamsNativeEnumSchema",
+    "AIFunctionParamsArraySchema"
 ]
 
 class AIMessageRole(StrEnum):
@@ -32,6 +33,7 @@ class AIFunctionParamsType(StrEnum):
     Integer = "integer"
     Number = "number"
     Boolean = "boolean"
+    Array = "array"
 
 class AIFunctionParamsObjectSchema(BaseModel):
     """Minimal JSON-schema for object params."""
@@ -102,6 +104,14 @@ class AIFunctionParamsNumberEnumSchema(BaseModel):
     Enum: List[float] = Field(default_factory=list, alias="enum")
     Description: Optional[str] = Field(default=None, alias="description")
 
+class AIFunctionParamsArraySchema(BaseModel):
+    """Minimal JSON-schema for array params."""
+
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+    
+    Type: Literal[AIFunctionParamsType.Array] = Field(default=AIFunctionParamsType.Array, alias="type")
+    Items: AIFunctionParamsSchema = Field(alias="items")
+    Description: Optional[str] = Field(default=None, alias="description")
 
 class AIFunctionSchema(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)

@@ -25,4 +25,24 @@ class FoodsClient {
       fromJson: Food.fromJson,
     );
   }
+
+  /// GET /data/food/search/formatted
+  Future<FoodsResultFormatted> searchFormatted(FoodSearchParams params) async {
+    params.validate();
+    return _api.getObject(
+      '/data/food/search/formatted',
+      query: params.toQuery(),
+      fromJson: FoodsResultFormatted.fromJson,
+    );
+  }
+
+  /// GET /data/food/byids/formatted
+  Future<FoodsResultFormatted> byIdsFormatted(FoodsByIdsParams params) async {
+    params.validate();
+    return _api.getObject(
+      '/data/food/byids/formatted',
+      query: params.toQuery(),
+      fromJson: FoodsResultFormatted.fromJson,
+    );
+  }
 }

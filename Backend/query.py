@@ -22,6 +22,7 @@ from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableMode
 from typing import List
 from handlers.search import SearchHandler
 from schemas.search import SearchResponseModel, SearchResultFormattedModel
+from schemas.data import DataRestaurantsFormattedModel, DataFoodsFormattedModel
 from handlers.weather import WeatherHandler
 from schemas.weather import WeatherResponseModel, WeatherInfoFormattedModel
 
@@ -188,9 +189,43 @@ class QuerySystem:
         )
 
     @staticmethod
+    async def DataRestaurantSearchFormatted(
+        focus_latitude: Optional[float] = None,
+        focus_longitude: Optional[float] = None,
+        query: Optional[str] = None,
+        radius: Optional[PositiveFloat] = None,
+        min_rating: Optional[float] = None,
+        category: Optional[str] = None,
+        tags: Optional[str] = None,
+        province: Optional[str] = None,
+        district: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> DataRestaurantsFormattedModel:
+        handler = DataHandlers()
+        return await handler.RestaurantSearchFormatted(
+            focus_latitude=focus_latitude,
+            focus_longitude=focus_longitude,
+            filters=DataRestaurantFilter(
+                Query=query,
+                Radius=radius,
+                MinRating=min_rating,
+                Category=category,
+                Tags=tags,
+                Province=province,
+                District=district,
+            ),
+            limit=limit,
+        )
+
+    @staticmethod
     async def DataRestaurantsByIds(ids: List[str], limit: Optional[int] = None) -> DataRestaurantSearchResult:
         handler = DataHandlers()
         return await handler.RestaurantsByIds(ids=ids, limit=limit)
+
+    @staticmethod
+    async def DataRestaurantsByIdsFormatted(ids: List[str], limit: Optional[int] = None) -> DataRestaurantsFormattedModel:
+        handler = DataHandlers()
+        return await handler.RestaurantsByIdsFormatted(ids=ids, limit=limit)
 
     @staticmethod
     async def FoodSearch(
@@ -214,9 +249,35 @@ class QuerySystem:
         )
 
     @staticmethod
+    async def FoodSearchFormatted(
+        text: Optional[str] = None,
+        category: Optional[str] = None,
+        loai: Optional[str] = None,
+        kieu_ten_mon: Optional[str] = None,
+        tags: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> DataFoodsFormattedModel:
+        handler = FoodHandlers()
+        return await handler.FoodSearchFormatted(
+            filters=FoodFilter(
+                Text=text,
+                Category=category,
+                Loai=loai,
+                KieuTenMon=kieu_ten_mon,
+                Tags=tags,
+            ),
+            limit=limit,
+        )
+
+    @staticmethod
     async def FoodsByIds(ids: List[str], limit: Optional[int] = None) -> FoodSearchResult:
         handler = FoodHandlers()
         return await handler.FoodsByIds(ids=ids, limit=limit)
+
+    @staticmethod
+    async def FoodsByIdsFormatted(ids: List[str], limit: Optional[int] = None) -> DataFoodsFormattedModel:
+        handler = FoodHandlers()
+        return await handler.FoodsByIdsFormatted(ids=ids, limit=limit)
         
     @staticmethod
     async def AIGenerate(model_name: str, payload: AIGenerateRequestSchema) -> AIMessageSchema:

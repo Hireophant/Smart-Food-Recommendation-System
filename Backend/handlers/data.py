@@ -1,5 +1,5 @@
 from core.mongodb import MongoDB, MongoDBHandlers, MongoDBSearchInputSchema, MongoDBGetByIdsInputSchema
-from schemas.data import DataRestaurantResponseModel
+from schemas.data import DataRestaurantResponseModel, DataRestaurantsFormattedModel, format_restaurants_vietnamese
 from typing import Optional, List
 from pydantic import PositiveFloat, BaseModel
 from fastapi import status
@@ -59,3 +59,36 @@ class DataHandlers:
                 detail=f"Failed to query restaurants by ids! The handler responses: {resp.error}",
             )
         return [DataRestaurantResponseModel.FromMongoDB(m) for m in resp.restaurants]
+
+    async def RestaurantSearchFormatted(
+        self,
+        focus_latitude: Optional[float],
+        focus_longitude: Optional[float],
+        filters: Optional[DataRestaurantFilter] = None,
+        limit: Optional[int] = None,
+    ) -> DataRestaurantsFormattedModel:
+        data = await self.RestaurantSearch(
+            focus_latitude=focus_latitude,
+            focus_longitude=focus_longitude,
+            filters=filters,
+            limit=limit,
+        )
+        return DataRestaurantsFormattedModel(
+            result=format_restaurants_vietnamese(
+                data,
+                title="Kết quả tìm kiếm nhà hàng",
+            )
+        )
+
+    async def RestaurantsByIdsFormatted(
+        self,
+        ids: List[str],
+        limit: Optional[int] = None,
+    ) -> DataRestaurantsFormattedModel:
+        data = await self.RestaurantsByIds(ids=ids, limit=limit)
+        return DataRestaurantsFormattedModel(
+            result=format_restaurants_vietnamese(
+                data,
+                title="Kết quả nhà hàng theo danh sách ID",
+            )
+        )

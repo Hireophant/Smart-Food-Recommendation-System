@@ -80,7 +80,7 @@ class MongoDBFoodSearchInputSchema(BaseModel):
     KieuTenMon: Optional[str] = Field(default=None, description="Filter by kieu_ten_mon")
     Tags: Optional[str] = Field(
         default=None,
-        description="Filter by tags (stored as '|' separated string in DB)",
+        description="Filter by tags (matches against tags array elements)",
     )
     Limit: int = Field(default=20, ge=1, le=200, description="Maximum number of results")
 
@@ -95,6 +95,7 @@ class MongoDBFoodResponse(BaseModel):
     category: str = Field(description="Dish category")
     kieu_ten_mon: str = Field(description="How the dish is named")
     loai: str = Field(description="Type of dish")
+    description: str = Field(default="No description", description="Food description")
     tags: List[str] = Field(default_factory=list, description="Dish tags")
 
 
@@ -750,6 +751,7 @@ class MongoDBFoodHandlers:
                     "category": 1,
                     "kieu_ten_mon": 1,
                     "loai": 1,
+                    "description": 1,
                     "tags": 1,
                     "_id": 0,
                 }
@@ -766,6 +768,10 @@ class MongoDBFoodHandlers:
 
             foods: List[MongoDBFoodResponse] = []
             for doc in results:
+                raw_description = doc.get("description")
+                desc = str(raw_description).strip() if raw_description is not None else ""
+                if not desc:
+                    desc = "No description"
                 foods.append(
                     MongoDBFoodResponse(
                         id=doc.get("id", ""),
@@ -773,6 +779,7 @@ class MongoDBFoodHandlers:
                         category=doc.get("category", ""),
                         kieu_ten_mon=doc.get("kieu_ten_mon", ""),
                         loai=doc.get("loai", ""),
+                        description=desc,
                         tags=self.__split_tags(doc.get("tags")),
                     )
                 )
@@ -826,6 +833,7 @@ class MongoDBFoodHandlers:
                         "category": 1,
                         "kieu_ten_mon": 1,
                         "loai": 1,
+                        "description": 1,
                         "tags": 1,
                         "_id": 0,
                     }
@@ -837,6 +845,10 @@ class MongoDBFoodHandlers:
 
             foods: List[MongoDBFoodResponse] = []
             for doc in results:
+                raw_description = doc.get("description")
+                desc = str(raw_description).strip() if raw_description is not None else ""
+                if not desc:
+                    desc = "No description"
                 foods.append(
                     MongoDBFoodResponse(
                         id=doc.get("id", ""),
@@ -844,6 +856,7 @@ class MongoDBFoodHandlers:
                         category=doc.get("category", ""),
                         kieu_ten_mon=doc.get("kieu_ten_mon", ""),
                         loai=doc.get("loai", ""),
+                        description=desc,
                         tags=self.__split_tags(doc.get("tags")),
                     )
                 )

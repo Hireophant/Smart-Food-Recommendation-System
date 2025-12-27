@@ -10,7 +10,11 @@ from core.mongodb import (
     MongoDBFoodSearchInputSchema,
     MongoDBFoodGetByIdsInputSchema,
 )
-from schemas.data import DataFoodResponseModel
+from schemas.data import (
+    DataFoodResponseModel,
+    DataFoodsFormattedModel,
+    format_foods_vietnamese,
+)
 
 
 FOOD_DEFAULT_SEARCH_LIMIT = 20
@@ -66,3 +70,23 @@ class FoodHandlers:
                 detail=f"Failed to query foods by ids! The handler responses: {resp.error}",
             )
         return [DataFoodResponseModel.FromMongoDB(m) for m in resp.foods]
+
+    async def FoodSearchFormatted(
+        self,
+        filters: Optional[FoodFilter] = None,
+        limit: Optional[int] = None,
+    ) -> DataFoodsFormattedModel:
+        data = await self.FoodSearch(filters=filters, limit=limit)
+        return DataFoodsFormattedModel(
+            result=format_foods_vietnamese(data, title="Kết quả tìm kiếm món ăn"),
+        )
+
+    async def FoodsByIdsFormatted(
+        self,
+        ids: List[str],
+        limit: Optional[int] = None,
+    ) -> DataFoodsFormattedModel:
+        data = await self.FoodsByIds(ids=ids, limit=limit)
+        return DataFoodsFormattedModel(
+            result=format_foods_vietnamese(data, title="Kết quả món ăn theo danh sách ID"),
+        )

@@ -77,10 +77,29 @@ final results = await restaurants.search(
   ),
 );
 
+// Restaurants: Search (Formatted)
+final restaurantsFormatted = await restaurants.searchFormatted(
+  RestaurantSearchParams(
+    focusLat: 10.8231,
+    focusLon: 106.6297,
+    query: 'phở',
+    radius: 5000,
+    minRating: 3.5,
+    limit: 20,
+  ),
+);
+print(restaurantsFormatted.result);
+
 // Restaurants: By IDs
 final byIds = await restaurants.byIds(
   RestaurantsByIdsParams(ids: results.take(3).map((e) => e.id).toList()),
 );
+
+// Restaurants: By IDs (Formatted)
+final byIdsFormatted = await restaurants.byIdsFormatted(
+  RestaurantsByIdsParams(ids: results.take(3).map((e) => e.id).toList()),
+);
+print(byIdsFormatted.result);
 
 // Foods: Search
 final foodsResult = await foods.search(
@@ -95,10 +114,27 @@ final foodsResult = await foods.search(
   ),
 );
 
+// Each Food now includes a `description` field (defaults to "No description" when missing).
+
+// Foods: Search (Formatted)
+final foodsFormatted = await foods.searchFormatted(
+  FoodSearchParams(
+    query: 'bún',
+    limit: 20,
+  ),
+);
+print(foodsFormatted.result);
+
 // Foods: By IDs
 final foodsByIds = await foods.byIds(
   FoodsByIdsParams(ids: foodsResult.take(3).map((e) => e.id).toList()),
 );
+
+// Foods: By IDs (Formatted)
+final foodsByIdsFormatted = await foods.byIdsFormatted(
+  FoodsByIdsParams(ids: foodsResult.take(3).map((e) => e.id).toList()),
+);
+print(foodsByIdsFormatted.result);
 
 // Search: Structured result (locations + organic results)
 final searchResult = await search.search(

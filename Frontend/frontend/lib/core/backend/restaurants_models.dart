@@ -173,3 +173,13 @@ class RestaurantsByIdsParams {
     };
   }
 }
+
+class RestaurantsResultFormatted {
+  const RestaurantsResultFormatted({required this.result});
+
+  final String result;
+
+  factory RestaurantsResultFormatted.fromJson(Map<String, dynamic> json) {
+    return RestaurantsResultFormatted(result: json['result']?.toString() ?? '');
+  }
+}
