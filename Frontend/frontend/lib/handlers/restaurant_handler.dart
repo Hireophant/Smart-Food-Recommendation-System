@@ -1,7 +1,7 @@
 import 'package:frontend/core/backend/restaurants_client.dart';
 import 'package:frontend/core/backend/restaurants_models.dart';
 
-import '../models/restaurant_item.dart';
+import '../models/food_model.dart';
 
 class RestaurantHandler {
   final RestaurantsClient _restaurantsClient;
