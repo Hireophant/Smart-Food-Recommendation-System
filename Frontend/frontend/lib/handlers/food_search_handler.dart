@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
 import 'dish_handler.dart';
@@ -14,11 +12,15 @@ abstract class FoodSearchHandler {
   // --- Discovery Flow ---
   Future<List<DishItem>> getAllDishes(); //lay all cac mon an ra
   Future<List<DishItem>> searchDishes(String query); //tim mon an theo query
-  Future<SearchResult> searchFoods(String query); //tim restaurant (o day goi la Food) theo query
+  Future<SearchResult> searchFoods(
+    String query,
+  ); //tim restaurant (o day goi la Food) theo query
 
   // --- Restaurant Flow ---
   Future<SearchResult> getAllFoods(); //lay all nha hang ra (Food = nha hang)
-  Future<SearchResult> getRestaurantsByDish(String dishId); //tim nha hang theo mon an (dish)
+  Future<SearchResult> getRestaurantsByDish(
+    String dishId,
+  ); //tim nha hang theo mon an (dish)
   //Future<RestaurantItem?> getFoodDetails(String id); //bo ham nay vi ko the tim duoc description cho nha hang
   //Future<List<MenuItem>> getMenu(String id); //bo ham nay vi ko co menu
 }
@@ -28,146 +30,146 @@ abstract class FoodSearchHandler {
 /// Class này giả lập việc gọi API từ Backend.
 /// - Dữ liệu cứng (Hardcoded) được dùng để hiển thị các quán mẫu đẹp mắt.
 /// - T tích hợp gọi API OpenStreetMap (Nominatim) để tìm kiếm địa điểm thực tế.
-class MockFoodSearchHandler implements FoodSearchHandler {
-  // Use data from RestaurantHandler to ensure consistency
-  List<RestaurantItem> get _mockFoods => MockRestaurantHandler.mockRestaurants;
+// class MockFoodSearchHandler implements FoodSearchHandler {
+//   // Use data from RestaurantHandler to ensure consistency
+//   List<RestaurantItem> get _mockFoods => MockRestaurantHandler.mockRestaurants;
 
-  @override
-  Future<SearchResult> searchFoods(String query) async {
-    // 1. Search in local mock data
-    final lowerQuery = query.toLowerCase();
+//   @override
+//   Future<SearchResult> searchFoods(String query) async {
+//     // 1. Search in local mock data
+//     final lowerQuery = query.toLowerCase();
 
-    // If query is "all", return all restaurants
-    if (lowerQuery == 'all') {
-      return SearchResult(items: _mockFoods);
-    }
+//     // If query is "all", return all restaurants
+//     if (lowerQuery == 'all') {
+//       return SearchResult(items: _mockFoods);
+//     }
 
-    final localResults = _mockFoods
-        .where(
-          (restaurant) =>
-              restaurant.name.toLowerCase().contains(lowerQuery) ||
-              restaurant.category.toLowerCase().contains(lowerQuery) ||
-              (restaurant.description?.toLowerCase().contains(lowerQuery) ??
-                  false) ||
-              restaurant.tags.any(
-                (tag) => tag.toLowerCase().contains(lowerQuery),
-              ),
-        )
-        .toList();
+//     final localResults = _mockFoods
+//         .where(
+//           (restaurant) =>
+//               restaurant.name.toLowerCase().contains(lowerQuery) ||
+//               restaurant.category.toLowerCase().contains(lowerQuery) ||
+//               (restaurant.description?.toLowerCase().contains(lowerQuery) ??
+//                   false) ||
+//               restaurant.tags.any(
+//                 (tag) => tag.toLowerCase().contains(lowerQuery),
+//               ),
+//         )
+//         .toList();
 
-    // 2. Search in OSM (if query is long enough)
-    if (query.length > 2) {
-      try {
-        final url = Uri.parse(
-          'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5&countrycodes=vn',
-        );
+//     // 2. Search in OSM (if query is long enough)
+//     if (query.length > 2) {
+//       try {
+//         final url = Uri.parse(
+//           'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5&countrycodes=vn',
+//         );
 
-        // Add User-Agent as required by Nominatim
-        final response = await http.get(
-          url,
-          headers: {'User-Agent': 'SmartFoodApp/1.0'},
-        );
+//         // Add User-Agent as required by Nominatim
+//         final response = await http.get(
+//           url,
+//           headers: {'User-Agent': 'SmartFoodApp/1.0'},
+//         );
 
-        if (response.statusCode == 200) {
-          final List<dynamic> data = json.decode(response.body);
-          final osmResults = data.map((item) {
-            return RestaurantItem(
-              id: 'osm_${item['place_id']}',
-              name:
-                  item['display_name']?.split(',').first ?? 'Unknown Location',
-              category: item['type'] ?? 'Place',
-              rating: 4.0, // Default rating for OSM
-              ratingCount: 10,
-              imageUrl: 'assets/images/com_tam.png', // Fallback image
-              address: item['display_name'] ?? 'Địa chỉ đang cập nhật',
-              description: item['display_name'],
-              priceLevel: '\$\$',
-              isOpen: true,
-              distance: 'Unknown',
-              tags: ['OSM Result'],
-              latitude: double.parse(item['lat']),
-              longitude: double.parse(item['lon']),
-            );
-          }).toList();
+//         if (response.statusCode == 200) {
+//           final List<dynamic> data = json.decode(response.body);
+//           final osmResults = data.map((item) {
+//             return RestaurantItem(
+//               id: 'osm_${item['place_id']}',
+//               name:
+//                   item['display_name']?.split(',').first ?? 'Unknown Location',
+//               category: item['type'] ?? 'Place',
+//               rating: 4.0, // Default rating for OSM
+//               ratingCount: 10,
+//               imageUrl: 'assets/images/com_tam.png', // Fallback image
+//               address: item['display_name'] ?? 'Địa chỉ đang cập nhật',
+//               description: item['display_name'],
+//               priceLevel: '\$\$',
+//               isOpen: true,
+//               distance: 'Unknown',
+//               tags: ['OSM Result'],
+//               latitude: double.parse(item['lat']),
+//               longitude: double.parse(item['lon']),
+//             );
+//           }).toList();
 
-          localResults.addAll(osmResults);
-        }
-      } catch (e) {
-        // print('OSM Search Error: $e');
-        // Ignore error and return local results
-      }
-    }
+//           localResults.addAll(osmResults);
+//         }
+//       } catch (e) {
+//         // print('OSM Search Error: $e');
+//         // Ignore error and return local results
+//       }
+//     }
 
-    return SearchResult(items: localResults);
-  }
+//     return SearchResult(items: localResults);
+//   }
 
-  @override
-  Future<SearchResult> getAllFoods() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return SearchResult(items: _mockFoods);
-  }
+//   @override
+//   Future<SearchResult> getAllFoods() async {
+//     await Future.delayed(const Duration(milliseconds: 200));
+//     return SearchResult(items: _mockFoods);
+//   }
 
-  @override
-  Future<RestaurantItem?> getFoodDetails(String id) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    try {
-      return _mockFoods.firstWhere((restaurant) => restaurant.id == id);
-    } catch (e) {
-      return null;
-    }
-  }
+//   @override
+//   Future<RestaurantItem?> getFoodDetails(String id) async {
+//     await Future.delayed(const Duration(milliseconds: 100));
+//     try {
+//       return _mockFoods.firstWhere((restaurant) => restaurant.id == id);
+//     } catch (e) {
+//       return null;
+//     }
+//   }
 
-  @override
-  Future<List<MenuItem>> getMenu(String restaurantId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    // Mock menu - Generic items for now
-    return [
-      MenuItem(
-        id: '1',
-        name: 'Signature Dish',
-        description: 'Best in town',
-        price: 50000,
-        imageUrl: 'assets/images/com_tam.png',
-      ),
-      MenuItem(
-        id: '2',
-        name: 'Special Drink',
-        description: 'Refeshing',
-        price: 25000,
-        imageUrl: 'assets/images/che.png',
-      ),
-    ];
-  }
+//   @override
+//   Future<List<MenuItem>> getMenu(String restaurantId) async {
+//     await Future.delayed(const Duration(milliseconds: 500));
+//     // Mock menu - Generic items for now
+//     return [
+//       MenuItem(
+//         id: '1',
+//         name: 'Signature Dish',
+//         description: 'Best in town',
+//         price: 50000,
+//         imageUrl: 'assets/images/com_tam.png',
+//       ),
+//       MenuItem(
+//         id: '2',
+//         name: 'Special Drink',
+//         description: 'Refeshing',
+//         price: 25000,
+//         imageUrl: 'assets/images/che.png',
+//       ),
+//     ];
+//   }
 
-  @override
-  Future<List<DishItem>> getAllDishes() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    // Retrieve from DishHandler to ensure consistency
-    return DishHandler.allDishes;
-  }
+//   @override
+//   Future<List<DishItem>> getAllDishes() async {
+//     await Future.delayed(const Duration(milliseconds: 300));
+//     // Retrieve from DishHandler to ensure consistency
+//     return DishHandler.allDishes;
+//   }
 
-  @override
-  Future<List<DishItem>> searchDishes(String query) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final lowerQuery = query.toLowerCase();
-    return DishHandler.allDishes.where((dish) {
-      return dish.name.toLowerCase().contains(lowerQuery) ||
-          dish.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
-    }).toList();
-  }
+//   @override
+//   Future<List<DishItem>> searchDishes(String query) async {
+//     await Future.delayed(const Duration(milliseconds: 200));
+//     final lowerQuery = query.toLowerCase();
+//     return DishHandler.allDishes.where((dish) {
+//       return dish.name.toLowerCase().contains(lowerQuery) ||
+//           dish.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+//     }).toList();
+//   }
 
-  @override
-  Future<SearchResult> getRestaurantsByDish(String dishId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+//   @override
+//   Future<SearchResult> getRestaurantsByDish(String dishId) async {
+//     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Use the logic from RestaurantHandler to map dishId to Name
-    // For simplicity, we can instantiate MockRestaurantHandler or just use similar logic
-    // Since FoodSearchHandler is somewhat redundant with RestaurantHandler, ideally they merge.
-    // But for now, let's delegate.
+//     // Use the logic from RestaurantHandler to map dishId to Name
+//     // For simplicity, we can instantiate MockRestaurantHandler or just use similar logic
+//     // Since FoodSearchHandler is somewhat redundant with RestaurantHandler, ideally they merge.
+//     // But for now, let's delegate.
 
-    return MockRestaurantHandler().getRestaurantsByDish(dishId);
-  }
-}
+//     return MockRestaurantHandler().getRestaurantsByDish(dishId);
+//   }
+// }
 
 class FoodSearchHandlerImpl implements FoodSearchHandler {
   final DishHandler dishHandler;
@@ -195,15 +197,13 @@ class FoodSearchHandlerImpl implements FoodSearchHandler {
   /// Wrapper: search ăn uống (dish + restaurant)
   @override
   Future<SearchResult> searchFoods(String query) async {
-    final results = await Future.wait([
-      dishHandler.searchDishes(query: query),
-      restaurantHandler.searchRestaurants(query: query),
-    ]);
+    try {
+      final results = await restaurantHandler.searchRestaurants(query: query);
 
-    return SearchResult(
-      dishes: results[0] as List<DishItem>,
-      restaurants: results[1] as List<RestaurantItem>,
-    );
+      return SearchResult(items: results);
+    } catch (e) {
+      return SearchResult.error("Lỗi: ${e.toString()}");
+    }
   }
 
   // -------------------------
@@ -212,30 +212,34 @@ class FoodSearchHandlerImpl implements FoodSearchHandler {
 
   @override
   Future<SearchResult> getAllFoods() async {
-    final restaurants = await restaurantHandler.searchRestaurants(query: '');
-    return SearchResult(
-      restaurants: restaurants,
-    );
+    try {
+      final restaurants = await restaurantHandler.searchRestaurants(query: '');
+      return SearchResult(items: restaurants);
+    } catch (e) {
+      return SearchResult.error("Lỗi: ${e.toString()}");
+    }
   }
 
   @override
   Future<SearchResult> getRestaurantsByDish(String dishName) async {
-    final restaurants = await restaurantHandler.searchRestaurants(
-      query: dishName,
-    );
-    return SearchResult(
-      restaurants: restaurants,
-    );
+    try {
+      final restaurants = await restaurantHandler.searchRestaurants(
+        query: dishName,
+      );
+      return SearchResult(items: restaurants);
+    } catch (e) {
+      return SearchResult.error("Lỗi: ${e.toString()}");
+    }
   }
 
   //@override
   //Future<RestaurantItem?> getFoodDetails(String id) {
-    //return restaurantHandler.getRestaurantById(id);
+  //return restaurantHandler.getRestaurantById(id);
   //}
 
   //@override
   //Future<List<MenuItem>> getMenu(String id) {
-    // Không có menu trong backend
-    //throw UnimplementedError('Menu is not supported');
+  // Không có menu trong backend
+  //throw UnimplementedError('Menu is not supported');
   //}
 }

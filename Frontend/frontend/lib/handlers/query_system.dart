@@ -1,3 +1,9 @@
+import 'package:frontend/core/backend/backend_api.dart';
+import 'package:frontend/core/backend/foods_client.dart';
+import 'package:frontend/core/backend/restaurants_client.dart';
+import 'package:frontend/handlers/dish_handler.dart';
+import 'package:frontend/handlers/restaurant_handler.dart';
+
 import '../handlers/food_search_handler.dart';
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
@@ -13,6 +19,8 @@ import 'chat_handler.dart';
 ///
 /// Xem thêm: Guideline.md -> Mục 6. Query System
 class QuerySystem {
+  static final String backendUrl = "http://localhost:8000";
+
   // Singleton pattern (Optional but recommended for central access)
   static final QuerySystem _instance = QuerySystem._internal();
   factory QuerySystem() => _instance;
@@ -20,7 +28,12 @@ class QuerySystem {
 
   // Dependency Injection could be used here for better testing
   // For now, we initialize the default handler.
-  final FoodSearchHandler _foodHandler = FoodSearchHandlerImpl();
+  final FoodSearchHandler _foodHandler = FoodSearchHandlerImpl(
+    dishHandler: DishHandler(FoodsClient(BackendAPI(baseUrl: backendUrl))),
+    restaurantHandler: RestaurantHandler(
+      RestaurantsClient(BackendAPI(baseUrl: backendUrl)),
+    ),
+  );
 
   // =========================================================================
   // DISH & DISCOVERY
@@ -53,12 +66,12 @@ class QuerySystem {
 
   /// Lấy menu của nhà hàng (Cho RestaurantDetailPage)
   //Future<List<MenuItem>> getMenu(String restaurantId) {
-    //return _foodHandler.getMenu(restaurantId);
+  //return _foodHandler.getMenu(restaurantId);
   //}
 
   /// Lấy chi tiết thông tin nhà hàng (Nếu cần thiết cho Deep Link hoặc reload)
   //Future<RestaurantItem?> getRestaurantDetails(String restaurantId) {
-    //return _foodHandler.getFoodDetails(restaurantId);
+  //return _foodHandler.getFoodDetails(restaurantId);
   //}
   // =========================================================================
   // CHATBOT

@@ -14,10 +14,7 @@ class RestaurantHandler {
     int limit = 10,
   }) async {
     final restaurants = await _restaurantsClient.search(
-      RestaurantSearchParams(
-        query: query,
-        limit: limit,
-      ),
+      RestaurantSearchParams(query: query, limit: limit),
     );
 
     return restaurants.map(_mapRestaurantToItem).toList();
@@ -36,7 +33,7 @@ class RestaurantHandler {
   // ============================
   // Mapping
   // ============================
-  RestaurantItem _mapRestaurantToItem(RestaurantModel restaurant) {
+  RestaurantItem _mapRestaurantToItem(Restaurant restaurant) {
     final location = restaurant.location;
 
     return RestaurantItem(
@@ -45,11 +42,12 @@ class RestaurantHandler {
       category: restaurant.category,
       rating: restaurant.rating,
       address: location.address,
-      province: location.province,
-      district: location.district,
-      distanceKm: location.distanceKm,
-      tags: restaurant.tags ?? const [],
-      link: restaurant.link,
+      //province: location.province,
+      //district: location.district,
+      //distanceKm: location.distanceKm,
+      tags: restaurant.tags,
+      imageUrl: 'assets/images/com_tam.png',
+      //link: restaurant.link,
     );
   }
 }
