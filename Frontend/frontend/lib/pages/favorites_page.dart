@@ -179,18 +179,23 @@ class _FavoritesPageState extends State<FavoritesPage>
       );
     }
 
-    return GridView.builder(
+    // LIST VIEW
+    return ListView.separated(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.95,
-      ),
       itemCount: provider.favoriteDishes.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final dish = provider.favoriteDishes[index];
-        return _buildDishCard(context, dish, provider);
+        return DishCard(
+          item: dish,
+          isHorizontal: true, // Enable horizontal mode
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => RestaurantListPage(dish: dish)),
+            );
+          },
+        );
       },
     );
   }
@@ -208,19 +213,16 @@ class _FavoritesPageState extends State<FavoritesPage>
       );
     }
 
-    return GridView.builder(
+    // LIST VIEW
+    return ListView.separated(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.95,
-      ),
       itemCount: provider.favoriteRestaurants.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final restaurant = provider.favoriteRestaurants[index];
         return RestaurantCard(
           item: restaurant,
+          isHorizontal: true, // Enable horizontal mode
           onTap: () {
             Navigator.push(
               context,
@@ -229,22 +231,6 @@ class _FavoritesPageState extends State<FavoritesPage>
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildDishCard(
-    BuildContext context,
-    DishItem dish,
-    FavoritesProvider provider,
-  ) {
-    return DishCard(
-      item: dish,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => RestaurantListPage(dish: dish)),
         );
       },
     );
