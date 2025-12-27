@@ -6,6 +6,10 @@ class UserProfile {
     required this.level,
     required this.dishEaten,
     required this.restaurantVisited,
+    this.phoneNumber,
+    this.occupations,
+    this.address,
+    this.nickname,
     this.createdAt,
     this.updatedAt,
   });
@@ -16,6 +20,10 @@ class UserProfile {
   final int level;
   final int dishEaten;
   final int restaurantVisited;
+  final String? phoneNumber;
+  final String? occupations;
+  final String? address;
+  final String? nickname;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -29,6 +37,10 @@ class UserProfile {
       level: _intOrDefault(json['level'], 1),
       dishEaten: _intOrDefault(json['dish_eaten'], 0),
       restaurantVisited: _intOrDefault(json['restaurant_visited'], 0),
+      phoneNumber: json['phone_number'] as String?,
+      occupations: json['occupations'] as String?,
+      address: json['address'] as String?,
+      nickname: json['nickname'] as String?,
       createdAt: _dateTimeOrNull(json['created_at']),
       updatedAt: _dateTimeOrNull(json['updated_at']),
     );
@@ -42,6 +54,10 @@ class UserProfile {
       'level': level,
       'dish_eaten': dishEaten,
       'restaurant_visited': restaurantVisited,
+      'phone_number': phoneNumber,
+      'occupations': occupations,
+      'address': address,
+      'nickname': nickname,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };

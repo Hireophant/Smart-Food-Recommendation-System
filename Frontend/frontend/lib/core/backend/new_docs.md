@@ -13,6 +13,7 @@ This folder keeps the *new* backend API layer.
 - `restaurants_models.dart`, `restaurants_client.dart`: Restaurant models + client.
 - `foods_models.dart`, `foods_client.dart`: Foods models + client.
 - `search_models.dart`, `search_client.dart`: Search models + client.
+- `weather_models.dart`, `weather_client.dart`: Weather models + client.
 
 ## Quick usage
 
@@ -26,12 +27,15 @@ import 'package:frontend/core/backend/restaurants_client.dart';
 import 'package:frontend/core/backend/restaurants_models.dart';
 import 'package:frontend/core/backend/search_client.dart';
 import 'package:frontend/core/backend/search_models.dart';
+import 'package:frontend/core/backend/weather_client.dart';
+import 'package:frontend/core/backend/weather_models.dart';
 
 final api = BackendAPI(); // defaults to http://localhost:8000
 final maps = MapsClient(api);
 final foods = FoodsClient(api);
 final restaurants = RestaurantsClient(api);
 final search = SearchClient(api);
+final weather = WeatherClient(api);
 
 // Maps: Autocomplete
 final suggestions = await maps.autocomplete(
@@ -111,6 +115,13 @@ final formatted = await search.formatted(
   SearchParams(query: 'Bánh mì', maxLocations: 5, maxResults: 5),
 );
 print(formatted.result);
+
+// Weather: Structured object
+final w = await weather.weather(WeatherParams(lat: 10.8231, lon: 106.6297));
+
+// Weather: Formatted string
+final wText = await weather.formatted(WeatherParams(lat: 10.8231, lon: 106.6297));
+print(wText.result);
 
 api.dispose();
 ```

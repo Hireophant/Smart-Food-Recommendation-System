@@ -22,6 +22,8 @@ from schemas.ai import AIGenerateRequestSchema, AIMessageSchema, AIAvailableMode
 from typing import List
 from handlers.search import SearchHandler
 from schemas.search import SearchResponseModel, SearchResultFormattedModel
+from handlers.weather import WeatherHandler
+from schemas.weather import WeatherResponseModel, WeatherInfoFormattedModel
 
 class QuerySystem:
     """The centralized backend query system."""
@@ -251,3 +253,11 @@ class QuerySystem:
             max_locations=max_locations,
             max_results=max_results,
         )
+
+    @staticmethod
+    async def WeatherObject(lat: float, lon: float) -> WeatherResponseModel:
+        return await WeatherHandler.Weather(lat=lat, lon=lon)
+
+    @staticmethod
+    async def WeatherFormatted(lat: float, lon: float) -> WeatherInfoFormattedModel:
+        return await WeatherHandler.WeatherFormatted(lat=lat, lon=lon)

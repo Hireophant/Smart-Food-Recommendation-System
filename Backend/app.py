@@ -1,4 +1,4 @@
-import dotenv, schemas.errors, routers.maps, routers.data, routers.ai, routers.search
+import dotenv, schemas.errors, routers.maps, routers.data, routers.ai, routers.search, routers.weather
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,6 +59,7 @@ app.include_router(routers.maps.router)
 app.include_router(routers.data.router)
 app.include_router(routers.ai.router)
 app.include_router(routers.search.router)
+app.include_router(routers.weather.router)
 
 # Add rate limiter state
 app.state.limiter = limiter
