@@ -20,7 +20,7 @@ class QuerySystem {
 
   // Dependency Injection could be used here for better testing
   // For now, we initialize the default handler.
-  final FoodSearchHandler _foodHandler = MockFoodSearchHandler();
+  final FoodSearchHandler _foodHandler = FoodSearchHandlerImpl();
 
   // =========================================================================
   // DISH & DISCOVERY
@@ -46,20 +46,20 @@ class QuerySystem {
   // =========================================================================
 
   /// Tìm nhà hàng bán món cụ thể (Khi chọn món ở Home -> RestaurantListPage)
-  Future<SearchResult> findRestaurantsByDish(String dishId) {
+  Future<SearchResult> findRestaurantsByDish(String dishName) {
     // Logic phức tạp hơn có thể nằm ở đây (ví dụ: logging, analytics)
-    return _foodHandler.getRestaurantsByDish(dishId);
+    return _foodHandler.getRestaurantsByDish(dishName);
   }
 
   /// Lấy menu của nhà hàng (Cho RestaurantDetailPage)
-  Future<List<MenuItem>> getMenu(String restaurantId) {
-    return _foodHandler.getMenu(restaurantId);
-  }
+  //Future<List<MenuItem>> getMenu(String restaurantId) {
+    //return _foodHandler.getMenu(restaurantId);
+  //}
 
   /// Lấy chi tiết thông tin nhà hàng (Nếu cần thiết cho Deep Link hoặc reload)
-  Future<RestaurantItem?> getRestaurantDetails(String restaurantId) {
-    return _foodHandler.getFoodDetails(restaurantId);
-  }
+  //Future<RestaurantItem?> getRestaurantDetails(String restaurantId) {
+    //return _foodHandler.getFoodDetails(restaurantId);
+  //}
   // =========================================================================
   // CHATBOT
   // =========================================================================

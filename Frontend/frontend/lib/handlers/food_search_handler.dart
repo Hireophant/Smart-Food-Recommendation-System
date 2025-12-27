@@ -12,15 +12,15 @@ import 'restaurant_handler.dart';
 /// Xem thêm: Guideline.md -> Mục 3.2 "Fake it until you make it"
 abstract class FoodSearchHandler {
   // --- Discovery Flow ---
-  Future<List<DishItem>> getAllDishes();
-  Future<List<DishItem>> searchDishes(String query);
-  Future<SearchResult> searchFoods(String query);
+  Future<List<DishItem>> getAllDishes(); //lay all cac mon an ra
+  Future<List<DishItem>> searchDishes(String query); //tim mon an theo query
+  Future<SearchResult> searchFoods(String query); //tim restaurant (o day goi la Food) theo query
 
   // --- Restaurant Flow ---
-  Future<SearchResult> getAllFoods();
-  Future<SearchResult> getRestaurantsByDish(String dishId);
-  Future<RestaurantItem?> getFoodDetails(String id);
-  Future<List<MenuItem>> getMenu(String id);
+  Future<SearchResult> getAllFoods(); //lay all nha hang ra (Food = nha hang)
+  Future<SearchResult> getRestaurantsByDish(String dishId); //tim nha hang theo mon an (dish)
+  //Future<RestaurantItem?> getFoodDetails(String id); //bo ham nay vi ko the tim duoc description cho nha hang
+  //Future<List<MenuItem>> getMenu(String id); //bo ham nay vi ko co menu
 }
 
 /// Implementation hiện tại - Mock Data kết hợp OSM Search
@@ -167,4 +167,75 @@ class MockFoodSearchHandler implements FoodSearchHandler {
 
     return MockRestaurantHandler().getRestaurantsByDish(dishId);
   }
+}
+
+class FoodSearchHandlerImpl implements FoodSearchHandler {
+  final DishHandler dishHandler;
+  final RestaurantHandler restaurantHandler;
+
+  FoodSearchHandlerImpl({
+    required this.dishHandler,
+    required this.restaurantHandler,
+  });
+
+  // -------------------------
+  // Discovery Flow
+  // -------------------------
+
+  @override
+  Future<List<DishItem>> getAllDishes() {
+    return dishHandler.searchDishes(query: '');
+  }
+
+  @override
+  Future<List<DishItem>> searchDishes(String query) {
+    return dishHandler.searchDishes(query: query);
+  }
+
+  /// Wrapper: search ăn uống (dish + restaurant)
+  @override
+  Future<SearchResult> searchFoods(String query) async {
+    final results = await Future.wait([
+      dishHandler.searchDishes(query: query),
+      restaurantHandler.searchRestaurants(query: query),
+    ]);
+
+    return SearchResult(
+      dishes: results[0] as List<DishItem>,
+      restaurants: results[1] as List<RestaurantItem>,
+    );
+  }
+
+  // -------------------------
+  // Restaurant Flow
+  // -------------------------
+
+  @override
+  Future<SearchResult> getAllFoods() async {
+    final restaurants = await restaurantHandler.searchRestaurants(query: '');
+    return SearchResult(
+      restaurants: restaurants,
+    );
+  }
+
+  @override
+  Future<SearchResult> getRestaurantsByDish(String dishName) async {
+    final restaurants = await restaurantHandler.searchRestaurants(
+      query: dishName,
+    );
+    return SearchResult(
+      restaurants: restaurants,
+    );
+  }
+
+  //@override
+  //Future<RestaurantItem?> getFoodDetails(String id) {
+    //return restaurantHandler.getRestaurantById(id);
+  //}
+
+  //@override
+  //Future<List<MenuItem>> getMenu(String id) {
+    // Không có menu trong backend
+    //throw UnimplementedError('Menu is not supported');
+  //}
 }
