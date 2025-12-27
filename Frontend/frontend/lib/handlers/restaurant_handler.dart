@@ -24,7 +24,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '84 Đặng Văn Ngữ, P. 10, Q. Phú Nhuận. Quán gia truyền từ 1995, nổi tiếng với miếng sườn nướng “to bằng cái mặt” phủ kín dĩa cơm. Sườn được ướp theo công thức riêng, nướng than thơm phức, mềm vàng óng hấp dẫn. Quán được Michelin xếp hạng Bib Gourmand nhờ chất lượng xuất sắc và giá cả phải chăng.',
       priceLevel: '\$\$',
-      tags: ['Cơm Tấm', 'Authentic', 'HCMC'],
+      tags: ['Cơm Tấm', 'Authentic', 'HCMC', 'Mặn', 'Ngọt'],
       latitude: 10.798366,
       longitude: 106.677896,
     ),
@@ -100,7 +100,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '72 Nguyễn Thượng Hiền, P. 5, Q.3 (và các chi nhánh). Thương hiệu hủ tiếu Nam Vang “Việt hóa” gắn liền với Sài Gòn từ 1990. Tô hủ tiếu đầy ắp tôm, thịt bằm, tim, gan… và rau giá trụng, đặc biệt phiên bản hủ tiếu khô trộn tỏi phi và nước sốt đậm đà rất được ưa chuộng. Nước lèo ngọt thanh ninh từ xương, sợi hủ tiếu dai mềm đúng chuẩn.',
       priceLevel: '\$\$\$',
-      tags: ['Hủ Tiếu', 'Authentic', 'HCMC'],
+      tags: ['Hủ Tiếu', 'Authentic', 'HCMC', 'Mặn', 'Ngọt'],
       latitude: 10.784167,
       longitude: 106.685278,
     ),
@@ -115,7 +115,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           'A65 Nguyễn Trãi, P. Nguyễn Cư Trinh, Q.1. Quán hủ tiếu Nam Vang nổi tiếng khu trung tâm, lúc nào cũng đông khách. Nước dùng trong vắt, vị ngọt xương tự nhiên. Tô hủ tiếu “đặc biệt” đầy đủ tôm, mực, trứng cút, thịt nạc, tim gan; sợi hủ tiếu dai. Quán phục vụ nhanh, không gian sạch sẽ thoáng mát.',
       priceLevel: '\$',
-      tags: ['Hủ Tiếu', 'Authentic', 'HCMC'],
+      tags: ['Hủ Tiếu', 'Authentic', 'HCMC', 'Mặn'],
       latitude: 10.767778,
       longitude: 106.686111,
     ),
@@ -191,7 +191,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '19 Huỳnh Khương Ninh, P. Đa Kao, Q.1. Xe bánh mì gia truyền gần 90 năm, nhỏ bé nằm trong con hẻm nhưng luôn tấp nập người mua. Bánh mì ở đây được đánh giá cao nhờ các nguyên liệu “nhà làm” sạch sẽ: từ ổ bánh mì đặc ruột nướng giòn, pate gan béo thơm đến xá xíu, chả lụa tự làm chất lượng. Mỗi ổ chỉ khoảng 20k nhưng đầy đủ vị mặn mà của thịt chả, béo bùi của pate trứng muối và chua giòn của đồ chua.',
       priceLevel: '\$',
-      tags: ['Bánh Mì', 'Authentic', 'HCMC'],
+      tags: ['Bánh Mì', 'Authentic', 'HCMC', 'Mặn', 'Cay'],
       latitude: 10.787778,
       longitude: 106.699444,
     ),
@@ -236,7 +236,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           'Trước số 39 Nguyễn Trãi, P. Bến Thành, Q.1 (xe đẩy vỉa hè). Xe bánh mì thịt nướng nhỏ nhưng “có võ”, từng được nhiều tạp chí nước ngoài khen ngợi. Chủ quán nướng những xiên thịt heo ướp mật ong trên bếp than đỏ rực, mùi thơm lan tỏa cả góc phố. Ổ bánh mì kẹp thịt nướng nóng hổi, thêm đồ chua, dưa leo và chan nước sốt bí truyền cay ngọt. Thịt nướng mềm thơm, đậm đà ăn một lần nhớ mãi. Quán bán từ chiều đến tối, giá chỉ ~20k nên thường xuyên có hàng dài khách xếp hàng.',
       priceLevel: '\$',
-      tags: ['Bánh Mì', 'Authentic', 'HCMC'],
+      tags: ['Bánh Mì', 'Authentic', 'HCMC', 'Mặn', 'Cay', 'Ngọt'],
       latitude: 10.767222,
       longitude: 106.685556,
     ),
@@ -297,7 +297,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '63/6 Pasteur, P. Bến Nghé, Q.1. Quán phở gia đình mở từ năm 1944 trong con hẻm nhỏ giữa trung tâm Sài Gòn. Phở Minh mang hương vị phở Bắc xưa: nước dùng thanh trong, thơm mùi hồi quế rất nhẹ, bò chín hầm mềm nhưng không nát, bò tái vừa chín tới ngọt thịt. Điều đặc biệt là quán phục vụ rau giá trụng và tương đen để phù hợp khẩu vị miền Nam từ những năm 1940 – một sự dung hòa thú vị giữa phở Bắc và Nam. Không gian quán xưa cũ, tường gạch gác gỗ giản dị, trên tường còn treo ảnh các nghệ sĩ cải lương từng ghé quán. Tô phở nhỏ nhỏ giá ~60k, khách đến không chỉ vì món ăn mà còn để tìm về ký ức Sài Gòn.',
       priceLevel: '\$\$\$',
-      tags: ['Phở', 'Authentic', 'HCMC'],
+      tags: ['Phở', 'Authentic', 'HCMC', 'Mặn'],
       latitude: 10.778889,
       longitude: 106.699167,
     ),
@@ -328,7 +328,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '242 Đề Thám, P. Phạm Ngũ Lão, Q.1. Quán bún bò Huế lâu năm (từ 1991) do người Huế mở, rất nổi tiếng với dân địa phương. Nước dùng ở đây chuẩn vị Huế: thơm mùi sả, có màu dầu điều đỏ cam bắt mắt, vị đậm nhưng thanh không quá béo. Tô bún bò đầy đủ có khoanh giò heo to, chả cua Huế dai thơm và thịt bắp bò mềm ngọt. Rau sống kèm theo tươi sạch, chén mắm ruốc Huế riêng để khách nêm thêm. Quán vừa chuyển về gần khu phố Tây, không gian bình dân sạch sẽ, giá ~60k/tô.',
       priceLevel: '\$\$\$',
-      tags: ['Bún Bò Huế', 'Authentic', 'HCMC'],
+      tags: ['Bún Bò Huế', 'Authentic', 'HCMC', 'Cay', 'Mặn'],
       latitude: 10.767222,
       longitude: 106.690556,
     ),
@@ -343,7 +343,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           'Hẻm 14B Nguyễn Thị Thập, P. Bình Thuận, Q.7 (và chi nhánh Q.4). Tiệm bún bò vỉa hè nhỏ nhưng vinh dự được Michelin Guide xếp hạng Bib Gourmand hai năm liền. Mỗi tô chỉ gồm bún, bò tái mỏng và gân mềm, không có giò chả, tập trung vào tinh túy nước dùng. Nước lèo nấu từ xương bò và xương heo cho vị ngọt tự nhiên, thơm mùi sả và hành tây. Khi ăn, khách tự cho thêm giá trụng, ớt sa tế, chanh và chút mắm tùy thích theo gợi ý của Michelin. Nhờ hương vị hài hòa và giá cả bình dân (~40k), quán luôn đông khách xếp hàng mua mang đi.',
       priceLevel: '\$',
-      tags: ['Bún Bò Huế', 'Authentic', 'HCMC'],
+      tags: ['Bún Bò Huế', 'Authentic', 'HCMC', 'Cay', 'Mặn'],
       latitude: 10.736944,
       longitude: 106.719722,
     ),
@@ -404,7 +404,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '43 Huỳnh Mẫn Đạt, Q. Bình Thạnh & 287 Võ Văn Tần, Q.3…. Chuỗi súp cua “quốc dân” thu hút giới trẻ nhờ chất lượng và dịch vụ tốt. Súp cua ở đây nấu sánh mịn, vị vừa ăn. Topping siêu đa dạng: nào là thịt cua, thịt gà xé, trứng bắc thảo bùi béo, óc heo hấp mềm… muỗng nào cũng đầy ắp rất “đã miệng”. Quán cam kết không dùng bột ngọt, nguyên liệu tươi sạch mỗi ngày nên khách khá yên tâm. Có không gian ngồi lại thoải mái, nhân viên nhanh nhẹn và có bán qua app giao hàng. Giá một chén dao động 25k – 40k tùy loại.',
       priceLevel: '\$\$',
-      tags: ['Súp Cua', 'Authentic', 'HCMC'],
+      tags: ['Súp Cua', 'Authentic', 'HCMC', 'Ngọt', 'Mặn'],
       latitude: 10.803333,
       longitude: 106.713889,
     ),
@@ -434,7 +434,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '239 Lương Nhữ Học, P. 11, Q.5. Nhắc đến súp cua “ngon độc đáo” ở Sài Gòn không thể bỏ qua súp cua cô Lan với bong bóng cá kiểu người Hoa. Nồi súp cua của cô có thêm bong bóng cá (phần bóng cá khô chiên phồng) tạo độ giòn dai lạ miệng. Nước súp thì nấu theo phong cách Triều Châu, sệt vừa phải và thơm dầu mè. Một chén súp đầy đủ ngoài cua và bong bóng cá còn có cật heo, trứng cút, nấm tuyết, óc heo… Ăn kèm với chút sa tế tôm cay cay rất hợp. Quán bán trong chợ bình dân buổi chiều, giá khoảng 25k – 40k.',
       priceLevel: '\$\$\$',
-      tags: ['Súp Cua', 'Authentic', 'HCMC'],
+      tags: ['Súp Cua', 'Authentic', 'HCMC', 'Mặn', 'Cay'],
       latitude: 10.753056,
       longitude: 106.663333,
     ),
@@ -480,7 +480,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '127 Đinh Tiên Hoàng, P. Đa Kao, Q.1. Tiệm bánh cuốn gia truyền hơn 60 năm tuổi, mở từ 1961. Bánh cuốn ở đây tráng mỏng “mềm như lụa”, trắng tinh, bên trên rắc đầy hành phi vàng ruộm hấp dẫn. Nhân thịt băm vừa vị, chấm cùng nước mắm pha chua ngọt rất vừa ăn. Mỗi phần bánh cuốn có chả lụa, nem chua, chả quế tự làm cực chất lượng. Quán có không gian máy lạnh, phục vụ chu đáo, giá khoảng 50k/phần – hơi cao nhưng xứng đáng với thương hiệu bánh cuốn lâu đời bậc nhất Sài Gòn.',
       priceLevel: '\$\$',
-      tags: ['Bánh Cuốn', 'Authentic', 'HCMC'],
+      tags: ['Bánh Cuốn', 'Authentic', 'HCMC', 'Mặn', 'Chua'],
       latitude: 10.787222,
       longitude: 106.7025,
     ),
@@ -525,7 +525,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '55/19 Vạn Kiếp, P. 3, Q.Bình Thạnh. Quán bánh cuốn bình dân nổi danh nhờ món bánh cuốn trứng độc đáo. Mỗi lúc tráng bánh, cô bán đập một quả trứng gà vào khuôn bánh, tráng đều để trứng chín dính cùng bánh. Bánh cuốn thành phẩm có lớp trứng vàng ươm bên trong, béo thơm lạ miệng. Ăn kèm nhân thịt mộc nhĩ, chả và đồ chua. Nước mắm ở đây pha hơi ngọt, rất hợp với vị bánh cuốn trứng. Giá 30k/đĩa đầy đủ. Quán bán từ chiều đến tối, nằm trong con hẻm ẩm thực Vạn Kiếp nên khá đông khách trẻ tìm đến.',
       priceLevel: '\$\$',
-      tags: ['Bánh Cuốn', 'Authentic', 'HCMC'],
+      tags: ['Bánh Cuốn', 'Authentic', 'HCMC', 'Mặn', 'Chua', 'Béo'],
       latitude: 10.797222,
       longitude: 106.7025,
     ),
@@ -556,7 +556,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '243/30 Tôn Đản, P. 15, Q.4. Nhắc đến phá lấu Sài Gòn không ai không biết quán Dì Nủi trứ danh hơn 30 năm ở Xóm Chiếu, Q.4. Quán trong hẻm nhỏ nhưng lúc nào cũng đông nghịt khách. Phá lấu Dì Nủi có nước dùng màu cam đẹp, béo thơm mùi nước dừa, nêm nếm vừa ăn. Lòng bò được làm sạch kỹ, hầm mềm mà vẫn giữ độ giòn. Đặc biệt phá lấu ở đây không hề bị hôi nhờ bí quyết gia truyền. Mỗi chén phá lấu giá chỉ ~25k, chấm bánh mì giòn rụm bao no. Quán bán từ trưa đến tối, nhiều nghệ sĩ và du khách cũng ghé thử cho biết “phá lấu cô Nủi”.',
       priceLevel: '\$\$',
-      tags: ['Phá Lấu', 'Authentic', 'HCMC'],
+      tags: ['Phá Lấu', 'Authentic', 'HCMC', 'Béo', 'Mặn', 'Cay'],
       latitude: 10.760833,
       longitude: 106.706111,
     ),
@@ -586,7 +586,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           'Số 1, Đường số 4, Cư xá Đô Thành, Q. 3 (và các chi nhánh). Hệ thống Phá Lấu Lì do các bạn trẻ khởi xướng, biến tấu phá lấu truyền thống thành nhiều món độc đáo. Menu có phá lấu xào me, phá lấu nướng xiên que, lẩu phá lấu… Ngoài ra vẫn có phá lấu nước ăn bánh mì chuẩn vị. Xiên phá lấu nướng Lì tẩm ướp thấm vị, hơi cay cay, nướng lên thơm lừng rất “bắt mồi”. Mì phá lấu xào sa tế chua cay mặn ngọt đủ vị cũng là món “best-seller” của quán. Quán có không gian trẻ trung, giá từ 20k – 50k, thích hợp tụ tập bạn bè đổi gió.',
       priceLevel: '\$\$\$',
-      tags: ['Phá Lấu', 'Authentic', 'HCMC'],
+      tags: ['Phá Lấu', 'Authentic', 'HCMC', 'Chua', 'Cay', 'Mặn', 'Ngọt'],
       latitude: 10.785278,
       longitude: 106.686944,
     ),
@@ -632,7 +632,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           'Lô H Chung cư Ngô Gia Tự, P. 2, Q.10. Quán chè độc đáo phục vụ mâm chè 16 chén đủ loại, thích hợp đi nhóm đông người. Một mâm có các vị chè truyền thống: chè đậu xanh, chè đậu đen, chè bà ba, rau câu, sương sa hạt lựu, bánh flan, nước dừa… Chén chè nhỏ xinh vừa ăn, giá cả lại rất bình dân (~5k/chén), thực khách có thể thưởng thức được nhiều vị. Quán trong khu chung cư cũ, không gian giản dị, cô chủ thân thiện. Chè mâm 30k của Khánh Vy từng “gây sốt” trên mạng, khách du lịch cũng tìm đến trải nghiệm rất nhiều.',
       priceLevel: '\$',
-      tags: ['Chè', 'Authentic', 'HCMC'],
+      tags: ['Chè', 'Authentic', 'HCMC', 'Ngọt'],
       latitude: 10.773333,
       longitude: 106.668889,
     ),
@@ -647,7 +647,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '138 Châu Văn Liêm, P. 11, Q.5. Tiệm chè người Hoa hơn 30 năm tuổi giữa lòng Chợ Lớn, lúc nào cũng đông khách xếp hàng. Quán có menu ~40 món chè nóng lạnh đủ loại. Đặc sắc nhất phải kể đến chè mè đen nấu kiểu Quảng Đông mịn màng thơm bùi, ăn nóng bổ dưỡng. Bên cạnh đó là các món sâm bổ lượng, hạt sen củ năng, hột gà trà, cao quy linh… chuẩn vị Hoa, ngọt vừa phải thanh mát. Quán còn phục vụ thêm vài món mặn ăn chơi như bì cuốn chay, bánh ít trần để khách đổi vị. Không gian sạch sẽ sáng sủa, nhân viên phục vụ nhanh. Chè Hà Ký mở cửa từ trưa đến khuya, giá 20k – 33k/chén.',
       priceLevel: '\$\$\$',
-      tags: ['Chè', 'Authentic', 'HCMC'],
+      tags: ['Chè', 'Authentic', 'HCMC', 'Ngọt', 'Thanh'],
       latitude: 10.755556,
       longitude: 106.664722,
     ),
@@ -692,7 +692,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       description:
           '382 Nguyễn Tri Phương, P. 4, Q.10. Nhắc đến chè Sài Gòn mà quên chè Thái thì thiếu sót. Chè Thái Ý Phương nằm ngay “thiên đường ăn vặt” Nguyễn Tri Phương, nổi tiếng nhất với chè Thái sầu riêng. Một ly chè đầy màu sắc với thạch trái cây, mít, nhãn, củ năng… chan nước cốt dừa và sữa thơm lừng, phía trên đặt một muỗng thịt sầu riêng chín tới vàng ươm. Vị béo của nước cốt dừa hòa quyện với hương sầu riêng tạo thành mùi thơm hấp dẫn không thể chối từ. Ngoài ra quán còn có sinh tố trái cây, kem trái dừa… phục vụ giới trẻ. Không gian bình dân, giá từ 25k – 35k/ly, buổi tối rất đông khách.',
       priceLevel: '\$\$',
-      tags: ['Chè', 'Authentic', 'HCMC'],
+      tags: ['Chè', 'Authentic', 'HCMC', 'Ngọt', 'Béo'],
       latitude: 10.766667,
       longitude: 106.666111,
     ),
@@ -707,7 +707,7 @@ class MockRestaurantHandler implements RestaurantHandler {
       imageUrl: 'assets/images/bun_rieu.png',
       description: '287/66 Nguyễn Đình Chiểu, TP. HCM',
       priceLevel: '\$',
-      tags: ['Bún Riêu', 'Authentic', 'HCMC'],
+      tags: ['Bún Riêu', 'Authentic', 'HCMC', 'Chua', 'Mặn'],
       latitude: 10.798889,
       longitude: 106.700556,
     ),

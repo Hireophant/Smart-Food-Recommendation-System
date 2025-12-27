@@ -19,8 +19,13 @@ final List<FilterTag> defaultTags = [
   FilterTag(id: 'vietnamese', label: 'Món Việt', icon: Icons.restaurant),
   FilterTag(id: 'asian', label: 'Món Á', icon: Icons.ramen_dining),
   FilterTag(id: 'western', label: 'Món Tây', icon: Icons.fastfood),
+  FilterTag(id: 'Chua', label: 'Chua', icon: Icons.local_bar), // Lemon/Drink
+  FilterTag(id: 'Cay', label: 'Cay', icon: Icons.whatshot), // Spicy
+  FilterTag(id: 'Mặn', label: 'Mặn', icon: Icons.grain), // Salt
+  FilterTag(id: 'Ngọt', label: 'Ngọt', icon: Icons.cake), // Sweet
+  FilterTag(id: 'Béo', label: 'Béo', icon: Icons.bubble_chart), // Fatty
   FilterTag(id: 'cafe', label: 'Cafe', icon: Icons.local_cafe),
-  FilterTag(id: 'dessert', label: 'Tráng miệng', icon: Icons.cake),
+  FilterTag(id: 'dessert', label: 'Tráng miệng', icon: Icons.icecream),
   FilterTag(id: 'vegan', label: 'Chay', icon: Icons.spa),
   FilterTag(id: 'cheap', label: 'Bình dân', icon: Icons.attach_money),
   FilterTag(id: 'luxury', label: 'Cao cấp', icon: Icons.diamond),
