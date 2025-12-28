@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_map/flutter_map.dart';
+import 'package:frontend/core/gps/gps.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/dish_model.dart';
 import '../models/food_model.dart';
@@ -46,12 +47,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
   final MapController _mapController = MapController();
 
   List<DishItem> _dishes = [];
-  List<RestaurantItem> _allRestaurants = [];
   List<RestaurantItem> _filteredRestaurants = [];
   List<String> _selectedTags = [];
   String _searchQuery = '';
+  double _searchRadius = 5000;
+  int _searchLimit = 20;
   bool _isLoading = true;
   bool _isMapLoading = true;
+  double? _userLat, _userLon;
 
   @override
   void initState() {
@@ -68,7 +71,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
       debugPrint('DiscoverPage: Dishes fetched (${dishes.length} items)');
 
       // Fetch restaurants for map
-      final restaurantsResult = await _querySystem.search('all');
+      final restaurantsResult = await _searchRestaurants();
       debugPrint(
         'DiscoverPage: Restaurants fetched (${restaurantsResult.items.length} items)',
       );
@@ -76,7 +79,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
       if (mounted) {
         setState(() {
           _dishes = dishes;
-          _allRestaurants = restaurantsResult.items;
           _filteredRestaurants = restaurantsResult.items;
           _isLoading = false;
         });
@@ -89,41 +91,50 @@ class _DiscoverPageState extends State<DiscoverPage> {
       }
     }
 
-    // Simulate map loading delay
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() {
-          _isMapLoading = false;
-        });
-      }
+    setState(() {
+      _isMapLoading = false;
     });
   }
 
-  void _applyFilters() {
+  Future<SearchResult> _searchRestaurants({String? query, String? tag}) async {
+    double? lat, lon;
+    try {
+      var location = await LocationHelper.getCurrentLocation();
+      lat = location['lat'];
+      lon = location['lon'];
+    } catch (e) {
+      lat = null;
+      lon = null;
+    }
+    if (lat == null || lon == null) {
+      lat = null;
+      lon = null;
+    }
+
+    _userLat = lat;
+    _userLon = lon;
+
+    var searchRestaurant = await _querySystem.search(
+      query: _searchQuery,
+      tag: _selectedTags.isEmpty
+          ? null
+          : _selectedTags.map((s) => s.toLowerCase()).join('|'),
+      lat: lat,
+      lon: lon,
+      radius: _searchRadius,
+      limit: _searchLimit,
+    );
+
+    return searchRestaurant;
+  }
+
+  Future<void> _applyFilters() async {
+    var searchRestaurant = await _searchRestaurants(
+      query: _searchQuery,
+      tag: _selectedTags.join('|'),
+    );
     setState(() {
-      _filteredRestaurants = _allRestaurants.where((restaurant) {
-        // Filter theo search query
-        final matchesSearch =
-            _searchQuery.isEmpty ||
-            restaurant.name.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            ) ||
-            restaurant.category.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            );
-
-        // Filter theo tags
-        final matchesTags =
-            _selectedTags.isEmpty ||
-            _selectedTags.any(
-              (tag) => restaurant.tags.any(
-                (restaurantTag) =>
-                    restaurantTag.toLowerCase().contains(tag.toLowerCase()),
-              ),
-            );
-
-        return matchesSearch && matchesTags;
-      }).toList();
+      _filteredRestaurants = searchRestaurant.items;
     });
   }
 
@@ -143,13 +154,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
         availableTags: defaultTags,
         selectedTagIds: _selectedTags,
         onApplyFilter: (tags) {
-          setState(() {
-            _selectedTags = tags;
-          });
+          _selectedTags = tags;
           _applyFilters();
         },
       ),
     );
+  }
+
+  bool _isSearchApplied() {
+    return _searchQuery.isNotEmpty || _selectedTags.isNotEmpty;
   }
 
   void _onMarkerTap(RestaurantItem restaurant) {
@@ -309,17 +322,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   children: [
                     FlutterMap(
                       mapController: _mapController,
-                      options: const MapOptions(
-                        initialCenter: LatLng(10.762622, 106.660172),
+                      options: MapOptions(
+                        initialCenter: LatLng(
+                          _userLat ?? 10.762622,
+                          _userLon ?? 106.660172,
+                        ),
                         initialZoom: 13.0,
                         minZoom: 5.0,
                         maxZoom: 18.0,
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: isDarkMode
-                              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-                              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
                           subdomains: const ['a', 'b', 'c', 'd'],
                           userAgentPackageName: 'com.foodfinder.app',
                         ),
@@ -423,7 +438,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _searchQuery.isNotEmpty
+                            _isSearchApplied()
                                 ? 'Kết quả tìm kiếm'
                                 : 'Gợi ý cho bạn',
                             style: TextStyle(
@@ -433,7 +448,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             ),
                           ),
                           Text(
-                            '${_searchQuery.isNotEmpty ? _filteredRestaurants.length : _dishes.length} ${_searchQuery.isNotEmpty ? "nhà hàng" : "món ăn"}',
+                            '${_isSearchApplied() ? _filteredRestaurants.length : _dishes.length} ${_isSearchApplied() ? "nhà hàng" : "món ăn"}',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontWeight: FontWeight.w500,
@@ -445,7 +460,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
                       if (_isLoading)
                         const Center(child: CircularProgressIndicator())
-                      else if (_searchQuery.isNotEmpty)
+                      else if (_isSearchApplied())
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),

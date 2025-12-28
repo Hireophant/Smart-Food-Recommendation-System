@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/dish_model.dart';
 
 import '../providers/favorites_provider.dart';
 import '../widgets/dish_card.dart';

@@ -50,8 +50,22 @@ class QuerySystem {
   }
 
   /// Tìm kiếm món ăn hoặc nhà hàng (Cho chức năng Search)
-  Future<SearchResult> search(String query) {
-    return _foodHandler.searchFoods(query);
+  Future<SearchResult> search({
+    String? query,
+    String? tag,
+    double? lat,
+    double? lon,
+    double? radius,
+    int? limit,
+  }) {
+    return _foodHandler.searchFoods(
+      query: query,
+      tag: tag,
+      lat: lat,
+      lon: lon,
+      radius: radius,
+      limit: limit,
+    );
   }
 
   // =========================================================================

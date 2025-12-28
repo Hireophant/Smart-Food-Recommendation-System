@@ -65,9 +65,9 @@
         },
         {
             "name" : "Default",
-            "model_name" : "gemini-2.5-flash",
-            "client_name" : "Gemini",
-            "description" : "From Gemini, the quickest, cheapest, fastest and lowest intellegents model."
+            "model_name" : "gpt-5-nano",
+            "client_name" : "OpenAI",
+            "description" : "From OpenAI API, the fastest, cheapest and lowest intellegents. Great for basic, repetitive task."
         }
     ]
 }

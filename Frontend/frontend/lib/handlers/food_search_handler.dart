@@ -12,9 +12,14 @@ abstract class FoodSearchHandler {
   // --- Discovery Flow ---
   Future<List<DishItem>> getAllDishes(); //lay all cac mon an ra
   Future<List<DishItem>> searchDishes(String query); //tim mon an theo query
-  Future<SearchResult> searchFoods(
-    String query,
-  ); //tim restaurant (o day goi la Food) theo query
+  Future<SearchResult> searchFoods({
+    String? query,
+    String? tag,
+    double? lat,
+    double? lon,
+    double? radius,
+    int? limit,
+  }); //tim restaurant (o day goi la Food) theo query
 
   // --- Restaurant Flow ---
   Future<SearchResult> getAllFoods(); //lay all nha hang ra (Food = nha hang)
@@ -196,9 +201,23 @@ class FoodSearchHandlerImpl implements FoodSearchHandler {
 
   /// Wrapper: search ăn uống (dish + restaurant)
   @override
-  Future<SearchResult> searchFoods(String query) async {
+  Future<SearchResult> searchFoods({
+    String? query,
+    String? tag,
+    double? lat,
+    double? lon,
+    double? radius,
+    int? limit,
+  }) async {
     try {
-      final results = await restaurantHandler.searchRestaurants(query: query);
+      final results = await restaurantHandler.searchRestaurants(
+        query: query,
+        tag: tag,
+        lat: lat,
+        lon: lon,
+        radius: radius,
+        limit: limit ?? 20,
+      );
 
       return SearchResult(items: results);
     } catch (e) {

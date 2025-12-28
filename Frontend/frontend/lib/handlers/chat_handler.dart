@@ -13,6 +13,7 @@ import 'package:frontend/core/backend/search_models.dart';
 import 'package:frontend/core/backend/weather_client.dart';
 import 'package:frontend/core/backend/weather_models.dart';
 import 'package:frontend/core/data/data_client.dart';
+import 'package:frontend/core/gps/gps.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/chat_message_model.dart';
@@ -66,11 +67,6 @@ class ChatToolExecutor {
         'min_rating': {
           'type': 'number',
           'description': 'Rating tối thiểu (0-5). Mặc định không filter.',
-        },
-        'tags': {
-          'type': 'string',
-          'description':
-              'Tag của nhà hàng (tìm theo keyword). Mặc định không filter.',
         },
         'limit': {
           'type': 'integer',
@@ -361,16 +357,23 @@ class ChatToolExecutor {
     }
   }
 
-  static List<double>? _getGPSLocation() {
-    // Mock since currently have no GPS
-    return [10.762962070528253, 106.68248239592286];
+  static Future<List<double>?> _getGPSLocation() async {
+    try {
+      var res = await LocationHelper.getCurrentLocation();
+      double? lat = res['lat'];
+      double? lon = res['lon'];
+
+      return (lat == null || lon == null) ? null : [lat, lon];
+    } catch (e) {
+      return null;
+    }
   }
 
   static Future<AIToolResult> _executeGetUserLocation(
     AIToolCall toolCall,
   ) async {
     try {
-      var res = _getGPSLocation();
+      var res = await _getGPSLocation();
       if (res == null || res.length != 2) {
         return AIToolResult(
           callId: toolCall.id,
@@ -418,7 +421,7 @@ class ChatToolExecutor {
       bool failGetGps = false;
       List<double>? location;
       if (maxDistanceKm != null) {
-        location = _getGPSLocation();
+        location = await _getGPSLocation();
         failGetGps = location == null || (location.length != 2);
         if (failGetGps) location = null;
       }

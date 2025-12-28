@@ -27,7 +27,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
   }
 
   Future<void> _loadData() async {
-    final result = await _querySystem.findRestaurantsByDish(widget.dish.id);
+    final result = await _querySystem.findRestaurantsByDish(widget.dish.name);
     setState(() {
       _restaurants = result.items;
       _isLoading = false;

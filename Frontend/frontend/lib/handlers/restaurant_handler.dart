@@ -1485,11 +1485,22 @@ class RestaurantHandler {
 
   /// Search restaurants
   Future<List<RestaurantItem>> searchRestaurants({
-    required String query,
+    String? query,
+    String? tag,
+    double? lat,
+    double? lon,
+    double? radius,
     int limit = 10,
   }) async {
     final restaurants = await _restaurantsClient.search(
-      RestaurantSearchParams(query: query, limit: limit),
+      RestaurantSearchParams(
+        query: query,
+        limit: limit,
+        focusLat: lat,
+        focusLon: lon,
+        radius: radius,
+        tags: tag,
+      ),
     );
 
     return restaurants.map(_mapRestaurantToItem).toList();
@@ -1522,6 +1533,9 @@ class RestaurantHandler {
       //distanceKm: location.distanceKm,
       tags: restaurant.tags,
       imageUrl: 'assets/images/com_tam.png',
+      latitude: location.lat,
+      longitude: location.lon,
+      distance: '${((location.distance ?? 0) / 1000).toStringAsFixed(2)} km',
       //link: restaurant.link,
     );
   }

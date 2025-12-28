@@ -7,15 +7,17 @@ import '../models/food_model.dart';
 class FavoritesProvider with ChangeNotifier {
   // Danh sách món ăn yêu thích
   final List<DishItem> _favoriteDishes = [];
-  
+
   // Danh sách nhà hàng yêu thích
   final List<RestaurantItem> _favoriteRestaurants = [];
 
   // Getters
   List<DishItem> get favoriteDishes => List.unmodifiable(_favoriteDishes);
-  List<RestaurantItem> get favoriteRestaurants => List.unmodifiable(_favoriteRestaurants);
-  
-  int get totalFavorites => _favoriteDishes.length + _favoriteRestaurants.length;
+  List<RestaurantItem> get favoriteRestaurants =>
+      List.unmodifiable(_favoriteRestaurants);
+
+  int get totalFavorites =>
+      _favoriteDishes.length + _favoriteRestaurants.length;
 
   /// Kiểm tra món ăn đã được yêu thích chưa
   bool isDishFavorite(String dishId) {
@@ -24,7 +26,9 @@ class FavoritesProvider with ChangeNotifier {
 
   /// Kiểm tra nhà hàng đã được yêu thích chưa
   bool isRestaurantFavorite(String restaurantId) {
-    return _favoriteRestaurants.any((restaurant) => restaurant.id == restaurantId);
+    return _favoriteRestaurants.any(
+      (restaurant) => restaurant.id == restaurantId,
+    );
   }
 
   /// Thêm món ăn vào danh sách yêu thích
@@ -60,7 +64,9 @@ class FavoritesProvider with ChangeNotifier {
 
   /// Xóa nhà hàng khỏi danh sách yêu thích
   void removeRestaurant(String restaurantId) {
-    _favoriteRestaurants.removeWhere((restaurant) => restaurant.id == restaurantId);
+    _favoriteRestaurants.removeWhere(
+      (restaurant) => restaurant.id == restaurantId,
+    );
     notifyListeners();
   }
 
