@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import '../models/food_model.dart';
 import '../models/dish_model.dart';
 import 'dish_handler.dart';
@@ -26,8 +27,17 @@ abstract class FoodSearchHandler {
   Future<SearchResult> getRestaurantsByDish(
     String dishId,
   ); //tim nha hang theo mon an (dish)
-  //Future<RestaurantItem?> getFoodDetails(String id); //bo ham nay vi ko the tim duoc description cho nha hang
-  //Future<List<MenuItem>> getMenu(String id); //bo ham nay vi ko co menu
+  
+  // --- Client-side Filtering ---
+  Future<SearchResult> searchFoodsWithClientFiltering({
+    String? query,
+    String? tag,
+    double? userLat,
+    double? userLon,
+    double? maxDistanceKm, // Client-side distance filter
+    List<String>? tastes, // Client-side taste filter
+    int? limit,
+  });
 }
 
 /// Implementation hiện tại - Mock Data kết hợp OSM Search
@@ -251,14 +261,88 @@ class FoodSearchHandlerImpl implements FoodSearchHandler {
     }
   }
 
-  //@override
-  //Future<RestaurantItem?> getFoodDetails(String id) {
-  //return restaurantHandler.getRestaurantById(id);
-  //}
+  // -------------------------
+  // Client-side Filtering
+  // -------------------------
 
-  //@override
-  //Future<List<MenuItem>> getMenu(String id) {
-  // Không có menu trong backend
-  //throw UnimplementedError('Menu is not supported');
-  //}
+  /// Client-side filtering for distance and taste
+  /// 
+  /// Since Backend API doesn't support radius and taste parameters yet,
+  /// we implement filtering on the client side.
+  /// 
+  /// Logic:
+  /// 1. Fetch raw list from Backend API
+  /// 2. Filter by distance (using geolocator to calculate)
+  /// 3. Filter by taste (matching tags/description)
+  /// 4. Return filtered list
+  @override
+  Future<SearchResult> searchFoodsWithClientFiltering({
+    String? query,
+    String? tag,
+    double? userLat,
+    double? userLon,
+    double? maxDistanceKm,
+    List<String>? tastes,
+    int? limit,
+  }) async {
+    try {
+      // 1. Fetch raw data from Backend (without radius/taste params)
+      final rawResults = await restaurantHandler.searchRestaurants(
+        query: query,
+        tag: tag,
+        lat: userLat,
+        lon: userLon,
+        // Don't pass radius to Backend - we'll filter client-side
+        limit: 100, // Get more results to filter from
+      );
+
+      List<RestaurantItem> filteredResults = rawResults;
+
+      // 2. Apply Distance Filter (Client-side)
+      if (maxDistanceKm != null &&
+          userLat != null &&
+          userLon != null &&
+          maxDistanceKm < 100) {
+        // Only filter if distance < 100km (< 100 means user wants filtering)
+        filteredResults = filteredResults.where((restaurant) {
+          final distanceInMeters = Geolocator.distanceBetween(
+            userLat,
+            userLon,
+            restaurant.latitude,
+            restaurant.longitude,
+          );
+          final distanceInKm = distanceInMeters / 1000;
+          return distanceInKm <= maxDistanceKm;
+        }).toList();
+      }
+
+      // 3. Apply Taste Filter (Client-side)
+      if (tastes != null && tastes.isNotEmpty) {
+        filteredResults = filteredResults.where((restaurant) {
+          // Check if any taste matches in tags or description
+          final tagsLower = restaurant.tags.map((t) => t.toLowerCase()).toList();
+          final descLower = restaurant.description?.toLowerCase() ?? '';
+          final nameLower = restaurant.name.toLowerCase();
+          final categoryLower = restaurant.category.toLowerCase();
+
+          return tastes.any((taste) {
+            final tasteLower = taste.toLowerCase();
+            return tagsLower.contains(tasteLower) ||
+                descLower.contains(tasteLower) ||
+                nameLower.contains(tasteLower) ||
+                categoryLower.contains(tasteLower);
+          });
+        }).toList();
+      }
+
+      // 4. Apply limit
+      if (limit != null && filteredResults.length > limit) {
+        filteredResults = filteredResults.sublist(0, limit);
+      }
+
+      return SearchResult(items: filteredResults);
+    } catch (e) {
+      return SearchResult.error("Lỗi: ${e.toString()}");
+    }
+  }
 }

@@ -20,11 +20,6 @@ final List<FilterTag> defaultTags = [
   FilterTag(id: 'vietnamese', label: 'Món Việt', icon: Icons.restaurant),
   FilterTag(id: 'asian', label: 'Món Á', icon: Icons.ramen_dining),
   FilterTag(id: 'western', label: 'Món Tây', icon: Icons.fastfood),
-  FilterTag(id: 'Chua', label: 'Chua', icon: Icons.local_bar), // Lemon/Drink
-  FilterTag(id: 'Cay', label: 'Cay', icon: Icons.whatshot), // Spicy
-  FilterTag(id: 'Mặn', label: 'Mặn', icon: Icons.grain), // Salt
-  FilterTag(id: 'Ngọt', label: 'Ngọt', icon: Icons.cake), // Sweet
-  FilterTag(id: 'Béo', label: 'Béo', icon: Icons.bubble_chart), // Fatty
   FilterTag(id: 'cafe', label: 'Cafe', icon: Icons.local_cafe),
   FilterTag(id: 'dessert', label: 'Tráng miệng', icon: Icons.icecream),
   FilterTag(id: 'vegan', label: 'Chay', icon: Icons.spa),
@@ -32,6 +27,7 @@ final List<FilterTag> defaultTags = [
   FilterTag(id: 'luxury', label: 'Cao cấp', icon: Icons.diamond),
   FilterTag(id: 'cozy', label: 'Ấm cúng', icon: Icons.favorite),
   FilterTag(id: 'family', label: 'Gia đình', icon: Icons.family_restroom),
+  FilterTag(id: 'street_food', label: 'Street Food', icon: Icons.food_bank),
 ];
 
 class DiscoverPage extends StatefulWidget {
@@ -49,7 +45,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
   List<DishItem> _dishes = [];
   List<RestaurantItem> _filteredRestaurants = [];
   List<String> _selectedTags = [];
+  List<String> _selectedTastes = []; // NEW: Taste filter
   String _searchQuery = '';
+  double _maxDistanceKm = 10.0; // NEW: Distance filter (default 10km)
   double _searchRadius = 5000;
   int _searchLimit = 20;
   bool _isLoading = true;
@@ -114,14 +112,16 @@ class _DiscoverPageState extends State<DiscoverPage> {
     _userLat = lat;
     _userLon = lon;
 
-    var searchRestaurant = await _querySystem.search(
+    // Use client-side filtering for distance and taste
+    var searchRestaurant = await _querySystem.searchWithClientFiltering(
       query: _searchQuery,
       tag: _selectedTags.isEmpty
           ? null
           : _selectedTags.map((s) => s.toLowerCase()).join('|'),
-      lat: lat,
-      lon: lon,
-      radius: _searchRadius,
+      userLat: lat,
+      userLon: lon,
+      maxDistanceKm: _maxDistanceKm,
+      tastes: _selectedTastes.isEmpty ? null : _selectedTastes,
       limit: _searchLimit,
     );
 
@@ -153,8 +153,16 @@ class _DiscoverPageState extends State<DiscoverPage> {
       builder: (context) => AdvancedFilterSheet(
         availableTags: defaultTags,
         selectedTagIds: _selectedTags,
-        onApplyFilter: (tags) {
-          _selectedTags = tags;
+        maxDistance: _maxDistanceKm,
+        selectedTastes: _selectedTastes,
+        resultLimit: _searchLimit, // NEW: Pass current limit
+        onApplyFilter: (tags, distance, tastes, limit) { // NEW: Accept limit parameter
+          setState(() {
+            _selectedTags = tags;
+            _maxDistanceKm = distance;
+            _selectedTastes = tastes;
+            _searchLimit = limit; // NEW: Update limit
+          });
           _applyFilters();
         },
       ),
@@ -162,7 +170,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   bool _isSearchApplied() {
-    return _searchQuery.isNotEmpty || _selectedTags.isNotEmpty;
+    return _searchQuery.isNotEmpty ||
+        _selectedTags.isNotEmpty ||
+        _selectedTastes.isNotEmpty ||
+        _maxDistanceKm < 100;
   }
 
   void _onMarkerTap(RestaurantItem restaurant) {

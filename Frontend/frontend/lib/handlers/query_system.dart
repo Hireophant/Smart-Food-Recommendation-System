@@ -68,6 +68,29 @@ class QuerySystem {
     );
   }
 
+  /// Tìm kiếm với client-side filtering (distance & taste)
+  /// 
+  /// Sử dụng khi Backend chưa hỗ trợ filter theo khoảng cách và khẩu vị
+  Future<SearchResult> searchWithClientFiltering({
+    String? query,
+    String? tag,
+    double? userLat,
+    double? userLon,
+    double? maxDistanceKm,
+    List<String>? tastes,
+    int? limit,
+  }) {
+    return _foodHandler.searchFoodsWithClientFiltering(
+      query: query,
+      tag: tag,
+      userLat: userLat,
+      userLon: userLon,
+      maxDistanceKm: maxDistanceKm,
+      tastes: tastes,
+      limit: limit,
+    );
+  }
+
   // =========================================================================
   // RESTAURANTS & MENU
   // =========================================================================

@@ -8,6 +8,7 @@ import '../widgets/glass_container.dart';
 import '../pages/login_page.dart'; // Import Handler
 import '../pages/edit_profile_page.dart'; // Import Edit Page
 import '../providers/theme_provider.dart'; // Import ThemeProvider
+import '../handlers/user_handler.dart'; // Import UserHandler
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,11 +21,16 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _avatarUrl;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
+  
+  // Stats từ UserHandler
+  UserStats? _userStats;
+  bool _isLoadingStats = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadUserStats();
   }
 
   Future<void> _loadUserProfile() async {
@@ -47,6 +53,33 @@ class _ProfilePageState extends State<ProfilePage> {
             _avatarUrl = metaAvatar;
           });
         }
+      }
+    }
+  }
+
+  /// Load stats từ UserHandler (theo Guideline: UI gọi Handler)
+  Future<void> _loadUserStats() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    try {
+      final stats = await UserHandler.getUserStats();
+      if (mounted) {
+        setState(() {
+          _userStats = stats;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('ProfilePage: Failed to load stats: $e');
+      if (mounted) {
+        setState(() {
+          _userStats = UserStats.empty();
+          _isLoadingStats = false;
+        });
       }
     }
   }
@@ -126,13 +159,13 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Colors.white),
+        automaticallyImplyLeading: false, // Remove back button
         actions: [
+          // Refresh button to reload stats
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              context.read<ThemeProvider>().toggleTheme();
-            },
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadUserStats,
+            tooltip: 'Làm mới thống kê',
           ),
         ],
       ),
@@ -258,16 +291,42 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 30),
 
                   // --- Stats Row ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildStatItem("ĐÃ ĐÁNH GIÁ", "15", Icons.rate_review),
-                      Container(width: 1, height: 40, color: Colors.white24),
-                      _buildStatItem("YÊU THÍCH", "38", Icons.favorite),
-                      Container(width: 1, height: 40, color: Colors.white24),
-                      _buildStatItem("CHECK-IN", "42", Icons.place),
-                    ],
-                  ),
+                  _isLoadingStats
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white70,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatItem(
+                              "ĐÃ ĐÁNH GIÁ",
+                              "${_userStats?.ratedCount ?? 0}",
+                              Icons.rate_review,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.white24,
+                            ),
+                            _buildStatItem(
+                              "YÊU THÍCH",
+                              "${_userStats?.favoritesCount ?? 0}",
+                              Icons.favorite,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.white24,
+                            ),
+                            _buildStatItem(
+                              "CHECK-IN",
+                              "${_userStats?.checkInCount ?? 0}",
+                              Icons.place,
+                            ),
+                          ],
+                        ),
 
                   const SizedBox(height: 40),
 

@@ -64,10 +64,19 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
             ),
           ),
           if (widget.onFilterTap != null)
-            IconButton(
-              icon: Icon(Icons.tune, color: Theme.of(context).primaryColor),
-              onPressed: widget.onFilterTap,
-              tooltip: 'Bộ lọc nâng cao',
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.tune,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: widget.onFilterTap,
+                tooltip: 'Bộ lọc nâng cao',
+              ),
             ),
         ],
       ),
