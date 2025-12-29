@@ -42,13 +42,8 @@ class _LoginPageState extends State<LoginPage> {
             'Login Warning: User found but Session is NULL (likely email not confirmed)',
           );
         }
-        if (mounted) {
-          // Explicitly navigate to home to ensure UX progression
-          debugPrint('Login Success: Navigating to DiscoverPage...');
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DiscoverPage()),
-          );
-        }
+        // AuthGate will handle navigation when session updates
+        debugPrint('Login Success: Session updated, AuthGate should redirect.');
       }
     } on AuthException catch (e) {
       if (mounted) {

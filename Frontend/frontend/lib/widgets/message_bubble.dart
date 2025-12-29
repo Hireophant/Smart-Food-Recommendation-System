@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/chat_message_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Widget hiển thị tin nhắn dạng bubble
 class MessageBubble extends StatelessWidget {
@@ -11,6 +13,10 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isUser = message.isUser;
+
+    final textColor = isUser
+        ? Colors.white
+        : (isDarkMode ? Colors.white : Colors.black87);
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -42,15 +48,36 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message.content,
-              style: TextStyle(
-                color: isUser
-                    ? Colors.white
-                    : (isDarkMode ? Colors.white : Colors.black87),
-                fontSize: 15,
+            if (isUser)
+              Text(
+                message.content,
+                style: TextStyle(color: textColor, fontSize: 15),
+              )
+            else
+              MarkdownBody(
+                data: message.content,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                    fontFamily: GoogleFonts.outfit().fontFamily,
+                  ),
+                  strong: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  em: TextStyle(color: textColor, fontStyle: FontStyle.italic),
+                  code: TextStyle(
+                    color: isDarkMode ? Colors.amberAccent : Colors.blue[800],
+                    backgroundColor: isDarkMode ? Colors.black26 : Colors.white,
+                    fontFamily: 'monospace',
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: isDarkMode ? Colors.black54 : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
-            ),
             const SizedBox(height: 4),
             Text(
               _formatTime(message.timestamp),
@@ -97,7 +124,7 @@ class QuickReplyChips extends StatelessWidget {
           return ActionChip(
             label: Text(reply),
             onPressed: () => onTap(reply),
-            backgroundColor: isDarkMode 
+            backgroundColor: isDarkMode
                 ? Theme.of(context).primaryColor.withValues(alpha: 0.3)
                 : Theme.of(context).primaryColor.withValues(alpha: 0.1),
             labelStyle: TextStyle(
@@ -105,7 +132,9 @@ class QuickReplyChips extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
             side: BorderSide(
-              color: Theme.of(context).primaryColor.withValues(alpha: isDarkMode ? 0.6 : 0.3),
+              color: Theme.of(
+                context,
+              ).primaryColor.withValues(alpha: isDarkMode ? 0.6 : 0.3),
             ),
           );
         }).toList(),
