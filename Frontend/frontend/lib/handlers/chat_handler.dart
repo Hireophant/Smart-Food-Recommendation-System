@@ -23,6 +23,54 @@ import '../core/ai/ai_module.dart';
 class ChatToolExecutor {
   static final String backendUrl = 'http://localhost:8000';
 
+  static String _stringOrUnknown(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return 'unknown';
+    return trimmed;
+  }
+
+  static String _formatMapGeocoding(MapGeocoding g) {
+    final buffer = StringBuffer();
+    buffer.writeln('- Tên: ${_stringOrUnknown(g.name)}');
+    buffer.writeln('  Địa chỉ: ${_stringOrUnknown(g.address)}');
+    buffer.writeln('  Hiển thị: ${_stringOrUnknown(g.display)}');
+    buffer.writeln('  Khoảng cách (km): ${g.distanceKm.toStringAsFixed(2)}');
+
+    if (g.boundaries.isNotEmpty) {
+      final parts = g.boundaries
+          .map((b) => b.fullName.trim())
+          .where((s) => s.isNotEmpty)
+          .toList(growable: false);
+      if (parts.isNotEmpty) {
+        buffer.writeln('  Khu vực: ${parts.join(' > ')}');
+      }
+    }
+
+    return buffer.toString().trimRight();
+  }
+
+  static String _formatGeocodingListToText(
+    List<MapGeocoding> items, {
+    String title = 'Kết quả',
+    int? limit,
+  }) {
+    final effectiveLimit = (limit == null)
+        ? items.length
+        : min(max(limit, 1), items.length);
+    if (items.isEmpty) return '$title: không có kết quả phù hợp.';
+
+    final buffer = StringBuffer();
+    buffer.writeln('$title (${items.length}):');
+    for (var i = 0; i < effectiveLimit; i++) {
+      buffer.writeln('Kết quả #${i + 1}');
+      buffer.writeln(_formatMapGeocoding(items[i]));
+    }
+    if (effectiveLimit < items.length) {
+      buffer.writeln('(Đã hiển thị $effectiveLimit/${items.length} kết quả)');
+    }
+    return buffer.toString().trim();
+  }
+
   static double? _asDouble(dynamic value) {
     if (value == null) return null;
     if (value is num) return value.toDouble();
@@ -85,11 +133,98 @@ class ChatToolExecutor {
       requires: [],
     ),
 
+    // === Maps (Vietmap) ===
+    AIToolDefinition(
+      name: 'maps_search',
+      description:
+          'Tìm kiếm địa điểm bằng Vietmap (Map Search) (gợi ý địa điểm theo query). '
+          'KHÔNG dùng tool search/Google search cho việc này.',
+      parameters: {
+        'query': {
+          'type': 'string',
+          'description': 'Từ khóa địa điểm (bắt buộc).',
+        },
+        'use_gps_focus': {
+          'type': 'boolean',
+          'description':
+              'Nếu true, sẽ cố gắng lấy GPS hiện tại để làm focus cho kết quả. Mặc định: true.',
+        },
+        'focus_lat': {
+          'type': 'number',
+          'description': 'Vĩ độ focus (tuỳ chọn).',
+        },
+        'focus_lon': {
+          'type': 'number',
+          'description': 'Kinh độ focus (tuỳ chọn).',
+        },
+        'limit': {
+          'type': 'integer',
+          'description': 'Số kết quả tối đa sẽ hiển thị. Mặc định: 5.',
+        },
+      },
+      requires: ['query'],
+    ),
+
+    AIToolDefinition(
+      name: 'maps_reverse_geocoding',
+      description:
+          'Reverse geocoding: chuyển lat/lon thành địa chỉ (Vietmap). Trả kết quả dạng text dễ đọc, không dump JSON.',
+      parameters: {
+        'lat': {'type': 'number', 'description': 'Vĩ độ (Latitude) của vị trí'},
+        'lon': {
+          'type': 'number',
+          'description': 'Kinh độ (Longitude) của vị trí',
+        },
+        'limit': {
+          'type': 'integer',
+          'description': 'Số kết quả tối đa sẽ hiển thị. Mặc định: 3.',
+        },
+      },
+      requires: ['lat', 'lon'],
+    ),
+
     // === User Preferences & Profile ===
     AIToolDefinition(
       name: 'get_user_taste_profile',
       description: 'Lấy thông tin sở thích ăn uống của người dùng từ profile.',
       parameters: {}, // User ID sẽ được inject từ session
+      requires: [],
+    ),
+
+    AIToolDefinition(
+      name: 'get_user_profile',
+      description:
+          'Lấy thông tin hồ sơ người dùng (không bao gồm IDs). Trả về dạng text tiếng Việt để AI dễ đọc.',
+      parameters: {},
+      requires: [],
+    ),
+
+    AIToolDefinition(
+      name: 'save_user_profile',
+      description:
+          'Lưu/cập nhật hồ sơ người dùng (chỉ cập nhật các field được cung cấp). '
+          'Không nên lưu IDs. Trả về thông báo thành công/thất bại dạng text.',
+      parameters: {
+        'phone_number': {
+          'type': 'string',
+          'description': 'Số điện thoại (tuỳ chọn).',
+        },
+        'occupations': {
+          'type': 'string',
+          'description': 'Nghề nghiệp (tuỳ chọn).',
+        },
+        'address': {'type': 'string', 'description': 'Địa chỉ (tuỳ chọn).'},
+        'nickname': {'type': 'string', 'description': 'Biệt danh (tuỳ chọn).'},
+        'level': {'type': 'integer', 'description': 'Cấp độ (tuỳ chọn).'},
+        'dish_eaten': {
+          'type': 'integer',
+          'description': 'Số món đã ăn (tuỳ chọn).',
+        },
+        'restaurant_visited': {
+          'type': 'integer',
+          'description': 'Số nhà hàng đã ghé (tuỳ chọn).',
+        },
+      },
       requires: [],
     ),
 
@@ -357,6 +492,50 @@ class ChatToolExecutor {
     }
   }
 
+  static Future<AIToolResult> _executeGetUserProfile(
+    AIToolCall toolCall,
+  ) async {
+    try {
+      final profile = await DataClient.getCurrentUserProfile();
+      return AIToolResult(
+        callId: toolCall.id,
+        result: profile.toVietnameseReadableText(),
+      );
+    } catch (e) {
+      return AIToolResult(callId: toolCall.id, result: 'Lỗi: ${e.toString()}');
+    }
+  }
+
+  static Future<AIToolResult> _executeSaveUserProfile(
+    AIToolCall toolCall,
+  ) async {
+    final phoneNumber = toolCall.arguments['phone_number']?.toString();
+    final occupations = toolCall.arguments['occupations']?.toString();
+    final address = toolCall.arguments['address']?.toString();
+    final nickname = toolCall.arguments['nickname']?.toString();
+    final level = _asInt(toolCall.arguments['level']);
+    final dishEaten = _asInt(toolCall.arguments['dish_eaten']);
+    final restaurantVisited = _asInt(toolCall.arguments['restaurant_visited']);
+
+    try {
+      await DataClient.setCurrentUserProfile(
+        phoneNumber: phoneNumber,
+        occupations: occupations,
+        address: address,
+        nickname: nickname,
+        level: level,
+        dishEaten: dishEaten,
+        restaurantVisited: restaurantVisited,
+      );
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'Cập nhật hồ sơ người dùng thành công!',
+      );
+    } catch (e) {
+      return AIToolResult(callId: toolCall.id, result: 'Lỗi: ${e.toString()}');
+    }
+  }
+
   static Future<List<double>?> _getGPSLocation() async {
     try {
       var res = await LocationHelper.getCurrentLocation();
@@ -398,6 +577,109 @@ class ChatToolExecutor {
       );
     } catch (e) {
       return AIToolResult(callId: toolCall.id, result: "Lỗi: ${e.toString()}");
+    }
+  }
+
+  static Future<AIToolResult> _executeMapsSearch(AIToolCall toolCall) async {
+    final query = toolCall.arguments['query']?.toString();
+    final focusLat = _asDouble(toolCall.arguments['focus_lat']);
+    final focusLon = _asDouble(toolCall.arguments['focus_lon']);
+    final useGpsFocusRaw = toolCall.arguments['use_gps_focus'];
+    final useGpsFocus = (useGpsFocusRaw is bool) ? useGpsFocusRaw : true;
+    final limit = max(_asInt(toolCall.arguments['limit']) ?? 5, 1);
+
+    if (query == null || query.trim().isEmpty) {
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'Từ khóa (query) không thể bỏ trống!',
+      );
+    }
+
+    double? resolvedFocusLat = focusLat;
+    double? resolvedFocusLon = focusLon;
+
+    if (resolvedFocusLat == null || resolvedFocusLon == null) {
+      if (useGpsFocus) {
+        final gps = await _getGPSLocation();
+        if (gps != null && gps.length == 2) {
+          resolvedFocusLat ??= gps[0];
+          resolvedFocusLon ??= gps[1];
+        }
+      }
+    }
+
+    if (resolvedFocusLat != null &&
+        (resolvedFocusLat < -90 || resolvedFocusLat > 90)) {
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'focus_lat phải nằm trong [-90, 90].',
+      );
+    }
+    if (resolvedFocusLon != null &&
+        (resolvedFocusLon < -180 || resolvedFocusLon > 180)) {
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'focus_lon phải nằm trong [-180, 180].',
+      );
+    }
+
+    try {
+      final client = MapsClient(BackendAPI(baseUrl: backendUrl));
+      final results = await client.autocomplete(
+        MapsAutocompleteParams(
+          query: query.trim(),
+          focusLat: resolvedFocusLat,
+          focusLon: resolvedFocusLon,
+        ),
+      );
+      return AIToolResult(
+        callId: toolCall.id,
+        result: _formatGeocodingListToText(
+          results,
+          title: 'Gợi ý địa điểm (Vietmap Autocomplete)',
+          limit: limit,
+        ),
+      );
+    } catch (e) {
+      return AIToolResult(callId: toolCall.id, result: 'Lỗi: ${e.toString()}');
+    }
+  }
+
+  static Future<AIToolResult> _executeMapsReverseGeocoding(
+    AIToolCall toolCall,
+  ) async {
+    final lat = _asDouble(toolCall.arguments['lat']);
+    final lon = _asDouble(toolCall.arguments['lon']);
+    final limit = max(_asInt(toolCall.arguments['limit']) ?? 3, 1);
+
+    if (lat == null || lon == null) {
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'Cần cả lat và lon để reverse geocoding.',
+      );
+    }
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      return AIToolResult(
+        callId: toolCall.id,
+        result: 'lat phải trong [-90, 90] và lon phải trong [-180, 180].',
+      );
+    }
+
+    try {
+      final client = MapsClient(BackendAPI(baseUrl: backendUrl));
+      final results = await client.reverseGeocoding(
+        MapsReverseParams(lat: lat, lon: lon),
+      );
+      return AIToolResult(
+        callId: toolCall.id,
+        result: _formatGeocodingListToText(
+          results,
+          title: 'Reverse geocoding (Vietmap)',
+          limit: limit,
+        ),
+      );
+    } catch (e) {
+      return AIToolResult(callId: toolCall.id, result: 'Lỗi: ${e.toString()}');
     }
   }
 
@@ -498,6 +780,10 @@ class ChatToolExecutor {
     switch (toolCall.name) {
       case 'get_weather':
         return await _executeGetWeather(toolCall);
+      case 'maps_search':
+        return await _executeMapsSearch(toolCall);
+      case 'maps_reverse_geocoding':
+        return await _executeMapsReverseGeocoding(toolCall);
       case 'search_dishes':
         return await _executeSearchDishes(toolCall);
       case 'search_google':
@@ -506,6 +792,10 @@ class ChatToolExecutor {
         return await _executeGetUserFavoritesDishes(toolCall);
       case 'get_user_favorites_restaurants':
         return await _executeGetUserFavoritesRestaurants(toolCall);
+      case 'get_user_profile':
+        return await _executeGetUserProfile(toolCall);
+      case 'save_user_profile':
+        return await _executeSaveUserProfile(toolCall);
       case 'save_user_taste_profile':
         return await _executeSaveUserTasteProfile(toolCall);
       case 'get_user_taste_profile':
