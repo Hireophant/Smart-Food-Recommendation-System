@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/supabase_handler.dart';
 import '../core/data/data_client.dart';
 import '../core/data/user_profile.dart';
@@ -17,16 +16,12 @@ class UserStats {
   });
 
   factory UserStats.empty() {
-    return const UserStats(
-      ratedCount: 0,
-      favoritesCount: 0,
-      checkInCount: 0,
-    );
+    return const UserStats(ratedCount: 0, favoritesCount: 0, checkInCount: 0);
   }
 }
 
 /// Handler quản lý thông tin User Profile
-/// 
+///
 /// Theo Decoupled Development Guidelines:
 /// - UI chỉ cần gọi Handler này để lấy dữ liệu
 /// - Handler tự quyết định: lấy từ Supabase hoặc mock data
@@ -35,14 +30,14 @@ class UserHandler {
   UserHandler._();
 
   /// Lấy stats của user hiện tại để hiển thị ở Profile Page
-  /// 
+  ///
   /// **REAL DATA IMPLEMENTATION:**
   /// - "Favorites": Count from user_profile.favorites_*_ids arrays
   /// - "Check-in": From user_profile.restaurant_visited field
-  /// - "Rated": Query count from user_ratings table (if exists, else 0)
+  /// - "Rated": Not implemented (no ratings table), always returns 0
   static Future<UserStats> getUserStats() async {
     final user = SupabaseHandler().currentUser;
-    
+
     if (user == null) {
       debugPrint('UserHandler: No user logged in, returning empty stats');
       return UserStats.empty();
@@ -51,46 +46,18 @@ class UserHandler {
     try {
       // Get user profile from Supabase (REAL DATA)
       final profile = await DataClient.getUserProfile(user.id);
-      
+
       // Count favorites from arrays
-      final favoritesCount = profile.favoritesFoodIds.length + 
-                            profile.favoritesRestaurantsIds.length;
-      
+      final favoritesCount =
+          profile.favoritesFoodIds.length +
+          profile.favoritesRestaurantsIds.length;
+
       // Get check-in count
       final checkInCount = profile.restaurantVisited;
-      
-      // Get rated count - Query Supabase directly for ratings
-      int ratedCount = 0;
-      try {
-        final supabase = SupabaseHandler.client;
-        
-        // Try to query user_ratings table (v2 syntax)
-        final ratingResponse = await supabase
-            .from('user_ratings')
-            .select()
-            .eq('user_id', user.id)
-            .count(CountOption.exact);
-        
-        ratedCount = ratingResponse.count ?? 0;
-      } catch (e) {
-        // Table might not exist or RLS policy issue
-        debugPrint('UserHandler: Could not fetch ratings: $e');
-        // Try user_reviews table as fallback (v2 syntax)
-        try {
-          final supabase = SupabaseHandler.client;
-          final reviewResponse = await supabase
-              .from('user_reviews')
-              .select()
-              .eq('user_id', user.id)
-              .count(CountOption.exact);
-          
-          ratedCount = reviewResponse.count ?? 0;
-        } catch (e2) {
-          debugPrint('UserHandler: Could not fetch reviews either: $e2');
-          ratedCount = 0; // Default to 0 if table doesn't exist
-        }
-      }
-      
+
+      // No ratings/reviews tables in this project.
+      const ratedCount = 0;
+
       return UserStats(
         ratedCount: ratedCount,
         favoritesCount: favoritesCount,
@@ -106,7 +73,7 @@ class UserHandler {
   /// Lấy UserProfile đầy đủ từ Supabase
   static Future<UserProfile?> getUserProfile() async {
     final user = SupabaseHandler().currentUser;
-    
+
     if (user == null) {
       debugPrint('UserHandler: No user logged in');
       return null;
@@ -121,7 +88,7 @@ class UserHandler {
   }
 
   /// Update một phần thông tin user profile
-  /// 
+  ///
   /// Chỉ update các field được truyền vào (không null)
   static Future<UserProfile?> updateUserProfile({
     String? nickname,
@@ -130,7 +97,7 @@ class UserHandler {
     String? occupations,
   }) async {
     final user = SupabaseHandler().currentUser;
-    
+
     if (user == null) {
       debugPrint('UserHandler: No user logged in');
       return null;
@@ -154,7 +121,7 @@ class UserHandler {
   /// Call this when user checks in at a restaurant
   static Future<void> incrementCheckIn() async {
     final user = SupabaseHandler().currentUser;
-    
+
     if (user == null) {
       debugPrint('UserHandler: No user logged in');
       return;

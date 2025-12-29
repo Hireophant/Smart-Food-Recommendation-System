@@ -39,15 +39,51 @@ class DataClient {
 
   static SupabaseClient get _client => Supabase.instance.client;
 
+  static Map<String, dynamic>? _firstRowOrNull(Object? data) {
+    if (data is Map) return data.cast<String, dynamic>();
+    if (data is List && data.isNotEmpty) {
+      final first = data.first;
+      if (first is Map) return first.cast<String, dynamic>();
+    }
+    return null;
+  }
+
+  static Future<String> _requireAuthenticatedUserId() async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message: 'No authenticated user in current session.',
+      );
+    }
+
+    // RLS policies require the request to include a valid JWT.
+    // `currentUser` can be non-null while `currentSession` is null/expired
+    // (for example during app startup before session restoration, or after
+    // a token expires but before refresh kicks in).
+    var session = _client.auth.currentSession;
+    if (session == null || (session.accessToken).isEmpty) {
+      try {
+        // Try to refresh the session once; ignore failures and fall through.
+        await _client.auth.refreshSession();
+      } catch (_) {}
+      session = _client.auth.currentSession;
+    }
+
+    if (session == null || (session.accessToken).isEmpty) {
+      throw const DataClientException(
+        DataClientErrorKind.notLoggedIn,
+        message:
+            'No active Supabase session (missing access token). Please sign in again.',
+      );
+    }
+
+    return user.id;
+  }
+
   static Future<UserTasteProfile> getTasteProfile(String userId) async {
     try {
-      final sessionUserId = _client.auth.currentUser?.id;
-      if (sessionUserId == null) {
-        throw const DataClientException(
-          DataClientErrorKind.notLoggedIn,
-          message: 'No authenticated user in current session.',
-        );
-      }
+      final sessionUserId = await _requireAuthenticatedUserId();
 
       final Map<String, dynamic>? row = await _client
           .from('user_taste_profiles')
@@ -104,13 +140,7 @@ class DataClient {
 
   static Future<UserProfile> getUserProfile(String userId) async {
     try {
-      final sessionUserId = _client.auth.currentUser?.id;
-      if (sessionUserId == null) {
-        throw const DataClientException(
-          DataClientErrorKind.notLoggedIn,
-          message: 'No authenticated user in current session.',
-        );
-      }
+      final sessionUserId = await _requireAuthenticatedUserId();
 
       final Map<String, dynamic>? row = await _client
           .from('user_profile')
@@ -165,13 +195,7 @@ class DataClient {
   }
 
   static Future<UserProfile> getCurrentUserProfile() async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const DataClientException(
-        DataClientErrorKind.notLoggedIn,
-        message: 'No authenticated user in current session.',
-      );
-    }
+    final userId = await _requireAuthenticatedUserId();
     return getUserProfile(userId);
   }
 
@@ -187,13 +211,7 @@ class DataClient {
     String? address,
     String? nickname,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const DataClientException(
-        DataClientErrorKind.notLoggedIn,
-        message: 'No authenticated user in current session.',
-      );
-    }
+    final userId = await _requireAuthenticatedUserId();
     return setUserProfile(
       userId,
       favoritesFoodIds: favoritesFoodIds,
@@ -226,13 +244,7 @@ class DataClient {
     String? nickname,
   }) async {
     try {
-      final sessionUserId = _client.auth.currentUser?.id;
-      if (sessionUserId == null) {
-        throw const DataClientException(
-          DataClientErrorKind.notLoggedIn,
-          message: 'No authenticated user in current session.',
-        );
-      }
+      final sessionUserId = await _requireAuthenticatedUserId();
 
       if (userId != sessionUserId) {
         throw const DataClientException(
@@ -257,25 +269,22 @@ class DataClient {
         return getUserProfile(sessionUserId);
       }
 
-      final Map<String, dynamic>? updated = await _client
+      final updatedData = await _client
           .from('user_profile')
           .update(patch)
           .eq('user_id', sessionUserId)
-          .select('*')
-          .maybeSingle();
-
-      if (updated != null) {
-        return _mapUserProfile(updated);
-      }
+          .select('*');
+      final updated = _firstRowOrNull(updatedData);
+      if (updated != null) return _mapUserProfile(updated);
 
       await _createDefaultUserProfile(sessionUserId);
 
-      final Map<String, dynamic>? updatedAfterCreate = await _client
+      final updatedAfterCreateData = await _client
           .from('user_profile')
           .update(patch)
           .eq('user_id', sessionUserId)
-          .select('*')
-          .maybeSingle();
+          .select('*');
+      final updatedAfterCreate = _firstRowOrNull(updatedAfterCreateData);
 
       if (updatedAfterCreate == null) {
         throw const DataClientException(
@@ -318,13 +327,7 @@ class DataClient {
   }
 
   static Future<UserTasteProfile> getCurrentTasteProfile() async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const DataClientException(
-        DataClientErrorKind.notLoggedIn,
-        message: 'No authenticated user in current session.',
-      );
-    }
+    final userId = await _requireAuthenticatedUserId();
     return getTasteProfile(userId);
   }
 
@@ -338,13 +341,7 @@ class DataClient {
     List<String>? favoriteDishes,
     List<String>? dislikes,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw const DataClientException(
-        DataClientErrorKind.notLoggedIn,
-        message: 'No authenticated user in current session.',
-      );
-    }
+    final userId = await _requireAuthenticatedUserId();
     return setTasteProfile(
       userId,
       cuisines: cuisines,
@@ -373,13 +370,7 @@ class DataClient {
     List<String>? dislikes,
   }) async {
     try {
-      final sessionUserId = _client.auth.currentUser?.id;
-      if (sessionUserId == null) {
-        throw const DataClientException(
-          DataClientErrorKind.notLoggedIn,
-          message: 'No authenticated user in current session.',
-        );
-      }
+      final sessionUserId = await _requireAuthenticatedUserId();
 
       if (userId != sessionUserId) {
         throw const DataClientException(
@@ -402,25 +393,22 @@ class DataClient {
         return getTasteProfile(sessionUserId);
       }
 
-      final Map<String, dynamic>? updated = await _client
+      final updatedData = await _client
           .from('user_taste_profiles')
           .update(patch)
           .eq('user_id', sessionUserId)
-          .select('*')
-          .maybeSingle();
-
-      if (updated != null) {
-        return _mapTasteProfile(updated);
-      }
+          .select('*');
+      final updated = _firstRowOrNull(updatedData);
+      if (updated != null) return _mapTasteProfile(updated);
 
       await _createDefaultTasteProfile(sessionUserId);
 
-      final Map<String, dynamic>? updatedAfterCreate = await _client
+      final updatedAfterCreateData = await _client
           .from('user_taste_profiles')
           .update(patch)
           .eq('user_id', sessionUserId)
-          .select('*')
-          .maybeSingle();
+          .select('*');
+      final updatedAfterCreate = _firstRowOrNull(updatedAfterCreateData);
 
       if (updatedAfterCreate == null) {
         throw const DataClientException(
@@ -491,11 +479,18 @@ class DataClient {
   static Future<Map<String, dynamic>> _createDefaultTasteProfile(
     String userId,
   ) async {
-    // Create a minimal row; other columns remain NULL and timestamps use defaults.
+    // Create a default row.
     // Use upsert to avoid race conditions if multiple calls try to create.
     final Map<String, dynamic> created = await _client
         .from('user_taste_profiles')
-        .upsert({'user_id': userId}, onConflict: 'user_id')
+        .upsert({
+          'user_id': userId,
+          'cuisines': <String>[],
+          'dietary_restrictions': <String>[],
+          'allergies': <String>[],
+          'favorite_dishes': <String>[],
+          'dislikes': <String>[],
+        }, onConflict: 'user_id')
         .select('*')
         .single();
 

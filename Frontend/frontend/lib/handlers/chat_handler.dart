@@ -547,7 +547,6 @@ class ChatHandler {
     List<AIMessage> inputs = List.from(_chatHistories[userId] ?? []);
     inputs.add(inputMessage);
 
-    debugPrint(userId);
     try {
       var result = await AIModule.generate(
         modelName: modelName ?? "OpenAI-Low", // Use passed model or default
