@@ -10,6 +10,7 @@ from utils import Config, Logger
 from middleware.rate_limit import limiter
 from core.mongodb import MongoDB
 from core.llm import Models
+from dotenv import load_dotenv
 
 #* Call when initialize the backend
 async def onInitialize() -> bool:
