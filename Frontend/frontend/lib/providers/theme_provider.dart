@@ -32,7 +32,6 @@ class ThemeProvider with ChangeNotifier {
       primary: const Color(0xFFFF9500),
       secondary: const Color(0xFF34C759), // Apple Green for success/accents
       surface: const Color(0xFFF2F2F7), // Apple Light Gray Background
-      background: const Color(0xFFF2F2F7),
       brightness: Brightness.light,
     ),
     scaffoldBackgroundColor: const Color(0xFFF2F2F7),
@@ -69,7 +68,6 @@ class ThemeProvider with ChangeNotifier {
       primary: const Color(0xFFFF9500),
       secondary: const Color(0xFF30D158),
       surface: const Color(0xFF1C1C1E), // Apple Dark Gray
-      background: const Color(0xFF000000),
       brightness: Brightness.dark,
     ),
     scaffoldBackgroundColor: const Color(0xFF000000),

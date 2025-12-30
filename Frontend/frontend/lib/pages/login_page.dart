@@ -4,7 +4,6 @@ import '../core/supabase_handler.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/custom_text_field.dart';
 import 'register_page.dart';
-import 'discover_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,10 +82,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
           // Dark Overlay
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.3)),
-          ),
-
-          Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -222,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
                             children: [
                               Expanded(
                                 child: Divider(
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withValues(alpha: 0.5),
                                 ),
                               ),
                               Padding(
@@ -232,13 +227,13 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Text(
                                   "OR",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ),
                               Expanded(
                                 child: Divider(
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
@@ -251,21 +246,23 @@ class _LoginPageState extends State<LoginPage> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 setState(() => _isLoading = true);
+                                final messenger = ScaffoldMessenger.of(context);
                                 try {
                                   await SupabaseHandler().signInWithGoogle();
                                   // Depending on platform (web vs mobile) deep link handling might differ
                                   // For now, we assume standard OAuth flow initiating external browser
                                 } catch (e) {
                                   if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    messenger.showSnackBar(
                                       const SnackBar(
                                         content: Text('Google Sign-In Failed'),
                                       ),
                                     );
                                   }
                                 } finally {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isLoading = false);
+                                  }
                                 }
                               },
                               style: ElevatedButton.styleFrom(

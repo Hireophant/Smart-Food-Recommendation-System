@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import '../core/supabase_handler.dart';
+import '../providers/favorites_provider.dart';
+import '../providers/reviews_provider.dart';
 import 'login_page.dart';
 import 'main_scaffold.dart';
 
@@ -33,8 +36,42 @@ class AuthGate extends StatelessWidget {
         );
 
         if (session != null) {
+          // User logged in - initialize FavoritesProvider
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final favoritesProvider = Provider.of<FavoritesProvider>(
+              context,
+              listen: false,
+            );
+            if (!favoritesProvider.isInitialized) {
+              favoritesProvider.initialize();
+            }
+            
+            // Initialize ReviewsProvider
+            final reviewsProvider = Provider.of<ReviewsProvider>(
+              context,
+              listen: false,
+            );
+            if (!reviewsProvider.isInitialized) {
+              reviewsProvider.initialize();
+            }
+          });
           return const MainScaffold();
         } else {
+          // User logged out - reset FavoritesProvider
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final favoritesProvider = Provider.of<FavoritesProvider>(
+              context,
+              listen: false,
+            );
+            favoritesProvider.reset();
+            
+            // Reset ReviewsProvider
+            final reviewsProvider = Provider.of<ReviewsProvider>(
+              context,
+              listen: false,
+            );
+            reviewsProvider.reset();
+          });
           return const LoginPage();
         }
       },

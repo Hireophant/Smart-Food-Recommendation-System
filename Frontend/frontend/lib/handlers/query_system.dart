@@ -49,6 +49,19 @@ class QuerySystem {
     return _foodHandler.searchDishes(query);
   }
 
+  /// Lấy danh sách nhà hàng (Cho màn hình DiscoverPage)
+  Future<SearchResult> getAllRestaurants({
+    double? userLat,
+    double? userLon,
+    int? limit,
+  }) {
+    return _foodHandler.searchFoodsWithClientFiltering(
+      userLat: userLat,
+      userLon: userLon,
+      limit: limit ?? 100,
+    );
+  }
+
   /// Tìm kiếm món ăn hoặc nhà hàng (Cho chức năng Search)
   Future<SearchResult> search({
     String? query,
@@ -69,7 +82,7 @@ class QuerySystem {
   }
 
   /// Tìm kiếm với client-side filtering (distance & taste)
-  /// 
+  ///
   /// Sử dụng khi Backend chưa hỗ trợ filter theo khoảng cách và khẩu vị
   Future<SearchResult> searchWithClientFiltering({
     String? query,

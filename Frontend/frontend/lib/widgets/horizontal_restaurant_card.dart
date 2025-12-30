@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/food_model.dart';
 import '../providers/favorites_provider.dart';
+import '../utils/restaurant_image_helper.dart';
 
 /// Horizontal Restaurant Card for list views
 class HorizontalRestaurantCard extends StatelessWidget {
@@ -45,19 +46,12 @@ class HorizontalRestaurantCard extends StatelessWidget {
                     borderRadius: const BorderRadius.horizontal(
                       left: Radius.circular(16),
                     ),
-                    child: item.imageUrl.startsWith('http')
-                        ? Image.network(
-                            item.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildPlaceholder(isDarkMode),
-                          )
-                        : Image.asset(
-                            item.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildPlaceholder(isDarkMode),
-                          ),
+                    child: Image.network(
+                      RestaurantImageHelper.getImageUrl(item.name),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildPlaceholder(isDarkMode),
+                    ),
                   ),
                   // Favorite Button Overlay
                   Positioned(

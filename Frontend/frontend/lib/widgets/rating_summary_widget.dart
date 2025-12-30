@@ -23,7 +23,7 @@ class RatingSummaryWidget extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDarkMode ? Colors.white10 : Colors.black.withOpacity(0.05),
+          color: isDarkMode ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
           width: 0.5,
         ),
       ),

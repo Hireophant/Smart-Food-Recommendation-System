@@ -3,6 +3,11 @@ import '../models/dish_model.dart';
 import '../models/food_model.dart';
 import '../core/data/data_client.dart';
 import '../core/supabase_handler.dart';
+import '../core/backend/backend_api.dart';
+import '../core/backend/foods_client.dart';
+import '../core/backend/restaurants_client.dart';
+import '../handlers/dish_handler.dart';
+import '../handlers/restaurant_handler.dart';
 
 /// Provider quản lý danh sách yêu thích
 /// Sử dụng ChangeNotifier để thông báo UI khi có thay đổi
@@ -69,13 +74,66 @@ class FavoritesProvider with ChangeNotifier {
       _favoriteDishIds = List.from(profile.favoritesFoodIds);
       _favoriteRestaurantIds = List.from(profile.favoritesRestaurantsIds);
 
-      debugPrint('FavoritesProvider: Loaded ${_favoriteDishIds.length} dishes, ${_favoriteRestaurantIds.length} restaurants');
+      debugPrint('FavoritesProvider: Loaded ${_favoriteDishIds.length} dish IDs, ${_favoriteRestaurantIds.length} restaurant IDs');
+
+      // Fetch full data for dishes and restaurants
+      await _fetchFullData();
+
+      debugPrint('FavoritesProvider: Fetched ${_favoriteDishes.length} dishes, ${_favoriteRestaurants.length} restaurants');
     } catch (e) {
       debugPrint('FavoritesProvider: Failed to load from Supabase: $e');
       // Giữ nguyên dữ liệu cũ nếu có lỗi
     } finally {
       _isSyncing = false;
       notifyListeners();
+    }
+  }
+
+  /// Fetch full data cho các món ăn và nhà hàng từ IDs
+  Future<void> _fetchFullData() async {
+    try {
+      // Clear old data
+      _favoriteDishes.clear();
+      _favoriteRestaurants.clear();
+
+      // Backend API URL
+      const backendUrl = "http://localhost:8000";
+
+      // Fetch dishes
+      if (_favoriteDishIds.isNotEmpty) {
+        final dishHandler = DishHandler(
+          FoodsClient(BackendAPI(baseUrl: backendUrl)),
+        );
+        for (final id in _favoriteDishIds) {
+          try {
+            final dish = await dishHandler.getDishById(id);
+            if (dish != null) {
+              _favoriteDishes.add(dish);
+            }
+          } catch (e) {
+            debugPrint('FavoritesProvider: Failed to fetch dish $id: $e');
+          }
+        }
+      }
+
+      // Fetch restaurants
+      if (_favoriteRestaurantIds.isNotEmpty) {
+        final restaurantHandler = RestaurantHandler(
+          RestaurantsClient(BackendAPI(baseUrl: backendUrl)),
+        );
+        for (final id in _favoriteRestaurantIds) {
+          try {
+            final restaurant = await restaurantHandler.getRestaurantById(id);
+            if (restaurant != null) {
+              _favoriteRestaurants.add(restaurant);
+            }
+          } catch (e) {
+            debugPrint('FavoritesProvider: Failed to fetch restaurant $id: $e');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('FavoritesProvider: Failed to fetch full data: $e');
     }
   }
 

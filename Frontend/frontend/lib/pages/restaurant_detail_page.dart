@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/food_model.dart';
 import '../models/review_model.dart';
 import '../widgets/review_card.dart';
 import '../widgets/rating_summary_widget.dart';
+import '../providers/reviews_provider.dart';
 import 'map_routing_page.dart';
 import 'package:latlong2/latlong.dart';
 import '../handlers/navigation_history_handler.dart';
+import '../utils/restaurant_image_helper.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   final RestaurantItem restaurant;
@@ -43,7 +46,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     _totalReviews = _reviews.length;
   }
 
-  void _addReview(double rating, String comment) {
+  void _addReview(double rating, String comment) async {
+    final reviewsProvider = Provider.of<ReviewsProvider>(
+      context,
+      listen: false,
+    );
+
+    // Add review to provider
+    await reviewsProvider.addReview(
+      restaurantId: widget.restaurant.id,
+      rating: rating,
+      comment: comment,
+    );
+
+    // Also add to local list for immediate UI update
     setState(() {
       _reviews.insert(
         0,
@@ -59,6 +75,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       );
       _calculateRatingStats();
     });
+
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã thêm đánh giá thành công!')),
+      );
+    }
   }
 
   @override
@@ -92,93 +115,53 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  widget.restaurant.imageUrl.startsWith('http')
-                      ? Image.network(
-                          widget.restaurant.imageUrl,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: isDarkMode
-                                  ? Colors.grey[850]
-                                  : Colors.grey[300],
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                      : null,
-                                ),
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            debugPrint('Image load error: $error');
-                            return Container(
-                              color: isDarkMode
-                                  ? Colors.grey[850]
-                                  : Colors.grey[300],
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.restaurant,
-                                      size: 80,
-                                      color: isDarkMode
-                                          ? Colors.grey[600]
-                                          : Colors.grey,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Không thể tải ảnh',
-                                      style: TextStyle(
-                                        color: isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : Image.asset(
-                          widget.restaurant.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: isDarkMode
-                                  ? Colors.grey[850]
-                                  : Colors.grey[300],
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.restaurant,
-                                      size: 80,
-                                      color: isDarkMode
-                                          ? Colors.grey[600]
-                                          : Colors.grey,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Không thể tải ảnh',
-                                      style: TextStyle(
-                                        color: isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                  Image.network(
+                    RestaurantImageHelper.getImageUrl(widget.restaurant.name),
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: isDarkMode ? Colors.grey[850] : Colors.grey[300],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
                         ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('Image load error: $error');
+                      return Container(
+                        color: isDarkMode ? Colors.grey[850] : Colors.grey[300],
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.restaurant,
+                                size: 80,
+                                color: isDarkMode
+                                    ? Colors.grey[600]
+                                    : Colors.grey,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Không thể tải ảnh',
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -360,9 +343,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   const SizedBox(height: 24),
 
                   // Reviews List
-                  ..._reviews
-                      .map((review) => ReviewCard(review: review))
-                      .toList(),
+                  ..._reviews.map((review) => ReviewCard(review: review)),
 
                   const SizedBox(height: 24),
                 ],

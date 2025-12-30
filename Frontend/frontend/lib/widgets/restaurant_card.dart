@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/food_model.dart';
 import '../providers/favorites_provider.dart';
+import '../utils/restaurant_image_helper.dart';
 
 /// Widget hiển thị thẻ thông tin nhà hàng trong danh sách
 /// Hiển thị: Ảnh, Tên, Danh mục, Đánh giá, và Trạng thái (Open/Close).
@@ -38,8 +39,8 @@ class RestaurantCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(
-                isDarkMode ? 0.3 : 0.05,
+              color: Colors.black.withValues(
+                alpha: isDarkMode ? 0.3 : 0.05,
               ), // Softer shadow
               blurRadius: 12,
               offset: const Offset(0, 4),
@@ -172,7 +173,7 @@ class RestaurantCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -301,65 +302,49 @@ class RestaurantCard extends StatelessWidget {
   }
 
   Widget _buildImage(bool isDarkMode) {
-    return item.imageUrl.startsWith('http')
-        ? Image.network(
-            item.imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                color: Colors.grey[300],
-                child: Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                        : null,
-                    strokeWidth: 2,
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                child: Center(
-                  child: Icon(
-                    Icons.restaurant,
-                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                    size: 40,
-                  ),
-                ),
-              );
-            },
-          )
-        : Image.asset(
-            item.imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                child: Center(
-                  child: Icon(
-                    Icons.restaurant,
-                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                    size: 40,
-                  ),
-                ),
-              );
-            },
-          );
+    // Use RestaurantImageHelper to get appropriate image based on restaurant name
+    final imageUrl = RestaurantImageHelper.getImageUrl(item.name);
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          color: Colors.grey[300],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+              strokeWidth: 2,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+          child: Center(
+            child: Icon(
+              Icons.restaurant,
+              color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+              size: 40,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildOpenBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.9),
+        color: Colors.green.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(4),
       ),
       child: const Text(
@@ -377,7 +362,7 @@ class RestaurantCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -401,7 +386,7 @@ class RestaurantCard extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -440,13 +425,13 @@ class RestaurantCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: isDarkMode
-                ? Colors.deepOrange.withOpacity(0.15)
+                ? Colors.deepOrange.withValues(alpha: 0.15)
                 : Colors.deepOrange.shade50,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: isDarkMode
-                  ? Colors.deepOrange.withOpacity(0.3)
-                  : Colors.deepOrange.withOpacity(0.2),
+                  ? Colors.deepOrange.withValues(alpha: 0.3)
+                  : Colors.deepOrange.withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),

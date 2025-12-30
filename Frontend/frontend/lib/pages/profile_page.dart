@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _avatarUrl;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
-  
+
   // Stats từ UserHandler
   UserStats? _userStats;
   bool _isLoadingStats = true;
@@ -60,13 +60,13 @@ class _ProfilePageState extends State<ProfilePage> {
   /// Load stats từ UserHandler (theo Guideline: UI gọi Handler)
   Future<void> _loadUserStats() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoadingStats = true;
     });
 
     try {
-      final stats = await UserHandler.getUserStats();
+      final stats = await UserHandler.getUserStats(context);
       if (mounted) {
         setState(() {
           _userStats = stats;
@@ -109,19 +109,21 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
         setState(() {
           _isUploading = false;
           _avatarUrl = newUrl;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
         );
       }
     } catch (e) {
       debugPrint('Avatar Error: $e');
       if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
         setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: Colors.red,
@@ -174,264 +176,271 @@ class _ProfilePageState extends State<ProfilePage> {
           Positioned.fill(child: Image.network(bgImage, fit: BoxFit.cover)),
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
             ), // Darker overlay
           ),
 
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-
-                  // --- Avatar & Title ---
-                  Stack(
-                    alignment: Alignment.bottomCenter,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: GestureDetector(
-                          onTap: () => _pickAndUploadAvatar(context),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Theme.of(context).primaryColor,
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(
-                                        context,
-                                      ).primaryColor.withOpacity(0.5),
-                                      blurRadius: 20,
-                                    ),
-                                  ],
-                                ),
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundImage: _avatarUrl != null
-                                      ? NetworkImage(_avatarUrl!)
-                                      : const NetworkImage(
-                                          'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
-                                        ),
-                                  onBackgroundImageError:
-                                      (exception, stackTrace) {
-                                        debugPrint(
-                                          'Image Load Error: $exception',
-                                        );
-                                        debugPrint('Failed URL: $_avatarUrl');
-                                      },
-                                  child: _isUploading
-                                      ? const CircularProgressIndicator(
-                                          color: Colors.white,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white24),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white70,
-                                      size: 14,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      "Đổi ảnh",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 20),
+
+                      // --- Avatar & Title ---
+                      Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: GestureDetector(
+                              onTap: () => _pickAndUploadAvatar(context),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context).primaryColor,
+                                        width: 3,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(
+                                            context,
+                                          ).primaryColor.withValues(alpha: 0.5),
+                                          blurRadius: 20,
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                    child: CircleAvatar(
+                                      radius: 50,
+                                      backgroundImage: _avatarUrl != null
+                                          ? NetworkImage(_avatarUrl!)
+                                          : const NetworkImage(
+                                              'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
+                                            ),
+                                      onBackgroundImageError:
+                                          (exception, stackTrace) {
+                                            debugPrint(
+                                              'Image Load Error: $exception',
+                                            );
+                                            debugPrint('Failed URL: $_avatarUrl');
+                                          },
+                                      child: _isUploading
+                                          ? const CircularProgressIndicator(
+                                              color: Colors.white,
+                                            )
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.white24),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white70,
+                                          size: 14,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          "Đổi ảnh",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // --- Name ---
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // --- Stats Row ---
+                      _isLoadingStats
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white70,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildStatItem(
+                                  "ĐÃ ĐÁNH GIÁ",
+                                  "${_userStats?.ratedCount ?? 0}",
+                                  Icons.rate_review,
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.white24,
+                                ),
+                                _buildStatItem(
+                                  "YÊU THÍCH",
+                                  "${_userStats?.favoritesCount ?? 0}",
+                                  Icons.favorite,
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.white24,
+                                ),
+                                _buildStatItem(
+                                  "CHECK-IN",
+                                  "${_userStats?.checkInCount ?? 0}",
+                                  Icons.place,
+                                ),
+                              ],
+                            ),
+
+                      const SizedBox(height: 40),
+
+                      // --- Menu Items ---
+                      GlassContainer(
+                        blur: 10,
+                        opacity: 0.1,
+                        child: Column(
+                          children: [
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.person_outline,
+                              label: "Hồ sơ của tôi",
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const EditProfilePage(),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              height: 1,
+                            ),
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.location_on_outlined,
+                              label: "Địa chỉ của tôi",
+                              onTap: () {
+                                // Placeholder: Select address for recommendations
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Chức năng chọn địa điểm đang phát triển',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              height: 1,
+                            ),
+                            _buildMenuItem(
+                              context,
+                              icon: isDarkTheme
+                                  ? Icons.dark_mode
+                                  : Icons.light_mode,
+                              label: "Giao diện: ${isDarkTheme ? 'Tối' : 'Sáng'}",
+                              onTap: () =>
+                                  context.read<ThemeProvider>().toggleTheme(),
+                            ),
+                            Divider(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              height: 1,
+                            ),
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.help_outline,
+                              label: "Trợ giúp & Hỗ trợ",
+                              onTap: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // --- Logout Button ---
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent.withValues(
+                              alpha: 0.2,
+                            ),
+                            foregroundColor: Colors.redAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: Colors.redAccent.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () => _signOut(context),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.logout, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                "Đăng xuất",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 30),
                     ],
                   ),
-
-                  // --- Name ---
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    email,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // --- Stats Row ---
-                  _isLoadingStats
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white70,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatItem(
-                              "ĐÃ ĐÁNH GIÁ",
-                              "${_userStats?.ratedCount ?? 0}",
-                              Icons.rate_review,
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: Colors.white24,
-                            ),
-                            _buildStatItem(
-                              "YÊU THÍCH",
-                              "${_userStats?.favoritesCount ?? 0}",
-                              Icons.favorite,
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: Colors.white24,
-                            ),
-                            _buildStatItem(
-                              "CHECK-IN",
-                              "${_userStats?.checkInCount ?? 0}",
-                              Icons.place,
-                            ),
-                          ],
-                        ),
-
-                  const SizedBox(height: 40),
-
-                  // --- Menu Items ---
-                  GlassContainer(
-                    blur: 10,
-                    opacity: 0.1,
-                    child: Column(
-                      children: [
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.person_outline,
-                          label: "Hồ sơ của tôi",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const EditProfilePage(),
-                              ),
-                            );
-                          },
-                        ),
-                        Divider(
-                          color: Colors.white.withOpacity(0.1),
-                          height: 1,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.location_on_outlined,
-                          label: "Địa chỉ của tôi",
-                          onTap: () {
-                            // Placeholder: Select address for recommendations
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Chức năng chọn địa điểm đang phát triển',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        Divider(
-                          color: Colors.white.withOpacity(0.1),
-                          height: 1,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: isDarkTheme
-                              ? Icons.dark_mode
-                              : Icons.light_mode,
-                          label: "Giao diện: ${isDarkTheme ? 'Tối' : 'Sáng'}",
-                          onTap: () =>
-                              context.read<ThemeProvider>().toggleTheme(),
-                        ),
-                        Divider(
-                          color: Colors.white.withOpacity(0.1),
-                          height: 1,
-                        ),
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.help_outline,
-                          label: "Trợ giúp & Hỗ trợ",
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // --- Logout Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent.withOpacity(0.2),
-                        foregroundColor: Colors.redAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: Colors.redAccent.withOpacity(0.5),
-                          ),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () => _signOut(context),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.logout, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            "Đăng xuất",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                ],
+                ),
               ),
             ),
           ),
@@ -455,7 +464,7 @@ class _ProfilePageState extends State<ProfilePage> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 11,
             letterSpacing: 0.5,
           ),
@@ -482,7 +491,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
-        color: Colors.white.withOpacity(0.3),
+        color: Colors.white.withValues(alpha: 0.3),
         size: 14,
       ),
       onTap: onTap,

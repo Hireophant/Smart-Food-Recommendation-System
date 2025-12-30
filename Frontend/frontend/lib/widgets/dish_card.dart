@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/dish_model.dart';
 import '../providers/favorites_provider.dart';
+import '../utils/dish_image_helper.dart';
 
 class DishCard extends StatelessWidget {
   final DishItem item;
@@ -34,7 +35,7 @@ class DishCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -154,7 +155,7 @@ class DishCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -238,55 +239,44 @@ class DishCard extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context, bool isDarkMode) {
-    return item.imageUrl.startsWith('http')
-        ? Image.network(
-            item.imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              final progress = loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                  : null;
-              return Container(
-                color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
-                child: Center(
-                  child: CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  color: isDarkMode ? Colors.grey[600] : Colors.grey,
-                  size: 24,
-                ),
+    // Use DishImageHelper to get appropriate image based on dish name
+    final imageUrl = DishImageHelper.getImageUrl(item.name);
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        final progress = loadingProgress.expectedTotalBytes != null
+            ? loadingProgress.cumulativeBytesLoaded /
+                  loadingProgress.expectedTotalBytes!
+            : null;
+        return Container(
+          color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).primaryColor,
               ),
             ),
-          )
-        : Image.asset(
-            item.imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-              child: Icon(
-                Icons.image_not_supported,
-                color: isDarkMode ? Colors.grey[600] : Colors.grey,
-              ),
-            ),
-          );
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+        child: Center(
+          child: Icon(
+            Icons.restaurant,
+            color: isDarkMode ? Colors.grey[600] : Colors.grey,
+            size: 24,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTags(bool isDarkMode, List<String> tags) {
@@ -298,7 +288,7 @@ class DishCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: isDarkMode
-                ? const Color(0xFF1ABC9C).withOpacity(0.2)
+                ? const Color(0xFF1ABC9C).withValues(alpha: 0.2)
                 : const Color(0xFFE0F2F1),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -331,7 +321,7 @@ class DishCard extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

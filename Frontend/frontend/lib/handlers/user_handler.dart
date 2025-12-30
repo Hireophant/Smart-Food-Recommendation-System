@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/supabase_handler.dart';
 import '../core/data/data_client.dart';
 import '../core/data/user_profile.dart';
+import 'package:provider/provider.dart';
+import '../providers/reviews_provider.dart';
 
 /// Model cho stats hiển thị ở Profile Page
 class UserStats {
@@ -34,8 +36,8 @@ class UserHandler {
   /// **REAL DATA IMPLEMENTATION:**
   /// - "Favorites": Count from user_profile.favorites_*_ids arrays
   /// - "Check-in": From user_profile.restaurant_visited field
-  /// - "Rated": Not implemented (no ratings table), always returns 0
-  static Future<UserStats> getUserStats() async {
+  /// - "Rated": Count from ReviewsProvider (local state only)
+  static Future<UserStats> getUserStats(BuildContext? context) async {
     final user = SupabaseHandler().currentUser;
 
     if (user == null) {
@@ -47,16 +49,22 @@ class UserHandler {
       // Get user profile from Supabase (REAL DATA)
       final profile = await DataClient.getUserProfile(user.id);
 
-      // Count favorites from arrays
-      final favoritesCount =
-          profile.favoritesFoodIds.length +
-          profile.favoritesRestaurantsIds.length;
+      // Count favorites - chỉ tính restaurants (bỏ món ăn)
+      final favoritesCount = profile.favoritesRestaurantsIds.length;
 
       // Get check-in count
       final checkInCount = profile.restaurantVisited;
 
-      // No ratings/reviews tables in this project.
-      const ratedCount = 0;
+      // Get reviews count from provider (if context available)
+      int ratedCount = 0;
+      if (context != null) {
+        try {
+          final reviewsProvider = Provider.of<ReviewsProvider>(context, listen: false);
+          ratedCount = reviewsProvider.totalReviewsCount;
+        } catch (e) {
+          debugPrint('UserHandler: Could not get ReviewsProvider: $e');
+        }
+      }
 
       return UserStats(
         ratedCount: ratedCount,

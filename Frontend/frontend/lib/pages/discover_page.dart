@@ -3,31 +3,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:frontend/core/gps/gps.dart';
 import 'package:latlong2/latlong.dart';
-import '../models/dish_model.dart';
-import '../models/food_model.dart';
 import '../models/filter_tag_model.dart';
+import '../models/food_model.dart';
 import '../handlers/query_system.dart';
-import '../widgets/dish_card.dart';
 import '../widgets/restaurant_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/advanced_filter_sheet.dart';
 
-import 'restaurant_list_page.dart';
 import 'restaurant_detail_page.dart';
 
-/// Tag mặc định cho filter
+/// Tag mặc định cho filter (top tags from database)
 final List<FilterTag> defaultTags = [
-  FilterTag(id: 'vietnamese', label: 'Món Việt', icon: Icons.restaurant),
-  FilterTag(id: 'asian', label: 'Món Á', icon: Icons.ramen_dining),
-  FilterTag(id: 'western', label: 'Món Tây', icon: Icons.fastfood),
-  FilterTag(id: 'cafe', label: 'Cafe', icon: Icons.local_cafe),
-  FilterTag(id: 'dessert', label: 'Tráng miệng', icon: Icons.icecream),
-  FilterTag(id: 'vegan', label: 'Chay', icon: Icons.spa),
-  FilterTag(id: 'cheap', label: 'Bình dân', icon: Icons.attach_money),
-  FilterTag(id: 'luxury', label: 'Cao cấp', icon: Icons.diamond),
-  FilterTag(id: 'cozy', label: 'Ấm cúng', icon: Icons.favorite),
-  FilterTag(id: 'family', label: 'Gia đình', icon: Icons.family_restroom),
-  FilterTag(id: 'street_food', label: 'Street Food', icon: Icons.food_bank),
+  FilterTag(
+    id: 'địa điểm ăn uống',
+    label: 'Địa điểm ăn uống',
+    icon: Icons.restaurant,
+  ),
+  FilterTag(id: 'hải sản', label: 'Hải sản', icon: Icons.set_meal),
+  FilterTag(id: 'nhậu', label: 'Nhậu', icon: Icons.local_bar),
+  FilterTag(id: 'gia đình', label: 'Gia đình', icon: Icons.family_restroom),
+  FilterTag(id: 'chay', label: 'Chay', icon: Icons.spa),
+  FilterTag(id: 'vegan', label: 'Vegan', icon: Icons.eco),
+  FilterTag(id: 'thịt nướng', label: 'Thịt nướng', icon: Icons.outdoor_grill),
+  FilterTag(id: 'hàn quốc', label: 'Hàn Quốc', icon: Icons.food_bank),
+  FilterTag(id: 'miền tây', label: 'Miền Tây', icon: Icons.rice_bowl),
+  FilterTag(id: 'bia', label: 'Bia', icon: Icons.sports_bar),
+  FilterTag(id: 'bbq', label: 'BBQ', icon: Icons.outdoor_grill),
+  FilterTag(id: 'cơm tấm', label: 'Cơm tấm', icon: Icons.rice_bowl),
+  FilterTag(id: 'hà nội', label: 'Hà Nội', icon: Icons.location_city),
+  FilterTag(id: 'tinh tế', label: 'Tinh tế', icon: Icons.diamond),
+  FilterTag(id: 'lai rai', label: 'Lai rai', icon: Icons.restaurant_menu),
 ];
 
 class DiscoverPage extends StatefulWidget {
@@ -42,14 +47,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
   final QuerySystem _querySystem = QuerySystem(); // Facade
   final MapController _mapController = MapController();
 
-  List<DishItem> _dishes = [];
+  List<RestaurantItem> _allRestaurants = [];
   List<RestaurantItem> _filteredRestaurants = [];
   List<String> _selectedTags = [];
   List<String> _selectedTastes = []; // NEW: Taste filter
   String _searchQuery = '';
   double _maxDistanceKm = 10.0; // NEW: Distance filter (default 10km)
-  double _searchRadius = 5000;
-  int _searchLimit = 20;
+  int _searchLimit = 100;
   bool _isLoading = true;
   bool _isMapLoading = true;
   double? _userLat, _userLon;
@@ -63,20 +67,36 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Future<void> _loadData() async {
     try {
-      debugPrint('DiscoverPage: Fetching dishes...');
-      // Fetch dishes via Query System
-      final dishes = await _querySystem.getAllDishes();
-      debugPrint('DiscoverPage: Dishes fetched (${dishes.length} items)');
+      // Get user location first
+      double? lat, lon;
+      try {
+        var location = await LocationHelper.getCurrentLocation();
+        lat = location['lat'];
+        lon = location['lon'];
+      } catch (e) {
+        lat = null;
+        lon = null;
+      }
 
-      // Fetch restaurants for map
-      final restaurantsResult = await _searchRestaurants();
+      setState(() {
+        _userLat = lat;
+        _userLon = lon;
+      });
+
+      debugPrint('DiscoverPage: Fetching restaurants...');
+      // Fetch restaurants via Query System
+      final restaurantsResult = await _querySystem.getAllRestaurants(
+        userLat: lat,
+        userLon: lon,
+        limit: _searchLimit,
+      );
       debugPrint(
         'DiscoverPage: Restaurants fetched (${restaurantsResult.items.length} items)',
       );
 
       if (mounted) {
         setState(() {
-          _dishes = dishes;
+          _allRestaurants = restaurantsResult.items;
           _filteredRestaurants = restaurantsResult.items;
           _isLoading = false;
         });
@@ -95,22 +115,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Future<SearchResult> _searchRestaurants({String? query, String? tag}) async {
-    double? lat, lon;
-    try {
-      var location = await LocationHelper.getCurrentLocation();
-      lat = location['lat'];
-      lon = location['lon'];
-    } catch (e) {
-      lat = null;
-      lon = null;
-    }
-    if (lat == null || lon == null) {
-      lat = null;
-      lon = null;
-    }
-
-    _userLat = lat;
-    _userLon = lon;
+    double? lat = _userLat;
+    double? lon = _userLon;
 
     // Use client-side filtering for distance and taste
     var searchRestaurant = await _querySystem.searchWithClientFiltering(
@@ -156,7 +162,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
         maxDistance: _maxDistanceKm,
         selectedTastes: _selectedTastes,
         resultLimit: _searchLimit, // NEW: Pass current limit
-        onApplyFilter: (tags, distance, tastes, limit) { // NEW: Accept limit parameter
+        onApplyFilter: (tags, distance, tastes, limit) {
+          // NEW: Accept limit parameter
           setState(() {
             _selectedTags = tags;
             _maxDistanceKm = distance;
@@ -304,14 +311,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  void _onDishSelected(DishItem dish) {
-    // Navigate to Restaurant List Page first
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => RestaurantListPage(dish: dish)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // No redundant ThemeProvider check if not used for toggling anymore here,
@@ -349,6 +348,42 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           subdomains: const ['a', 'b', 'c', 'd'],
                           userAgentPackageName: 'com.foodfinder.app',
                         ),
+                        // User location marker (blue pin)
+                        if (_userLat != null && _userLon != null)
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(_userLat!, _userLon!),
+                                width: 40,
+                                height: 40,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 3,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.my_location,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        // Restaurant markers
                         MarkerLayer(
                           markers: _filteredRestaurants.map((restaurant) {
                             return Marker(
@@ -366,7 +401,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         blurRadius: 6,
                                         offset: const Offset(0, 3),
                                       ),
@@ -391,8 +428,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     if (_isMapLoading)
                       Container(
                         color: isDarkMode
-                            ? Colors.black.withOpacity(0.5)
-                            : Colors.white.withOpacity(0.5),
+                            ? Colors.black.withValues(alpha: 0.5)
+                            : Colors.white.withValues(alpha: 0.5),
                         child: const Center(child: CircularProgressIndicator()),
                       ),
                   ],
@@ -419,7 +456,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -451,7 +488,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           Text(
                             _isSearchApplied()
                                 ? 'Kết quả tìm kiếm'
-                                : 'Gợi ý cho bạn',
+                                : 'Gợi ý nhà hàng',
                             style: TextStyle(
                               fontSize: 22, // Apple Large Title
                               fontWeight: FontWeight.bold,
@@ -459,7 +496,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             ),
                           ),
                           Text(
-                            '${_isSearchApplied() ? _filteredRestaurants.length : _dishes.length} ${_isSearchApplied() ? "nhà hàng" : "món ăn"}',
+                            '${_isSearchApplied() ? _filteredRestaurants.length : _allRestaurants.length} nhà hàng',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontWeight: FontWeight.w500,
@@ -472,17 +509,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       if (_isLoading)
                         const Center(child: CircularProgressIndicator())
                       else if (_isSearchApplied())
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _filteredRestaurants.length,
-                          itemBuilder: (context, index) {
-                            final restaurant = _filteredRestaurants[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: SizedBox(
-                                height: 260, // Taller for better visual
-                                child: RestaurantCard(
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            int crossAxisCount = 2;
+                            if (constraints.maxWidth > 600) crossAxisCount = 3;
+                            if (constraints.maxWidth > 900) crossAxisCount = 4;
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _filteredRestaurants.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 0.72,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final restaurant = _filteredRestaurants[index];
+                                return RestaurantCard(
                                   item: restaurant,
                                   onTap: () {
                                     Navigator.push(
@@ -494,22 +540,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                       ),
                                     );
                                   },
-                                ),
-                              ),
+                                );
+                              },
                             );
                           },
                         )
                       else
-                        // Dish Grid
+                        // Restaurant Grid
                         LayoutBuilder(
                           builder: (context, constraints) {
                             int crossAxisCount = 2;
                             if (constraints.maxWidth > 600) crossAxisCount = 3;
+                            if (constraints.maxWidth > 900) crossAxisCount = 4;
 
                             return GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _dishes.length,
+                              itemCount: _allRestaurants.length,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: crossAxisCount,
@@ -518,10 +565,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                     childAspectRatio: 0.72,
                                   ),
                               itemBuilder: (context, index) {
-                                final item = _dishes[index];
-                                return DishCard(
-                                  item: item,
-                                  onTap: () => _onDishSelected(item),
+                                final restaurant = _allRestaurants[index];
+                                return RestaurantCard(
+                                  item: restaurant,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => RestaurantDetailPage(
+                                          restaurant: restaurant,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -571,7 +627,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             },
                             backgroundColor: Theme.of(
                               context,
-                            ).primaryColor.withOpacity(0.1),
+                            ).primaryColor.withValues(alpha: 0.1),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),

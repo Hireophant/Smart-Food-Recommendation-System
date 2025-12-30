@@ -7,8 +7,16 @@ import 'package:timeago/timeago.dart' as timeago;
 /// Widget hiển thị một review (đánh giá) của người dùng
 class ReviewCard extends StatelessWidget {
   final ReviewModel review;
+  final bool
+  isCurrentUser; // Kiểm tra xem review có phải của user hiện tại không
+  final VoidCallback? onDelete; // Callback khi xóa review
 
-  const ReviewCard({super.key, required this.review});
+  const ReviewCard({
+    super.key,
+    required this.review,
+    this.isCurrentUser = false,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +29,9 @@ class ReviewCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDarkMode ? Colors.white10 : Colors.black.withOpacity(0.05),
+          color: isDarkMode
+              ? Colors.white10
+              : Colors.black.withValues(alpha: 0.05),
           width: 0.5,
         ),
       ),
@@ -129,6 +139,39 @@ class ReviewCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Nút xóa cho current user
+                if (isCurrentUser && onDelete != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    color: Colors.red,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Xóa đánh giá?'),
+                          content: const Text(
+                            'Bạn có chắc muốn xóa đánh giá này không?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Hủy'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                onDelete!();
+                              },
+                              child: const Text(
+                                'Xóa',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
 

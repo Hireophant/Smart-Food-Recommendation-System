@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'pages/auth_gate.dart';
 import 'providers/theme_provider.dart';
 import 'providers/favorites_provider.dart';
+import 'providers/reviews_provider.dart';
 import 'core/supabase_handler.dart';
 
 /// Điểm khởi chạy của ứng dụng
@@ -20,6 +21,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewsProvider()),
       ],
       child: const MyApp(),
     ),

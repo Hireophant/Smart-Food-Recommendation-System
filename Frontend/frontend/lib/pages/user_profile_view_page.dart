@@ -44,7 +44,7 @@ class UserProfileViewPage extends StatelessWidget {
           // Background
           Positioned.fill(child: Image.network(bgImage, fit: BoxFit.cover)),
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.6)),
+            child: Container(color: Colors.black.withValues(alpha: 0.6)),
           ),
 
           // Content
@@ -69,7 +69,7 @@ class UserProfileViewPage extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.amber.withOpacity(0.5),
+                                color: Colors.amber.withValues(alpha: 0.5),
                                 blurRadius: 20,
                               ),
                             ],
@@ -105,7 +105,7 @@ class UserProfileViewPage extends StatelessWidget {
                           user.email,
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
 
@@ -118,7 +118,7 @@ class UserProfileViewPage extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               height: 1.5,
                             ),
                           ),
@@ -251,7 +251,7 @@ class UserProfileViewPage extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 10,
             letterSpacing: 1,
           ),

@@ -100,7 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           // Dark Overlay
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.3)),
+            child: Container(color: Colors.black.withValues(alpha: 0.3)),
           ),
 
           Center(

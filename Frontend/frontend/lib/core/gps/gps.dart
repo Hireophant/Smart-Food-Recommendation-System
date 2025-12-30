@@ -2,7 +2,6 @@ import 'dart:io' show Platform;
 import 'package:geolocator/geolocator.dart';
 
 class LocationHelper {
-  
   /// Hàm này chỉ làm 1 việc: Lấy tọa độ và trả về Map {lat, lon}
   /// Nếu lỗi sẽ throw Exception để bên UI tự xử lý hiển thị.
   static Future<Map<String, double>> getCurrentLocation() async {
@@ -23,27 +22,28 @@ class LocationHelper {
         throw Exception('Quyền truy cập vị trí bị từ chối.');
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Quyền vị trí bị chặn vĩnh viễn. Hãy vào cài đặt để mở lại.');
+      throw Exception(
+        'Quyền vị trí bị chặn vĩnh viễn. Hãy vào cài đặt để mở lại.',
+      );
     }
 
     // 3. Cấu hình độ chính xác (Tối ưu cho Desktop/Mobile)
     // Desktop dùng Low để tránh timeout, Mobile dùng High để chính xác
-    LocationAccuracy accuracy = (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-        ? LocationAccuracy.low 
+    LocationAccuracy accuracy =
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+        ? LocationAccuracy.low
         : LocationAccuracy.high;
 
     // 4. Lấy vị trí
     Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: accuracy,
-      timeLimit: const Duration(seconds: 10), // Timeout sau 10s
+      locationSettings: LocationSettings(
+        accuracy: accuracy,
+        timeLimit: const Duration(seconds: 10),
+      ),
     );
 
-    // 5. Trả về kết quả dạng Map
-    return {
-      'lat': position.latitude,
-      'lon': position.longitude,
-    };
+    return {'lat': position.latitude, 'lon': position.longitude};
   }
 }
